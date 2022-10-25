@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
+using MapConverter.IO;
 
-namespace MapConverter
+namespace MapConverter.UOP
 {
     internal class UOPMap
     {
@@ -11,7 +12,7 @@ namespace MapConverter
         private readonly int chunksWidth;
         private readonly int chunksHeight;
 
-        public UOPMap(string filePath , int id, int width, int height)
+        public UOPMap(string filePath, int id, int width, int height)
         {
             chunksWidth = width >> 3;
             chunksHeight = height >> 3;
@@ -31,14 +32,14 @@ namespace MapConverter
 
                 for (int j = 0; j < chunksLength && index < chunks.Length; j++)
                 {
-                    chunks[index++] = uopChunk.Address + (j * chunkSize);
+                    chunks[index++] = uopChunk.Address + j * chunkSize;
                 }
             }
         }
 
         public void FillChunk(int x, int y, Span<MapTile> chunk)
         {
-            long address = chunks[x + y * chunksWidth];
+            long address = chunks[x * chunksHeight + y];
             reader.Seek(address);
 
             reader.Skip(4);

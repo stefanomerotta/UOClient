@@ -2,8 +2,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using PrimitiveType = Microsoft.Xna.Framework.Graphics.PrimitiveType;
 using VertexDeclaration = Microsoft.Xna.Framework.Graphics.VertexDeclaration;
 using VertexElement = Microsoft.Xna.Framework.Graphics.VertexElement;

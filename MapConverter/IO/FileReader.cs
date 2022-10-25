@@ -3,7 +3,7 @@ using System.IO.MemoryMappedFiles;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace MapConverter
+namespace MapConverter.IO
 {
     internal unsafe sealed class FileReader : IDisposable
     {

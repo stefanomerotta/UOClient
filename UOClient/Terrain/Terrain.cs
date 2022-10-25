@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
+using SharpDX.WIC;
 using System;
+using System.Runtime.InteropServices;
 using UOClient.Data;
 
 namespace UOClient.Terrain
@@ -26,10 +28,12 @@ namespace UOClient.Terrain
             blocks = new TerrainBlock[width / TerrainBlock.Size, height / TerrainBlock.Size];
         }
 
-        private float[,] GetHeights(int blockX, int blockY)
+        private unsafe float[,] GetHeights(int blockX, int blockY)
         {
             float[,] toRet = new float[TerrainBlock.VertexSize, TerrainBlock.VertexSize];
-            MapTile[] tiles = new MapTile[TerrainBlock.VertexSize * TerrainBlock.VertexSize];
+
+            Span<byte> rawTiles = stackalloc byte[TerrainBlock.VertexSize * TerrainBlock.VertexSize * sizeof(MapTile)];
+            Span<MapTile> tiles = MemoryMarshal.Cast<byte, MapTile>(rawTiles);
             map.FillChunk(blockX, blockY, tiles);
 
             for (int i = 0; i < tiles.Length; i++)

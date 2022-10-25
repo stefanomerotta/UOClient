@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
+using MapConverter.IO;
 
-namespace MapConverter
+namespace MapConverter.UOP
 {
     internal sealed class UOPUnpacker
     {
@@ -79,20 +80,20 @@ namespace MapConverter
             int i;
             for (i = 0; i + 12 < s.Length; i += 12)
             {
-                edi = (uint)((s[i + 7] << 24) | (s[i + 6] << 16) | (s[i + 5] << 8) | s[i + 4]) + edi;
-                esi = (uint)((s[i + 11] << 24) | (s[i + 10] << 16) | (s[i + 9] << 8) | s[i + 8]) + esi;
-                edx = (uint)((s[i + 3] << 24) | (s[i + 2] << 16) | (s[i + 1] << 8) | s[i]) - esi;
-                edx = (edx + ebx) ^ (esi >> 28) ^ (esi << 4);
+                edi = (uint)(s[i + 7] << 24 | s[i + 6] << 16 | s[i + 5] << 8 | s[i + 4]) + edi;
+                esi = (uint)(s[i + 11] << 24 | s[i + 10] << 16 | s[i + 9] << 8 | s[i + 8]) + esi;
+                edx = (uint)(s[i + 3] << 24 | s[i + 2] << 16 | s[i + 1] << 8 | s[i]) - esi;
+                edx = edx + ebx ^ esi >> 28 ^ esi << 4;
                 esi += edi;
-                edi = (edi - edx) ^ (edx >> 26) ^ (edx << 6);
+                edi = edi - edx ^ edx >> 26 ^ edx << 6;
                 edx += esi;
-                esi = (esi - edi) ^ (edi >> 24) ^ (edi << 8);
+                esi = esi - edi ^ edi >> 24 ^ edi << 8;
                 edi += edx;
-                ebx = (edx - esi) ^ (esi >> 16) ^ (esi << 16);
+                ebx = edx - esi ^ esi >> 16 ^ esi << 16;
                 esi += edi;
-                edi = (edi - ebx) ^ (ebx >> 13) ^ (ebx << 19);
+                edi = edi - ebx ^ ebx >> 13 ^ ebx << 19;
                 ebx += esi;
-                esi = (esi - edi) ^ (edi >> 28) ^ (edi << 4);
+                esi = esi - edi ^ edi >> 28 ^ edi << 4;
                 edi += ebx;
             }
 
@@ -114,21 +115,19 @@ namespace MapConverter
                     case 1: ebx += s[i]; break;
                 }
 
-                esi = (esi ^ edi) - ((edi >> 18) ^ (edi << 14));
-                ecx = (esi ^ ebx) - ((esi >> 21) ^ (esi << 11));
-                edi = (edi ^ ecx) - ((ecx >> 7) ^ (ecx << 25));
-                esi = (esi ^ edi) - ((edi >> 16) ^ (edi << 16));
-                edx = (esi ^ ecx) - ((esi >> 28) ^ (esi << 4));
-                edi = (edi ^ edx) - ((edx >> 18) ^ (edx << 14));
-                eax = (esi ^ edi) - ((edi >> 8) ^ (edi << 24));
+                esi = (esi ^ edi) - (edi >> 18 ^ edi << 14);
+                ecx = (esi ^ ebx) - (esi >> 21 ^ esi << 11);
+                edi = (edi ^ ecx) - (ecx >> 7 ^ ecx << 25);
+                esi = (esi ^ edi) - (edi >> 16 ^ edi << 16);
+                edx = (esi ^ ecx) - (esi >> 28 ^ esi << 4);
+                edi = (edi ^ edx) - (edx >> 18 ^ edx << 14);
+                eax = (esi ^ edi) - (edi >> 8 ^ edi << 24);
 
-                return ((ulong)edi << 32) | eax;
+                return (ulong)edi << 32 | eax;
             }
 
-            return ((ulong)esi << 32) | eax;
+            return (ulong)esi << 32 | eax;
         }
-
-        
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -157,21 +156,6 @@ namespace MapConverter
 
         public UOPFileContent(long address, int length)
         {
-            Address = address;
-            Length = length;
-        }
-    }
-
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public readonly struct UOPIndexedFileContent
-    {
-        public readonly long Address;
-        public readonly int Length;
-        public readonly int Index;
-
-        public UOPIndexedFileContent(int index, long address, int length)
-        {
-            Index = index;
             Address = address;
             Length = length;
         }

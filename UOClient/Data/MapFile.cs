@@ -58,19 +58,19 @@ namespace UOClient.Data
     internal sealed class MyMap : Map, IDisposable
     {
         private readonly PackageReader reader;
-        private readonly int chunksWidth;
+        private readonly int chunksHeight;
 
         public MyMap(int id, int width, int height)
         {
             FileStream stream = File.Open(Path.Combine(Settings.FilePath, "converted.bin"), FileMode.Open);
             reader = new(stream);
 
-            chunksWidth = width / 64;
+            chunksHeight = (int)Math.Ceiling(height / 64d);
         }
 
         public override void FillChunk(int x, int y, Span<MapTile> chunk)
         {
-            reader.ReadSpan(x * chunksWidth + y, chunk);
+            reader.ReadSpan(x + y * chunksHeight, chunk);
         }
 
         public void Dispose()
