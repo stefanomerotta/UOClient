@@ -2,6 +2,8 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Runtime.InteropServices;
+using UOClient.Effects;
+using UOClient.Structures;
 using PrimitiveType = Microsoft.Xna.Framework.Graphics.PrimitiveType;
 using VertexDeclaration = Microsoft.Xna.Framework.Graphics.VertexDeclaration;
 using VertexElement = Microsoft.Xna.Framework.Graphics.VertexElement;
@@ -16,22 +18,20 @@ namespace UOClient.Terrain
         private readonly int blockX;
         private readonly int blockY;
 
-        private readonly float[,] heightData;
-        private readonly VertexPositionDualTexture[] vertices;
+        private readonly MapTile[,] tiles;
+        private readonly VertexPositionTextureArray[] vertices;
         private readonly VertexPositionColor[] boundaries;
         private readonly short[] indices;
 
-        public TerrainBlock(int blockX, int blockY, float[,] tiles)
+        public TerrainBlock(int blockX, int blockY, MapTile[,] tiles)
         {
             this.blockX = blockX;
             this.blockY = blockY;
+            this.tiles = tiles;
 
-            heightData = new float[VertexSize, VertexSize];
-            vertices = new VertexPositionDualTexture[VertexSize * VertexSize];
+            vertices = new VertexPositionTextureArray[VertexSize * VertexSize];
             indices = new short[(VertexSize - 1) * (VertexSize - 1) * 6];
-
             boundaries = new VertexPositionColor[8];
-            heightData = tiles;
 
             SetUpVertices();
             SetUpIndices();
@@ -46,16 +46,20 @@ namespace UOClient.Terrain
             {
                 for (int x = 0; x < VertexSize; x++)
                 {
-                    ref VertexPositionDualTexture vertex = ref vertices[x + y * VertexSize];
-                    Vector3 position = Vector3.Transform(new Vector3(x, heightData[x, y], y), m);
+                    ref VertexPositionTextureArray vertex = ref vertices[x + y * VertexSize];
+                    MapTile tile = tiles[x, y];
+
+                    Vector3 position = Vector3.Transform(new Vector3(x, tile.Z, y), m);
 
                     vertex.Position = position;
                     vertex.TextureCoordinate.X = position.X / 10f;
                     vertex.TextureCoordinate.Y = position.Z / 10f;
-                    vertex.Texture2Coordinate.X = position.X / 4f;
-                    vertex.Texture2Coordinate.Y = position.Z / 4f;
-                    vertex.Texture3Coordinate.X = position.X / 32f;
-                    vertex.Texture3Coordinate.Y = position.Z / 32f;
+                    vertex.TextureCoordinate.Z = tile.Id is > 2 and < 7 ? 0 : 1;
+
+                    //vertex.Texture2Coordinate.X = position.X / 4f;
+                    //vertex.Texture2Coordinate.Y = position.Z / 4f;
+                    //vertex.Texture3Coordinate.X = position.X / 32f;
+                    //vertex.Texture3Coordinate.Y = position.Z / 32f;
                 }
             }
         }
@@ -95,7 +99,7 @@ namespace UOClient.Terrain
             SetVertex(vertices[^VertexSize], 6);
             SetVertex(vertices[0], 7);
 
-            void SetVertex(VertexPositionDualTexture v, int i)
+            void SetVertex(VertexPositionTextureArray v, int i)
             {
                 ref VertexPositionColor vertex = ref boundaries[i];
                 vertex.Position = v.Position;
@@ -106,7 +110,7 @@ namespace UOClient.Terrain
         public void Draw(GraphicsDevice device)
         {
             device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, vertices, 0, vertices.Length, indices, 0,
-                indices.Length / 3, VertexPositionDualTexture.VertexDeclaration);
+                indices.Length / 3, VertexPositionTextureArray.VertexDeclaration);
         }
 
         public void DrawBoundaries(GraphicsDevice device)

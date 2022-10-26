@@ -1,8 +1,8 @@
 ﻿using FileSystem.IO;
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using UOClient.IO;
+using UOClient.Structures;
 
 namespace UOClient.Data
 {
@@ -77,13 +77,5 @@ namespace UOClient.Data
         {
             reader.Dispose();
         }
-    }
-
-
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct MapTile
-    {
-        public ushort Id;
-        public sbyte Z;
     }
 }

@@ -3,6 +3,7 @@ using SharpDX.WIC;
 using System;
 using System.Runtime.InteropServices;
 using UOClient.Data;
+using UOClient.Structures;
 
 namespace UOClient.Terrain
 {
@@ -28,9 +29,9 @@ namespace UOClient.Terrain
             blocks = new TerrainBlock[width / TerrainBlock.Size, height / TerrainBlock.Size];
         }
 
-        private unsafe float[,] GetHeights(int blockX, int blockY)
+        private unsafe MapTile[,] GetHeights(int blockX, int blockY)
         {
-            float[,] toRet = new float[TerrainBlock.VertexSize, TerrainBlock.VertexSize];
+            MapTile[,] toRet = new MapTile[TerrainBlock.VertexSize, TerrainBlock.VertexSize];
 
             Span<byte> rawTiles = stackalloc byte[TerrainBlock.VertexSize * TerrainBlock.VertexSize * sizeof(MapTile)];
             Span<MapTile> tiles = MemoryMarshal.Cast<byte, MapTile>(rawTiles);
@@ -38,7 +39,7 @@ namespace UOClient.Terrain
 
             for (int i = 0; i < tiles.Length; i++)
             {
-                toRet[i % TerrainBlock.VertexSize, i / TerrainBlock.VertexSize] = tiles[i].Z;
+                toRet[i % TerrainBlock.VertexSize, i / TerrainBlock.VertexSize] = tiles[i];
             }
 
             return toRet;

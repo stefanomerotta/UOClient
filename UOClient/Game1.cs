@@ -1,7 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using SharpDX.Direct3D9;
+using System;
 using UOClient.Effects;
+using UOClient.Utilities;
 using CullMode = Microsoft.Xna.Framework.Graphics.CullMode;
 using FillMode = Microsoft.Xna.Framework.Graphics.FillMode;
 using Map = UOClient.Terrain.Terrain;
@@ -21,11 +24,13 @@ namespace UOClient
         private SpriteFont font;
 
         private BasicEffect wireframeEffect;
-        private DualTextureWithAlphaEffect effect;
+        private BasicArrayEffect effect;
 
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
+            graphics.GraphicsProfile = GraphicsProfile.HiDef;
+
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
@@ -53,11 +58,21 @@ namespace UOClient
 
             wireframeEffect = new(device) { VertexColorEnabled = true };
 
+            //effect = new(Content)
+            //{
+            //    Texture0 = Content.Load<Texture2D>("land/02000010_Grass_C"),
+            //    Texture1 = Content.Load<Texture2D>("land/02000011_Grass_B"),
+            //    Texture2 = Content.Load<Texture2D>("land/01000003_noise_alpha"),
+            //};
+
+            TextureArray array = new(device, 256, 256, 2);
+            array.Add(0, Content.Load<Texture2D>("land/02000011_Grass_B"));
+            array.Add(1, Content.Load<Texture2D>("land/02000051_water"));
+
             effect = new(Content)
             {
-                Texture0 = Content.Load<Texture2D>("land/02000010_Grass_C"),
-                Texture1 = Content.Load<Texture2D>("land/02000011_Grass_B"),
-                Texture2 = Content.Load<Texture2D>("land/01000003_noise_alpha"),
+                TextureEnabled = true,
+                Texture = array
             };
 
             spriteBatch = new(device);
@@ -96,26 +111,28 @@ namespace UOClient
 
             device.RasterizerState = rs;
 
+            effect.PreDraw();
+
             foreach (EffectPass pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
                 terrain.Draw(device);
             }
 
-            //RasterizerState rs2 = new()
-            //{
-            //    CullMode = CullMode.None,
-            //    FillMode = FillMode.WireFrame
-            //};
+            RasterizerState rs2 = new()
+            {
+                CullMode = CullMode.None,
+                FillMode = FillMode.WireFrame
+            };
 
-            //device.RasterizerState = rs2;
+            device.RasterizerState = rs2;
 
-            //foreach (EffectPass pass in wireframeEffect.CurrentTechnique.Passes)
-            //{
-            //    pass.Apply();
-            //    camera.Test(device);
-            //    terrain.DrawBoundaries(device);
-            //}
+            foreach (EffectPass pass in wireframeEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                camera.Test(device);
+                terrain.DrawBoundaries(device);
+            }
 
             //Vector3 position = device.Viewport.Project(Vector3.Subtract(camera.Target, new Vector3(5, 5, 0)), camera.ProjectionMatrix, camera.ViewMatrix, Matrix.Identity);
 
