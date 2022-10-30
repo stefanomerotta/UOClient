@@ -14,9 +14,9 @@ namespace UOClient.Terrain
         public readonly Texture2D Texture1;
         public readonly Texture2D AlphaMask;
                
-        public readonly byte TextureStretch0;
-        public readonly byte TextureStretch1;
-        public readonly byte AlphaStretch;
+        public readonly byte Texture0Stretch;
+        public readonly byte Texture1Stretch;
+        public readonly byte AlphaMaskStretch;
 
         private TerrainInfo(Texture2D texture0, Texture2D texture1, Texture2D alphaMask,
             byte textureStretch0, byte textureStretch1, byte alphaStretch)
@@ -25,9 +25,9 @@ namespace UOClient.Terrain
             Texture1 = texture1;
             AlphaMask = alphaMask;
 
-            TextureStretch0 = textureStretch0;
-            TextureStretch1 = textureStretch1;
-            AlphaStretch = alphaStretch;
+            Texture0Stretch = textureStretch0;
+            Texture1Stretch = textureStretch1;
+            AlphaMaskStretch = alphaStretch;
         }
 
         public static void Load(ContentManager contentManager)

@@ -7,11 +7,19 @@
 
 #include "Macros.fxh"
 
-Texture2D Texture : register(t0);
+Texture2D Texture0 : register(t0);
+Texture2D Texture1 : register(t1);
+Texture2D AlphaMask : register(t2);
+
 sampler TextureSampler : register(s0);
 
 BEGIN_CONSTANTS
 
+    int Texture0Stretch;
+    int Texture1Stretch;
+    int AlphaMaskStretch;
+    int TextureIndex;
+    
     float4 DiffuseColor _vs(c0) _ps(c1) _cb(c0);
     float3 EmissiveColor _vs(c1) _ps(c2) _cb(c1);
     float3 SpecularColor _vs(c2) _ps(c3) _cb(c2);
@@ -36,9 +44,6 @@ BEGIN_CONSTANTS
 
     float4x4 World _vs(c19) _cb(c15);
     float3x3 WorldInverseTranspose _vs(c23) _cb(c19);
-    
-    int TextureStretch;
-    int TextureIndex;
 
 MATRIX_CONSTANTS
 
@@ -84,34 +89,46 @@ struct VSOutputTxArray
     float4 PositionPS : SV_Position;
     float4 Diffuse : COLOR0;
     float4 Specular : COLOR1;
-    float3 TexCoord : TEXCOORD0;
+    float4 TexCoord : TEXCOORD0;
+    float3 AlphaMaskCoord : TEXCOORD1;
 };
 
 struct VSOutputTxArrayNoFog
 {
     float4 PositionPS : SV_Position;
     float4 Diffuse : COLOR0;
-    float3 TexCoord : TEXCOORD0;
+    float4 TexCoord : TEXCOORD0;
+    float3 AlphaMaskCoord : TEXCOORD1;
 };
 
 struct VSOutputPixelLightingTxArray
 {
     float4 PositionPS : SV_Position;
-    float3 TexCoord : TEXCOORD0;
-    float4 PositionWS : TEXCOORD1;
-    float3 NormalWS : TEXCOORD2;
+    float4 TexCoord : TEXCOORD0;
+    float3 AlphaMaskCoord : TEXCOORD1;
+    float4 PositionWS : TEXCOORD2;
+    float3 NormalWS : TEXCOORD3;
     float4 Diffuse : COLOR0;
 };
 
-float3 GetTextCoord(float4 position, uint textId)
+float4 GetMainTextCoord(float4 position)
 {
-    float x = position.x / TextureStretch;
-    float y = position.z / TextureStretch;
+    float x0 = position.x / Texture0Stretch;
+    float y0 = position.z / Texture0Stretch;
+    float x1 = position.x / Texture1Stretch;
+    float y1 = position.z / Texture1Stretch;
+    
+    return float4(x0, y0, x1, y1);
+}
+
+float3 GetAlphaTextCoord(float4 position, uint textId)
+{
+    float x = position.x / AlphaMaskStretch;
+    float y = position.z / AlphaMaskStretch;
     bool a = TextureIndex <= textId;
     
     return float3(x, y, a);
 }
-
 
 // Vertex shader: basic.
 VSOutput VSBasic(VSInput vin)
@@ -173,7 +190,8 @@ VSOutputTxArray VSBasicTx(VSInputTxArray vin)
     CommonVSOutput cout = ComputeCommonVSOutput(vin.Position);
     SetCommonVSOutputParams;
     
-    vout.TexCoord = GetTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord = GetMainTextCoord(vin.Position);
+    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
 
     return vout;
 }
@@ -187,7 +205,8 @@ VSOutputTxArrayNoFog VSBasicTxNoFog(VSInputTxArray vin)
     CommonVSOutput cout = ComputeCommonVSOutput(vin.Position);
     SetCommonVSOutputParamsNoFog;
     
-    vout.TexCoord = GetTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord = GetMainTextCoord(vin.Position);
+    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
     
     return vout;
 }
@@ -201,7 +220,8 @@ VSOutputTxArray VSBasicTxVc(VSInputTxVcArray vin)
     CommonVSOutput cout = ComputeCommonVSOutput(vin.Position);
     SetCommonVSOutputParams;
     
-    vout.TexCoord = GetTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord = GetMainTextCoord(vin.Position);
+    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
     vout.Diffuse *= vin.Color;
     
     return vout;
@@ -216,7 +236,8 @@ VSOutputTxArrayNoFog VSBasicTxVcNoFog(VSInputTxVcArray vin)
     CommonVSOutput cout = ComputeCommonVSOutput(vin.Position);
     SetCommonVSOutputParamsNoFog;
     
-    vout.TexCoord = GetTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord = GetMainTextCoord(vin.Position);
+    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
     vout.Diffuse *= vin.Color;
     
     return vout;
@@ -257,7 +278,8 @@ VSOutputTxArray VSBasicVertexLightingTx(VSInputNmTxArray vin)
     CommonVSOutput cout = ComputeCommonVSOutputWithLighting(vin.Position, vin.Normal, 3);
     SetCommonVSOutputParams;
     
-    vout.TexCoord = GetTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord = GetMainTextCoord(vin.Position);
+    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
     
     return vout;
 }
@@ -271,7 +293,8 @@ VSOutputTxArray VSBasicVertexLightingTxVc(VSInputNmTxVcArray vin)
     CommonVSOutput cout = ComputeCommonVSOutputWithLighting(vin.Position, vin.Normal, 3);
     SetCommonVSOutputParams;
     
-    vout.TexCoord = GetTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord = GetMainTextCoord(vin.Position);
+    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
     vout.Diffuse *= vin.Color;
     
     return vout;
@@ -312,7 +335,8 @@ VSOutputTxArray VSBasicOneLightTx(VSInputNmTxArray vin)
     CommonVSOutput cout = ComputeCommonVSOutputWithLighting(vin.Position, vin.Normal, 1);
     SetCommonVSOutputParams;
     
-    vout.TexCoord = GetTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord = GetMainTextCoord(vin.Position);
+    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
     
     return vout;
 }
@@ -326,7 +350,8 @@ VSOutputTxArray VSBasicOneLightTxVc(VSInputNmTxVcArray vin)
     CommonVSOutput cout = ComputeCommonVSOutputWithLighting(vin.Position, vin.Normal, 1);
     SetCommonVSOutputParams;
     
-    vout.TexCoord = GetTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord = GetMainTextCoord(vin.Position);
+    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
     vout.Diffuse *= vin.Color;
     
     return vout;
@@ -371,7 +396,8 @@ VSOutputPixelLightingTxArray VSBasicPixelLightingTx(VSInputNmTxArray vin)
     SetCommonVSOutputParamsPixelLighting;
     
     vout.Diffuse = float4(1, 1, 1, DiffuseColor.a);
-    vout.TexCoord = GetTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord = GetMainTextCoord(vin.Position);
+    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
 
     return vout;
 }
@@ -387,7 +413,8 @@ VSOutputPixelLightingTxArray VSBasicPixelLightingTxVc(VSInputNmTxVcArray vin)
     
     vout.Diffuse.rgb = vin.Color.rgb;
     vout.Diffuse.a = vin.Color.a * DiffuseColor.a;
-    vout.TexCoord = GetTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord = GetMainTextCoord(vin.Position);
+    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
     
     return vout;
 }
@@ -414,7 +441,7 @@ float4 PSBasicNoFog(VSOutputNoFog pin) : SV_Target0
 // Pixel shader: texture.
 float4 PSBasicTx(VSOutputTxArray pin) : SV_Target0
 {
-    float4 color = Texture.SampleLevel(TextureSampler, pin.TexCoord.xy, 0) * pin.Diffuse;
+    float4 color = Texture0.SampleLevel(TextureSampler, pin.TexCoord.xy, 0) * pin.Diffuse;
     
     ApplyFog(color, pin.Specular.w);
     
@@ -425,10 +452,14 @@ float4 PSBasicTx(VSOutputTxArray pin) : SV_Target0
 // Pixel shader: texture, no fog.
 float4 PSBasicTxNoFog(VSOutputTxArrayNoFog pin) : SV_Target0
 {
-    float4 color = Texture.SampleLevel(TextureSampler, pin.TexCoord.xy, 0);
+    float4 color0 = Texture0.SampleLevel(TextureSampler, pin.TexCoord.xy, 0);
+    float4 color1 = Texture1.SampleLevel(TextureSampler, pin.TexCoord.zw, 0);
+    float4 alpha = AlphaMask.SampleLevel(TextureSampler, pin.AlphaMaskCoord.xy, 0);
     
-    color = lerp(color, 0, 1 - pin.TexCoord.z);
-    color.a = pin.TexCoord.z;
+    float4 color = lerp(color0, color1, alpha.a);
+    
+    color = lerp(color, 0, 1 - pin.AlphaMaskCoord.z);
+    color.a = pin.AlphaMaskCoord.z;
     
     return color * pin.Diffuse;
 }
@@ -460,7 +491,7 @@ float4 PSBasicVertexLightingNoFog(VSOutput pin) : SV_Target0
 // Pixel shader: vertex lighting + texture.
 float4 PSBasicVertexLightingTx(VSOutputTxArray pin) : SV_Target0
 {
-    float4 color = Texture.SampleLevel(TextureSampler, pin.TexCoord.xy, 0) * pin.Diffuse;
+    float4 color = Texture0.SampleLevel(TextureSampler, pin.TexCoord.xy, 0) * pin.Diffuse;
     
     AddSpecular(color, pin.Specular.rgb);
     ApplyFog(color, pin.Specular.w);
@@ -472,7 +503,7 @@ float4 PSBasicVertexLightingTx(VSOutputTxArray pin) : SV_Target0
 // Pixel shader: vertex lighting + texture, no fog.
 float4 PSBasicVertexLightingTxNoFog(VSOutputTxArray pin) : SV_Target0
 {
-    float4 color = Texture.SampleLevel(TextureSampler, pin.TexCoord.xy, 0) * pin.Diffuse;
+    float4 color = Texture0.SampleLevel(TextureSampler, pin.TexCoord.xy, 0) * pin.Diffuse;
     
     AddSpecular(color, pin.Specular.rgb);
     
@@ -502,7 +533,7 @@ float4 PSBasicPixelLighting(VSOutputPixelLighting pin) : SV_Target0
 // Pixel shader: pixel lighting + texture.
 float4 PSBasicPixelLightingTx(VSOutputPixelLightingTxArray pin) : SV_Target0
 {
-    float4 color = Texture.SampleLevel(TextureSampler, pin.TexCoord.xy, 0) * pin.Diffuse;
+    float4 color = Texture0.SampleLevel(TextureSampler, pin.TexCoord.xy, 0) * pin.Diffuse;
     
     float3 eyeVector = normalize(EyePosition - pin.PositionWS.xyz);
     float3 worldNormal = normalize(pin.NormalWS);

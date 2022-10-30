@@ -79,9 +79,16 @@ namespace UOClient.Terrain
 
             for (int k = 1; k < (int)LandTileId.Length; k++)
             {
+                ref TerrainInfo info = ref TerrainInfo.Values[k];
+
                 effect.TextureIndex = k;
-                effect.TextureStretch = 10;
-                effect.Texture0 = textures[k];
+                effect.Texture0 = info.Texture0;
+                effect.Texture1 = info.Texture1;
+                effect.AlphaMask = info.AlphaMask;
+
+                effect.Texture0Stretch = info.Texture0Stretch;
+                effect.Texture1Stretch = info.Texture1Stretch;
+                effect.AlphaMaskStretch = info.AlphaMaskStretch;
 
                 pass.Apply();
 

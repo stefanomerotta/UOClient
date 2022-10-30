@@ -10,7 +10,7 @@ namespace UOClient.Effects
 
         private readonly EffectParameter texture0;
         private readonly EffectParameter texture1;
-        private readonly EffectParameter alphaMaskTexture;
+        private readonly EffectParameter alphaMask;
 
         private readonly EffectParameter texture0Stretch;
         private readonly EffectParameter texture1Stretch;
@@ -281,16 +281,40 @@ namespace UOClient.Effects
             set => texture0.SetValue(value);
         }
 
+        public Texture2D Texture1
+        {
+            get => texture1.GetValueTexture2D();
+            set => texture1.SetValue(value);
+        }
+
+        public Texture2D AlphaMask
+        {
+            get => alphaMask.GetValueTexture2D();
+            set => alphaMask.SetValue(value);
+        }
+
+        public int Texture0Stretch
+        {
+            get => texture0Stretch.GetValueInt32();
+            set => texture0Stretch.SetValue(value);
+        }
+
+        public int Texture1Stretch
+        {
+            get => texture1Stretch.GetValueInt32();
+            set => texture1Stretch.SetValue(value);
+        }
+
+        public int AlphaMaskStretch
+        {
+            get => alphaMaskStretch.GetValueInt32();
+            set => alphaMaskStretch.SetValue(value);
+        }
+
         public int TextureIndex
         {
             get => textureIndex.GetValueInt32();
             set => textureIndex.SetValue(value);
-        }
-
-        public int TextureStretch
-        {
-            get => texture0Stretch.GetValueInt32();
-            set => texture0Stretch.SetValue(value);
         }
 
         /// <summary>
@@ -300,7 +324,16 @@ namespace UOClient.Effects
         {
             effect = contentManager.Load<Effect>("shaders/basic-array");
 
-            texture0 = effect.Parameters["Texture"];
+            texture0 = effect.Parameters["Texture0"];
+            texture1 = effect.Parameters["Texture1"];
+            alphaMask = effect.Parameters["AlphaMask"];
+
+            texture0Stretch = effect.Parameters["Texture0Stretch"];
+            texture1Stretch = effect.Parameters["Texture1Stretch"];
+            alphaMaskStretch = effect.Parameters["AlphaMaskStretch"];
+
+            textureIndex = effect.Parameters["TextureIndex"];
+
             diffuseColorParam = effect.Parameters["DiffuseColor"];
             emissiveColorParam = effect.Parameters["EmissiveColor"];
             specularColorParam = effect.Parameters["SpecularColor"];
@@ -311,8 +344,7 @@ namespace UOClient.Effects
             worldParam = effect.Parameters["World"];
             worldInverseTransposeParam = effect.Parameters["WorldInverseTranspose"];
             worldViewProjParam = effect.Parameters["WorldViewProj"];
-            texture0Stretch = effect.Parameters["TextureStretch"];
-            textureIndex = effect.Parameters["TextureIndex"];
+            
 
             DirectionalLight0 = new DirectionalLight(effect.Parameters["DirLight0Direction"],
                                           effect.Parameters["DirLight0DiffuseColor"],
