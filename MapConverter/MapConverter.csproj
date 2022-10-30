@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FileSystem\FileSystem.csproj" />
+    <ProjectReference Include="..\GameData\GameData.csproj" />
   </ItemGroup>
 
 </Project>

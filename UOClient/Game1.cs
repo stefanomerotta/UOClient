@@ -1,10 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using SharpDX.Direct3D9;
-using System;
 using UOClient.Effects;
-using UOClient.Utilities;
+using UOClient.Terrain;
 using CullMode = Microsoft.Xna.Framework.Graphics.CullMode;
 using FillMode = Microsoft.Xna.Framework.Graphics.FillMode;
 using Map = UOClient.Terrain.Terrain;
@@ -28,7 +26,7 @@ namespace UOClient
 
         public Game1()
         {
-            graphics = new GraphicsDeviceManager(this);
+            graphics = new(this);
             graphics.GraphicsProfile = GraphicsProfile.HiDef;
 
             Content.RootDirectory = "Content";
@@ -47,8 +45,6 @@ namespace UOClient
             graphics.ApplyChanges();
             Window.Title = "Riemer's MonoGame Tutorials -- 3D Series 1";
 
-            terrain.Load(0, 0);
-
             base.Initialize();
         }
 
@@ -56,27 +52,14 @@ namespace UOClient
         {
             device = graphics.GraphicsDevice;
 
+            effect = new(Content) { TextureEnabled = true, };
             wireframeEffect = new(device) { VertexColorEnabled = true };
-
-            //effect = new(Content)
-            //{
-            //    Texture0 = Content.Load<Texture2D>("land/02000010_Grass_C"),
-            //    Texture1 = Content.Load<Texture2D>("land/02000011_Grass_B"),
-            //    Texture2 = Content.Load<Texture2D>("land/01000003_noise_alpha"),
-            //};
-
-            TextureArray array = new(device, 256, 256, 2);
-            array.Add(0, Content.Load<Texture2D>("land/02000011_Grass_B"));
-            array.Add(1, Content.Load<Texture2D>("land/02000051_water"));
-
-            effect = new(Content)
-            {
-                TextureEnabled = true,
-                Texture = array
-            };
 
             spriteBatch = new(device);
             font = Content.Load<SpriteFont>("fonts/File");
+
+            Map.LoadTextures(Content);
+            TerrainInfo.Load(Content);
         }
 
         protected override void Update(GameTime gameTime)
@@ -85,7 +68,7 @@ namespace UOClient
                 Exit();
 
             camera.HandleKeyboardInput();
-            terrain.OnLocationChanged((int)camera.Target.X, (int)camera.Target.Z);
+            terrain.OnLocationChanged(device, (int)camera.Target.X, (int)camera.Target.Z);
             fps.Update(gameTime);
 
             base.Update(gameTime);
@@ -94,6 +77,7 @@ namespace UOClient
         protected override void Draw(GameTime gameTime)
         {
             device.Clear(Color.DarkSlateBlue);
+            //device.Clear(Color.Black);
 
             effect.View = camera.ViewMatrix;
             effect.Projection = camera.ProjectionMatrix;
@@ -106,18 +90,14 @@ namespace UOClient
             RasterizerState rs = new()
             {
                 CullMode = CullMode.CullCounterClockwiseFace,
-                FillMode = FillMode.Solid
+                FillMode = FillMode.Solid,
             };
 
             device.RasterizerState = rs;
+            device.BlendState = BlendState.AlphaBlend;
 
             effect.PreDraw();
-
-            foreach (EffectPass pass in effect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-                terrain.Draw(device);
-            }
+            terrain.Draw(device, effect);
 
             RasterizerState rs2 = new()
             {

@@ -22,15 +22,15 @@ namespace UOClient
         {
             float val = (float)Math.Cos(Math.PI / 4);
 
-            position = new Vector3(val, val * 10, val) * 127;
-            target = Vector3.Zero;
+            target = new(170, 0, 230);
+            position = (new Vector3(val, val * 10, val) * 127) + target;
             zoom = 1;
 
             WorldMatrix = Matrix.Identity;
             ViewMatrix = Matrix.CreateLookAt(position, target, Vector3.UnitY);
 
-            ProjectionMatrix = Matrix.CreateOrthographic(20, 20, 0, 3000.0f);
-            //* Matrix.CreateScale(1, 1.5f, 1);
+            ProjectionMatrix = Matrix.CreateOrthographic(20, 20, 0, 3000.0f)
+                * Matrix.CreateScale(1, 1.5f, 1);
         }
 
         public void HandleKeyboardInput()

@@ -210,13 +210,7 @@ namespace UOClient.IO
         private void EnsureSize(int size)
         {
             if (Position + size > Length)
-            {
-#if DEBUG
                 throw new IndexOutOfRangeException();
-#else
-                Log.Error($"size out of range. {Position + size} > {Length}");
-#endif
-            }
         }
 
 

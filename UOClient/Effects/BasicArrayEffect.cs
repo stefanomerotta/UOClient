@@ -8,7 +8,15 @@ namespace UOClient.Effects
     {
         private readonly Effect effect;
 
-        private readonly EffectParameter textureParam;
+        private readonly EffectParameter texture0;
+        private readonly EffectParameter texture1;
+        private readonly EffectParameter alphaMaskTexture;
+
+        private readonly EffectParameter texture0Stretch;
+        private readonly EffectParameter texture1Stretch;
+        private readonly EffectParameter alphaMaskStretch;
+
+        private readonly EffectParameter textureIndex;
         private readonly EffectParameter diffuseColorParam;
         private readonly EffectParameter emissiveColorParam;
         private readonly EffectParameter specularColorParam;
@@ -246,15 +254,6 @@ namespace UOClient.Effects
         }
 
         /// <summary>
-        /// Gets or sets the current texture.
-        /// </summary>
-        public Texture2D Texture
-        {
-            get => textureParam.GetValueTexture2D();
-            set => textureParam.SetValue(value);
-        }
-
-        /// <summary>
         /// Gets or sets whether vertex color is enabled.
         /// </summary>
         public bool VertexColorEnabled
@@ -272,8 +271,26 @@ namespace UOClient.Effects
 
         public EffectTechnique CurrentTechnique
         {
-            get => effect.CurrentTechnique; 
+            get => effect.CurrentTechnique;
             set => effect.CurrentTechnique = value;
+        }
+
+        public Texture2D Texture0
+        {
+            get => texture0.GetValueTexture2D();
+            set => texture0.SetValue(value);
+        }
+
+        public int TextureIndex
+        {
+            get => textureIndex.GetValueInt32();
+            set => textureIndex.SetValue(value);
+        }
+
+        public int TextureStretch
+        {
+            get => texture0Stretch.GetValueInt32();
+            set => texture0Stretch.SetValue(value);
         }
 
         /// <summary>
@@ -283,7 +300,7 @@ namespace UOClient.Effects
         {
             effect = contentManager.Load<Effect>("shaders/basic-array");
 
-            textureParam = effect.Parameters["Texture"];
+            texture0 = effect.Parameters["Texture"];
             diffuseColorParam = effect.Parameters["DiffuseColor"];
             emissiveColorParam = effect.Parameters["EmissiveColor"];
             specularColorParam = effect.Parameters["SpecularColor"];
@@ -294,6 +311,8 @@ namespace UOClient.Effects
             worldParam = effect.Parameters["World"];
             worldInverseTransposeParam = effect.Parameters["WorldInverseTranspose"];
             worldViewProjParam = effect.Parameters["WorldViewProj"];
+            texture0Stretch = effect.Parameters["TextureStretch"];
+            textureIndex = effect.Parameters["TextureIndex"];
 
             DirectionalLight0 = new DirectionalLight(effect.Parameters["DirLight0Direction"],
                                           effect.Parameters["DirLight0DiffuseColor"],

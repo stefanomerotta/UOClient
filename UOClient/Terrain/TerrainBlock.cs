@@ -1,16 +1,15 @@
-﻿using Microsoft.Xna.Framework;
+﻿using GameData.Enums;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Runtime.InteropServices;
 using UOClient.Effects;
 using UOClient.Structures;
 using PrimitiveType = Microsoft.Xna.Framework.Graphics.PrimitiveType;
-using VertexDeclaration = Microsoft.Xna.Framework.Graphics.VertexDeclaration;
-using VertexElement = Microsoft.Xna.Framework.Graphics.VertexElement;
+using VertexBuffer = Microsoft.Xna.Framework.Graphics.VertexBuffer;
 
 namespace UOClient.Terrain
 {
-    internal class TerrainBlock
+    internal sealed class TerrainBlock : IDisposable
     {
         public const int Size = 64;
         public const int VertexSize = Size + 1;
@@ -21,20 +20,27 @@ namespace UOClient.Terrain
         private readonly MapTile[,] tiles;
         private readonly VertexPositionTextureArray[] vertices;
         private readonly VertexPositionColor[] boundaries;
-        private readonly short[] indices;
+        private readonly BitMapBlock64[] indices;
 
-        public TerrainBlock(int blockX, int blockY, MapTile[,] tiles)
+        private readonly VertexBuffer vBuffer;
+        private readonly IndexBuffer[] iBuffers;
+
+        public TerrainBlock(GraphicsDevice device, int blockX, int blockY, MapTile[,] tiles)
         {
             this.blockX = blockX;
             this.blockY = blockY;
             this.tiles = tiles;
 
             vertices = new VertexPositionTextureArray[VertexSize * VertexSize];
-            indices = new short[(VertexSize - 1) * (VertexSize - 1) * 6];
+            indices = new BitMapBlock64[(int)LandTileId.Length];
             boundaries = new VertexPositionColor[8];
 
+            vBuffer = new(device, VertexPositionTextureArray.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+            iBuffers = new IndexBuffer[indices.Length];
+
             SetUpVertices();
-            SetUpIndices();
+            SetUpIndices(device);
+
             SetUpBoundaries();
         }
 
@@ -49,42 +55,88 @@ namespace UOClient.Terrain
                     ref VertexPositionTextureArray vertex = ref vertices[x + y * VertexSize];
                     MapTile tile = tiles[x, y];
 
-                    Vector3 position = Vector3.Transform(new Vector3(x, tile.Z, y), m);
-
-                    vertex.Position = position;
-                    vertex.TextureCoordinate.X = position.X / 10f;
-                    vertex.TextureCoordinate.Y = position.Z / 10f;
-                    vertex.TextureCoordinate.Z = tile.Id is > 2 and < 7 ? 0 : 1;
-
-                    //vertex.Texture2Coordinate.X = position.X / 4f;
-                    //vertex.Texture2Coordinate.Y = position.Z / 4f;
-                    //vertex.Texture3Coordinate.X = position.X / 32f;
-                    //vertex.Texture3Coordinate.Y = position.Z / 32f;
+                    vertex.Position = Vector3.Transform(new Vector3(x, tile.Z, y), m);
+                    vertex.TextureIndex = tile.Id;
                 }
+            }
+
+            vBuffer.SetData(vertices);
+        }
+
+        private ref BitMapBlock64 SetupBitMap(int id)
+        {
+            ref BitMapBlock64 indices = ref this.indices[id];
+
+            for (int y = 0; y < Size; y++)
+            {
+                int ySize = y * VertexSize;
+
+                for (int x = 0; x < Size; x++)
+                {
+                    if (vertices[x + ySize].TextureIndex != id)
+                        continue;
+
+                    SetBit(ref indices, x, y);
+                    SetBit(ref indices, x - 1, y);
+                    SetBit(ref indices, x, y - 1);
+                    SetBit(ref indices, x - 1, y - 1);
+                    SetBit(ref indices, x, y + 1);
+                    SetBit(ref indices, x + 1, y);
+                    SetBit(ref indices, x + 1, y + 1);
+                }
+            }
+
+            return ref indices;
+
+            static void SetBit(ref BitMapBlock64 indices, int x, int y)
+            {
+                x = Math.Clamp(x, 0, Size - 1);
+                y = Math.Clamp(y, 0, Size - 1);
+
+                indices[x, y] = true;
             }
         }
 
-        private void SetUpIndices()
+        private void SetUpIndices(GraphicsDevice device)
         {
-            int counter = 0;
+            short[] indices = new short[Size * Size * 6];
 
-            for (int y = 0; y < VertexSize - 1; y++)
+            for (int i = 0; i < (int)LandTileId.Length; i++)
             {
-                for (int x = 0; x < VertexSize - 1; x++)
+                int counter = 0;
+                ref BitMapBlock64 flags = ref SetupBitMap(i);
+
+                for (int y = 0; y < Size; y++)
                 {
-                    short topLeft = (short)(x + y * VertexSize);
-                    short topRight = (short)(topLeft + 1);
-                    short lowerLeft = (short)(topLeft + VertexSize);
-                    short lowerRight = (short)(lowerLeft + 1);
+                    int yVertexSize = y * VertexSize;
 
-                    indices[counter++] = topLeft;
-                    indices[counter++] = topRight;
-                    indices[counter++] = lowerLeft;
+                    for (int x = 0; x < Size; x++)
+                    {
+                        if (!flags[x, y])
+                            continue;
 
-                    indices[counter++] = lowerLeft;
-                    indices[counter++] = topRight;
-                    indices[counter++] = lowerRight;
+                        short topLeft = (short)(x + yVertexSize);
+                        short topRight = (short)(topLeft + 1);
+                        short lowerLeft = (short)(topLeft + VertexSize);
+                        short lowerRight = (short)(lowerLeft + 1);
+
+                        indices[counter++] = topLeft;
+                        indices[counter++] = topRight;
+                        indices[counter++] = lowerLeft;
+
+                        indices[counter++] = lowerLeft;
+                        indices[counter++] = topRight;
+                        indices[counter++] = lowerRight;
+                    }
                 }
+
+                if (counter == 0)
+                    continue;
+
+                iBuffers[i] = new(device, IndexElementSize.SixteenBits, indices.Length, BufferUsage.WriteOnly);
+                iBuffers[i].SetData(indices, 0, counter);
+
+                Array.Clear(indices, 0, counter);
             }
         }
 
@@ -107,10 +159,17 @@ namespace UOClient.Terrain
             }
         }
 
-        public void Draw(GraphicsDevice device)
+        public void Draw(GraphicsDevice device, int id)
         {
-            device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, vertices, 0, vertices.Length, indices, 0,
-                indices.Length / 3, VertexPositionTextureArray.VertexDeclaration);
+            ref BitMapBlock64 flags = ref indices[id];
+
+            if (flags.TrueCount == 0)
+                return;
+
+            device.SetVertexBuffer(vBuffer);
+            device.Indices = iBuffers[id];
+
+            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, flags.TrueCount * 4);
         }
 
         public void DrawBoundaries(GraphicsDevice device)
@@ -118,78 +177,86 @@ namespace UOClient.Terrain
             device.DrawUserPrimitives(PrimitiveType.LineList, boundaries, 0, 4, VertexPositionColor.VertexDeclaration);
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct VertexPositionDualTexture : IVertexType, IEquatable<VertexPositionDualTexture>
+        public void Dispose()
         {
-            public static readonly VertexDeclaration VertexDeclaration;
+            vBuffer.Dispose();
 
-            public Vector3 Position;
-            public Vector2 TextureCoordinate;
-            public Vector2 Texture2Coordinate;
-            public Vector2 Texture3Coordinate;
-
-            VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
-
-            public VertexPositionDualTexture(Vector3 position, Vector2 textureCoordinate, Vector2 texture2Coordinate, Vector2 texture3Coordinate)
-            {
-                Position = position;
-                TextureCoordinate = textureCoordinate;
-                Texture2Coordinate = texture2Coordinate;
-                Texture3Coordinate = texture3Coordinate;
-            }
-
-            public override int GetHashCode()
-            {
-                return HashCode.Combine(
-                    Position.GetHashCode(),
-                    TextureCoordinate.GetHashCode(),
-                    Texture2Coordinate.GetHashCode(),
-                    Texture3Coordinate.GetHashCode()
-                );
-            }
-
-            public override string ToString()
-            {
-                return $"{{Position:{Position} TextureCoordinate: {TextureCoordinate} " +
-                    $"Texture2Coordinate: {Texture2Coordinate} Texture3Coordinate: {Texture3Coordinate}}}";
-            }
-
-            bool IEquatable<VertexPositionDualTexture>.Equals(VertexPositionDualTexture other)
-            {
-                return Position == other.Position
-                    && TextureCoordinate == other.TextureCoordinate
-                    && Texture2Coordinate == other.Texture2Coordinate
-                    && Texture3Coordinate == other.Texture3Coordinate;
-            }
-
-            public static bool operator ==(VertexPositionDualTexture left, VertexPositionDualTexture right)
-            {
-                return left.Position == right.Position
-                    && left.TextureCoordinate == right.TextureCoordinate
-                    && left.Texture2Coordinate == right.Texture2Coordinate
-                    && left.Texture3Coordinate == right.Texture3Coordinate;
-            }
-
-            public static bool operator !=(VertexPositionDualTexture left, VertexPositionDualTexture right)
-            {
-                return !(left == right);
-            }
-
-            static VertexPositionDualTexture()
-            {
-                VertexDeclaration = new VertexDeclaration(
-                    new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
-                    new VertexElement(12, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
-                    new VertexElement(20, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 1),
-                    new VertexElement(28, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 2)
-                );
-            }
-
-            public override bool Equals(object? obj)
-            {
-                return obj is VertexPositionDualTexture texture
-                    && ((IEquatable<VertexPositionDualTexture>)this).Equals(texture);
-            }
+            for (int i = 0; i < iBuffers.Length; i++)
+                iBuffers[i]?.Dispose();
         }
+
+        //[StructLayout(LayoutKind.Sequential, Pack = 1)]
+        //public struct VertexPositionDualTexture : IVertexType, IEquatable<VertexPositionDualTexture>
+        //{
+        //    public static readonly VertexDeclaration VertexDeclaration;
+
+        //    public Vector3 Position;
+        //    public Vector2 TextureCoordinate;
+        //    public Vector2 Texture2Coordinate;
+        //    public Vector2 Texture3Coordinate;
+
+        //    VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
+
+        //    public VertexPositionDualTexture(Vector3 position, Vector2 textureCoordinate, Vector2 texture2Coordinate, Vector2 texture3Coordinate)
+        //    {
+        //        Position = position;
+        //        TextureCoordinate = textureCoordinate;
+        //        Texture2Coordinate = texture2Coordinate;
+        //        Texture3Coordinate = texture3Coordinate;
+        //    }
+
+        //    public override int GetHashCode()
+        //    {
+        //        return HashCode.Combine(
+        //            Position.GetHashCode(),
+        //            TextureCoordinate.GetHashCode(),
+        //            Texture2Coordinate.GetHashCode(),
+        //            Texture3Coordinate.GetHashCode()
+        //        );
+        //    }
+
+        //    public override string ToString()
+        //    {
+        //        return $"{{Position:{Position} TextureCoordinate: {TextureCoordinate} " +
+        //            $"Texture2Coordinate: {Texture2Coordinate} Texture3Coordinate: {Texture3Coordinate}}}";
+        //    }
+
+        //    bool IEquatable<VertexPositionDualTexture>.Equals(VertexPositionDualTexture other)
+        //    {
+        //        return Position == other.Position
+        //            && TextureCoordinate == other.TextureCoordinate
+        //            && Texture2Coordinate == other.Texture2Coordinate
+        //            && Texture3Coordinate == other.Texture3Coordinate;
+        //    }
+
+        //    public static bool operator ==(VertexPositionDualTexture left, VertexPositionDualTexture right)
+        //    {
+        //        return left.Position == right.Position
+        //            && left.TextureCoordinate == right.TextureCoordinate
+        //            && left.Texture2Coordinate == right.Texture2Coordinate
+        //            && left.Texture3Coordinate == right.Texture3Coordinate;
+        //    }
+
+        //    public static bool operator !=(VertexPositionDualTexture left, VertexPositionDualTexture right)
+        //    {
+        //        return !(left == right);
+        //    }
+
+        //    static VertexPositionDualTexture()
+        //    {
+        //        VertexDeclaration = new VertexDeclaration(
+        //            new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
+        //            new VertexElement(12, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
+        //            new VertexElement(20, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 1),
+        //            new VertexElement(28, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 2)
+        //        );
+        //    }
+
+        //    public override bool Equals(object? obj)
+        //    {
+        //        return obj is VertexPositionDualTexture texture
+        //            && ((IEquatable<VertexPositionDualTexture>)this).Equals(texture);
+        //    }
+        //}
     }
 }

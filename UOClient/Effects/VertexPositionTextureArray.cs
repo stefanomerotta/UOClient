@@ -9,33 +9,33 @@ namespace UOClient.Effects
         public static readonly VertexDeclaration VertexDeclaration = new
         (
             new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
-            new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 0)
+            new VertexElement(12, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 0)
         );
 
         public Vector3 Position;
-        public Vector3 TextureCoordinate;
+        public ushort TextureIndex;
 
         VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
 
-        public VertexPositionTextureArray(Vector3 position, Vector3 textureCoordinate)
+        public VertexPositionTextureArray(Vector3 position, ushort textureIndex)
         {
             Position = position;
-            TextureCoordinate = textureCoordinate;
+            TextureIndex = textureIndex;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Position.GetHashCode(), TextureCoordinate.GetHashCode());
+            return HashCode.Combine(Position.GetHashCode(), TextureIndex.GetHashCode());
         }
 
         public override string ToString()
         {
-            return $"{{Position:{Position} TextureCoordinate:{TextureCoordinate}}}";
+            return $"{{Position:{Position} TextureCoordinate:{TextureIndex}}}";
         }
 
         public bool Equals(VertexPositionTextureArray other)
         {
-            return Position == other.Position && TextureCoordinate == other.TextureCoordinate;
+            return Position == other.Position && TextureIndex == other.TextureIndex;
         }
 
         public override bool Equals(object? obj)

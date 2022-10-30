@@ -2,6 +2,7 @@
 using FileSystem.IO;
 using MapConverter.UOP;
 using System.Diagnostics;
+using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 
 namespace MapConverter
@@ -41,7 +42,7 @@ namespace MapConverter
 
         public unsafe void Convert(string fileName)
         {
-            using FileStream stream = File.Create(Path.Combine(path, fileName));
+            using FileStream stream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", fileName));
             using PackageWriter writer = new(stream);
 
             Span<MapTile> newChunk = new MapTile[(newSize + 1) * (newSize + 1)];
@@ -69,8 +70,16 @@ namespace MapConverter
         {
             Debug.Assert(tiles.Length == oldSize * oldSize);
 
-            if (x < oldChunkWidth && y < oldChunkHeight)
-                map.FillChunk(x, y, tiles);
+            if (x >= oldChunkWidth || y >= oldChunkHeight)
+                return;
+
+            map.FillChunk(x, y, tiles);
+
+            for (int i = 0; i < tiles.Length; i++)
+            {
+                ref MapTile tile = ref tiles[i];
+                tile.Id = (ushort)MapTileTranscoder.GetNewId(tile.Id);
+            }
         }
 
         private unsafe void LoadOldChunks(int startX, int startY, Span<MapTile> tiles)
@@ -94,7 +103,7 @@ namespace MapConverter
 
                     for (int k = 0; k < oldSize; k++)
                     {
-                        oldChunk.Slice(k, oldSize).CopyTo(tiles.Slice(tileX + (tileY + k) * (newSize + 1), oldSize));
+                        oldChunk.Slice(k * oldSize, oldSize).CopyTo(tiles.Slice(tileX + (tileY + k) * (newSize + 1), oldSize));
                     }
                 }
             }

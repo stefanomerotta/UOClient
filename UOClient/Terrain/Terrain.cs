@@ -1,8 +1,10 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using SharpDX.WIC;
+﻿using GameData.Enums;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Runtime.InteropServices;
 using UOClient.Data;
+using UOClient.Effects;
 using UOClient.Structures;
 
 namespace UOClient.Terrain
@@ -11,6 +13,8 @@ namespace UOClient.Terrain
     {
         private const int size = 3;
         private const int halfSize = size / 2;
+
+        private static readonly Texture2D[] textures = new Texture2D[(int)LandTileId.Length];
 
         private readonly TerrainBlock[,] blocks;
         private readonly Map map;
@@ -29,7 +33,7 @@ namespace UOClient.Terrain
             blocks = new TerrainBlock[width / TerrainBlock.Size, height / TerrainBlock.Size];
         }
 
-        private unsafe MapTile[,] GetHeights(int blockX, int blockY)
+        private unsafe MapTile[,] GetTiles(int blockX, int blockY)
         {
             MapTile[,] toRet = new MapTile[TerrainBlock.VertexSize, TerrainBlock.VertexSize];
 
@@ -45,12 +49,12 @@ namespace UOClient.Terrain
             return toRet;
         }
 
-        public void Load(int x, int y)
+        public void Load(GraphicsDevice device, int x, int y)
         {
-            OnLocationChanged(x, y);
+            OnLocationChanged(device, x, y);
         }
 
-        public void OnLocationChanged(int newX, int newY)
+        public void OnLocationChanged(GraphicsDevice device, int newX, int newY)
         {
             blockX = newX / TerrainBlock.Size;
             blockY = newY / TerrainBlock.Size;
@@ -62,21 +66,31 @@ namespace UOClient.Terrain
             {
                 for (int i = startX; i < startX + size && i <= blockMaxX; i++)
                 {
-                    blocks[i, j] ??= new(i, j, GetHeights(i, j));
+                    blocks[i, j] ??= new(device, i, j, GetTiles(i, j));
                 }
             }
         }
 
-        public void Draw(GraphicsDevice device)
+        public void Draw(GraphicsDevice device, BasicArrayEffect effect)
         {
             int startX = Math.Clamp(blockX - halfSize, 0, blockMaxX);
             int startY = Math.Clamp(blockY - halfSize, 0, blockMaxY);
+            EffectPass pass = effect.CurrentTechnique.Passes[0];
 
-            for (int i = startX; i < startX + size && i <= blockMaxX; i++)
+            for (int k = 1; k < (int)LandTileId.Length; k++)
             {
-                for (int j = startY; j < startY + size && j <= blockMaxY; j++)
+                effect.TextureIndex = k;
+                effect.TextureStretch = 10;
+                effect.Texture0 = textures[k];
+
+                pass.Apply();
+
+                for (int i = startX; i < startX + size && i <= blockMaxX; i++)
                 {
-                    blocks[i, j].Draw(device);
+                    for (int j = startY; j < startY + size && j <= blockMaxY; j++)
+                    {
+                        blocks[i, j].Draw(device, k);
+                    }
                 }
             }
         }
@@ -92,6 +106,27 @@ namespace UOClient.Terrain
                 {
                     blocks[i, j].DrawBoundaries(device);
                 }
+            }
+        }
+
+        public static void LoadTextures(ContentManager contentManager)
+        {
+            Set(LandTileId.Dirt, "02000020_Dirt_A");
+            Set(LandTileId.Forest, "02000040_Forest_A");
+            Set(LandTileId.Grass, "02000010_Grass_C");
+            Set(LandTileId.Jungle, "02000030_Jungle_A");
+            Set(LandTileId.Lava, "02000100_Lava_A");
+            Set(LandTileId.Rock, "02000060_Rock_A");
+            Set(LandTileId.Sand, "02000070_Sand_A");
+            Set(LandTileId.Snow, "02000080_Snow_A");
+            Set(LandTileId.Swamp, "02000700_Swamp_Water_A");
+            Set(LandTileId.Unused, "02000000_Black_Void_A");
+            Set(LandTileId.Water, "02000051_water");
+            Set(LandTileId.Acid, "02000490_Acid_A");
+
+            void Set(LandTileId id, string landTexture)
+            {
+                textures[(int)id] = contentManager.Load<Texture2D>($"land/{landTexture}");
             }
         }
     }

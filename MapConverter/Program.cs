@@ -5,7 +5,7 @@
         public static unsafe void Main(string[] args)
         {
             CCMapConverter p = new(".\\", 4, 1448, 1448);
-            p.Convert("converted2.bin");
+            p.Convert("converted.bin");
         }
     }
 }
