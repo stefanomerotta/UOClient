@@ -1,4 +1,6 @@
 ﻿using GameData.Enums;
+using Microsoft.Win32.SafeHandles;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -71,26 +73,67 @@ namespace UOClient.Terrain
             }
         }
 
-        public void Draw(GraphicsDevice device, BasicArrayEffect effect, WaterEffect waterEffect)
+        public void Draw(GraphicsDevice device, IsometricCamera camera, GameTime gameTime, BasicArrayEffect effect, WaterEffect waterEffect)
         {
             int startX = Math.Clamp(blockX - halfSize, 0, blockMaxX);
             int startY = Math.Clamp(blockY - halfSize, 0, blockMaxY);
             EffectPass pass = effect.CurrentTechnique.Passes[0];
 
-            for (int k = 1; k < (int)LandTileId.Length; k++)
+            for (int k = 1; k < (int)LandTileId.Water; k++)
             {
-                ref TerrainInfo info = ref TerrainInfo.Values[k];
+                ref SolidTerrainInfo info = ref SolidTerrainInfo.Values[k];
 
                 effect.TextureIndex = k;
                 effect.Texture0 = info.Texture0;
                 effect.Texture1 = info.Texture1;
-                effect.AlphaMask = info.Texture2;
+                effect.AlphaMask = info.AlphaMask;
 
                 effect.Texture0Stretch = info.Texture0Stretch;
                 effect.Texture1Stretch = info.Texture1Stretch;
-                effect.AlphaMaskStretch = info.Texture2Stretch;
+                effect.AlphaMaskStretch = info.AlphaMaskStretch;
 
                 pass.Apply();
+
+                for (int i = startX; i < startX + size && i <= blockMaxX; i++)
+                {
+                    for (int j = startY; j < startY + size && j <= blockMaxY; j++)
+                    {
+                        blocks[i, j].Draw(device, k);
+                    }
+                }
+            }
+
+            EffectPass waterPass = waterEffect.CurrentTechnique.Passes[0];
+
+            for (int k = (int)LandTileId.Water; k < (int)LandTileId.Length; k++)
+            {
+                ref LiquidTerrainInfo info = ref LiquidTerrainInfo.Values[k];
+
+                waterEffect.TextureIndex = k;
+                waterEffect.Texture0 = info.Texture0;
+                waterEffect.Texture0Stretch = info.Texture0Stretch;
+
+                waterEffect.Normal = info.Normal;
+                waterEffect.NormalStretch = info.NormalStretch;
+
+                waterEffect.WaveHeight = info.WaveHeight;
+
+                if (info.WindSpeed == 0)
+                {
+                    waterEffect.WindForce = 0.05f;
+                    waterEffect.WindDirection = new(1, 1);
+                }
+                else
+                {
+                    waterEffect.WindForce = info.WindSpeed;
+                    waterEffect.WindDirection = new(1, 0);
+                }
+
+                waterEffect.Time = (float)gameTime.TotalGameTime.TotalMilliseconds / 100.0f;
+                waterEffect.Center = new Vector2(camera.Target.X, camera.Target.Z);
+                waterEffect.FollowCenter = info.FollowCenter;
+
+                waterPass.Apply();
 
                 for (int i = startX; i < startX + size && i <= blockMaxX; i++)
                 {

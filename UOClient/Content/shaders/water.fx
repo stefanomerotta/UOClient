@@ -1,17 +1,21 @@
 ﻿#include "Macros.fxh"
 
 Texture2D Texture0 : register(t0);
-Texture2D Texture1 : register(t1);
-Texture2D AlphaMask : register(t2);
+Texture2D Normal : register(t1);
 
 sampler TextureSampler : register(s0);
 
 BEGIN_CONSTANTS
 
     int Texture0Stretch;
-    int Texture1Stretch;
-    int AlphaMaskStretch;
+    int NormalStretch;
     int TextureIndex;
+    
+    float WaveHeight;
+    float2 WindDirection;
+    float WindForce;
+    float Time;
+    float2 Center;
     
     float4 DiffuseColor _vs(c0) _ps(c1) _cb(c0);
     float3 EmissiveColor _vs(c1) _ps(c2) _cb(c1);
@@ -83,7 +87,7 @@ struct VSOutputTxArray
     float4 Diffuse : COLOR0;
     float4 Specular : COLOR1;
     float4 TexCoord : TEXCOORD0;
-    float3 AlphaMaskCoord : TEXCOORD1;
+    float AlphaMask : TEXCOORD1;
 };
 
 struct VSOutputTxArrayNoFog
@@ -91,36 +95,48 @@ struct VSOutputTxArrayNoFog
     float4 PositionPS : SV_Position;
     float4 Diffuse : COLOR0;
     float4 TexCoord : TEXCOORD0;
-    float3 AlphaMaskCoord : TEXCOORD1;
+    float AlphaMask : TEXCOORD1;
 };
 
 struct VSOutputPixelLightingTxArray
 {
     float4 PositionPS : SV_Position;
     float4 TexCoord : TEXCOORD0;
-    float3 AlphaMaskCoord : TEXCOORD1;
+    float AlphaMask : TEXCOORD1;
     float4 PositionWS : TEXCOORD2;
     float3 NormalWS : TEXCOORD3;
     float4 Diffuse : COLOR0;
 };
 
-float4 GetMainTextCoord(float4 position)
+float2 GetNormalTextCoord(float4 position)
 {
-    float x0 = position.x / Texture0Stretch;
-    float y0 = position.z / Texture0Stretch;
-    float x1 = position.x / Texture1Stretch;
-    float y1 = position.z / Texture1Stretch;
+    float2 windDirection = normalize(WindDirection);
+    float3 perpDirection = cross(float3(windDirection, 0), float3(0, 0, 1));
     
-    return float4(x0, y0, x1, y1);
+    float xDot = dot(position.xz, perpDirection.xy);
+    float yDot = dot(position.xz, windDirection);
+    
+    yDot -= Time * WindForce;
+    
+    float normalX = xDot / NormalStretch;
+    float normalY = yDot / NormalStretch;
+    
+    return float2(normalX, normalY);
 }
 
-float3 GetAlphaTextCoord(float4 position, uint textId)
+float2 GetText0CoordFollowCenter(float4 position)
 {
-    float x = position.x / AlphaMaskStretch;
-    float y = position.z / AlphaMaskStretch;
-    bool a = TextureIndex <= textId;
-    
-    return float3(x, y, a);
+    return ((Center - position.xz) / Texture0Stretch) - 0.5;
+}
+
+float2 GetText0Coord(float4 position)
+{
+    return position.xz / Texture0Stretch;
+}
+
+float GetAlphaMask(uint textId)
+{
+    return TextureIndex <= textId;
 }
 
 // Vertex shader: basic.
@@ -183,8 +199,9 @@ VSOutputTxArray VSBasicTx(VSInputTxArray vin)
     CommonVSOutput cout = ComputeCommonVSOutput(vin.Position);
     SetCommonVSOutputParams;
     
-    vout.TexCoord = GetMainTextCoord(vin.Position);
-    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord.xy = GetText0Coord(vin.Position);
+    vout.TexCoord.zw = GetNormalTextCoord(vin.Position);
+    vout.AlphaMask = GetAlphaMask(vin.TexIndex);
 
     return vout;
 }
@@ -198,12 +215,28 @@ VSOutputTxArrayNoFog VSBasicTxNoFog(VSInputTxArray vin)
     CommonVSOutput cout = ComputeCommonVSOutput(vin.Position);
     SetCommonVSOutputParamsNoFog;
     
-    vout.TexCoord = GetMainTextCoord(vin.Position);
-    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord.xy = GetText0Coord(vin.Position);
+    vout.TexCoord.zw = GetNormalTextCoord(vin.Position);
+    vout.AlphaMask = GetAlphaMask(vin.TexIndex);
     
     return vout;
 }
 
+
+// Vertex shader: texture, no fog, follow center.
+VSOutputTxArrayNoFog VSBasicTxNoFogFollowCenter(VSInputTxArray vin)
+{
+    VSOutputTxArrayNoFog vout;
+    
+    CommonVSOutput cout = ComputeCommonVSOutput(vin.Position);
+    SetCommonVSOutputParamsNoFog;
+    
+    vout.TexCoord.xy = GetText0CoordFollowCenter(vin.Position);
+    vout.TexCoord.zw = GetNormalTextCoord(vin.Position);
+    vout.AlphaMask = GetAlphaMask(vin.TexIndex);
+    
+    return vout;
+}
 
 // Vertex shader: texture + vertex color.
 VSOutputTxArray VSBasicTxVc(VSInputTxVcArray vin)
@@ -213,8 +246,9 @@ VSOutputTxArray VSBasicTxVc(VSInputTxVcArray vin)
     CommonVSOutput cout = ComputeCommonVSOutput(vin.Position);
     SetCommonVSOutputParams;
     
-    vout.TexCoord = GetMainTextCoord(vin.Position);
-    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord.xy = GetText0Coord(vin.Position);
+    vout.TexCoord.zw = GetNormalTextCoord(vin.Position);
+    vout.AlphaMask = GetAlphaMask(vin.TexIndex);
     vout.Diffuse *= vin.Color;
     
     return vout;
@@ -229,8 +263,9 @@ VSOutputTxArrayNoFog VSBasicTxVcNoFog(VSInputTxVcArray vin)
     CommonVSOutput cout = ComputeCommonVSOutput(vin.Position);
     SetCommonVSOutputParamsNoFog;
     
-    vout.TexCoord = GetMainTextCoord(vin.Position);
-    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord.xy = GetText0Coord(vin.Position);
+    vout.TexCoord.zw = GetNormalTextCoord(vin.Position);
+    vout.AlphaMask = GetAlphaMask(vin.TexIndex);
     vout.Diffuse *= vin.Color;
     
     return vout;
@@ -271,8 +306,9 @@ VSOutputTxArray VSBasicVertexLightingTx(VSInputNmTxArray vin)
     CommonVSOutput cout = ComputeCommonVSOutputWithLighting(vin.Position, vin.Normal, 3);
     SetCommonVSOutputParams;
     
-    vout.TexCoord = GetMainTextCoord(vin.Position);
-    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord.xy = GetText0Coord(vin.Position);
+    vout.TexCoord.zw = GetNormalTextCoord(vin.Position);
+    vout.AlphaMask = GetAlphaMask(vin.TexIndex);
     
     return vout;
 }
@@ -286,8 +322,9 @@ VSOutputTxArray VSBasicVertexLightingTxVc(VSInputNmTxVcArray vin)
     CommonVSOutput cout = ComputeCommonVSOutputWithLighting(vin.Position, vin.Normal, 3);
     SetCommonVSOutputParams;
     
-    vout.TexCoord = GetMainTextCoord(vin.Position);
-    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord.xy = GetText0Coord(vin.Position);
+    vout.TexCoord.zw = GetNormalTextCoord(vin.Position);
+    vout.AlphaMask = GetAlphaMask(vin.TexIndex);
     vout.Diffuse *= vin.Color;
     
     return vout;
@@ -328,8 +365,9 @@ VSOutputTxArray VSBasicOneLightTx(VSInputNmTxArray vin)
     CommonVSOutput cout = ComputeCommonVSOutputWithLighting(vin.Position, vin.Normal, 1);
     SetCommonVSOutputParams;
     
-    vout.TexCoord = GetMainTextCoord(vin.Position);
-    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord.xy = GetText0Coord(vin.Position);
+    vout.TexCoord.zw = GetNormalTextCoord(vin.Position);
+    vout.AlphaMask = GetAlphaMask(vin.TexIndex);
     
     return vout;
 }
@@ -343,8 +381,9 @@ VSOutputTxArray VSBasicOneLightTxVc(VSInputNmTxVcArray vin)
     CommonVSOutput cout = ComputeCommonVSOutputWithLighting(vin.Position, vin.Normal, 1);
     SetCommonVSOutputParams;
     
-    vout.TexCoord = GetMainTextCoord(vin.Position);
-    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord.xy = GetText0Coord(vin.Position);
+    vout.TexCoord.zw = GetNormalTextCoord(vin.Position);
+    vout.AlphaMask = GetAlphaMask(vin.TexIndex);
     vout.Diffuse *= vin.Color;
     
     return vout;
@@ -389,8 +428,9 @@ VSOutputPixelLightingTxArray VSBasicPixelLightingTx(VSInputNmTxArray vin)
     SetCommonVSOutputParamsPixelLighting;
     
     vout.Diffuse = float4(1, 1, 1, DiffuseColor.a);
-    vout.TexCoord = GetMainTextCoord(vin.Position);
-    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord.xy = GetText0Coord(vin.Position);
+    vout.TexCoord.zw = GetNormalTextCoord(vin.Position);
+    vout.AlphaMask = GetAlphaMask(vin.TexIndex);
 
     return vout;
 }
@@ -406,8 +446,9 @@ VSOutputPixelLightingTxArray VSBasicPixelLightingTxVc(VSInputNmTxVcArray vin)
     
     vout.Diffuse.rgb = vin.Color.rgb;
     vout.Diffuse.a = vin.Color.a * DiffuseColor.a;
-    vout.TexCoord = GetMainTextCoord(vin.Position);
-    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
+    vout.TexCoord.xy = GetText0Coord(vin.Position);
+    vout.TexCoord.zw = GetNormalTextCoord(vin.Position);
+    vout.AlphaMask = GetAlphaMask(vin.TexIndex);
     
     return vout;
 }
@@ -441,18 +482,16 @@ float4 PSBasicTx(VSOutputTxArray pin) : SV_Target0
     return color;
 }
 
-
 // Pixel shader: texture, no fog.
 float4 PSBasicTxNoFog(VSOutputTxArrayNoFog pin) : SV_Target0
 {
-    float4 color0 = Texture0.SampleLevel(TextureSampler, pin.TexCoord.xy, 0);
-    float4 color1 = Texture1.SampleLevel(TextureSampler, pin.TexCoord.zw, 0);
-    float4 alpha = AlphaMask.SampleLevel(TextureSampler, pin.AlphaMaskCoord.xy, 0);
+    float4 normal = Normal.SampleLevel(TextureSampler, pin.TexCoord.zw, 0);
+    float2 perturbation = WaveHeight * (normal.rg - 0.5f) * 2.0f;
+    float2 perturbatedTexCoords = pin.TexCoord.xy + perturbation;
     
-    float4 color = lerp(color0, color1, alpha.a);
-    
-    color = lerp(color, 0, 1 - pin.AlphaMaskCoord.z);
-    color.a = pin.AlphaMaskCoord.z;
+    float4 color = Texture0.SampleLevel(TextureSampler, perturbatedTexCoords, 0);
+    color = lerp(color, 0, 1 - pin.AlphaMask);
+    color.a = pin.AlphaMask;
     
     return color * pin.Diffuse;
 }
@@ -580,3 +619,12 @@ TECHNIQUE(BasicEffect_PixelLighting_Texture, VSBasicPixelLightingTx, PSBasicPixe
 TECHNIQUE(BasicEffect_PixelLighting_Texture_NoFog, VSBasicPixelLightingTx, PSBasicPixelLightingTx);
 TECHNIQUE(BasicEffect_PixelLighting_Texture_VertexColor, VSBasicPixelLightingTxVc, PSBasicPixelLightingTx);
 TECHNIQUE(BasicEffect_PixelLighting_Texture_VertexColor_NoFog, VSBasicPixelLightingTxVc, PSBasicPixelLightingTx);
+
+TECHNIQUE(BasicEffect_FollowCenter, VSBasic, PSBasic);
+TECHNIQUE(BasicEffect_FollowCenter_NoFog, VSBasicNoFog, PSBasicNoFog);
+TECHNIQUE(BasicEffect_FollowCenter_VertexColor, VSBasicVc, PSBasic);
+TECHNIQUE(BasicEffect_FollowCenter_VertexColor_NoFog, VSBasicVcNoFog, PSBasicNoFog);
+TECHNIQUE(BasicEffect_FollowCenter_Texture, VSBasicTx, PSBasicTx);
+TECHNIQUE(BasicEffect_FollowCenter_Texture_NoFog, VSBasicTxNoFogFollowCenter, PSBasicTxNoFog);
+TECHNIQUE(BasicEffect_FollowCenter_Texture_VertexColor, VSBasicTxVc, PSBasicTx);
+TECHNIQUE(BasicEffect_FollowCenter_Texture_VertexColor_NoFog, VSBasicTxVcNoFog, PSBasicTxNoFog);

@@ -61,7 +61,8 @@ namespace UOClient
             font = Content.Load<SpriteFont>("fonts/File");
 
             Map.LoadTextures(Content);
-            TerrainInfo.Load(Content);
+            SolidTerrainInfo.Load(Content);
+            LiquidTerrainInfo.Load(Content);
         }
 
         protected override void Update(GameTime gameTime)
@@ -105,7 +106,7 @@ namespace UOClient
             waterEffect.PreDraw();
             effect.PreDraw();
 
-            terrain.Draw(device, effect, waterEffect);
+            terrain.Draw(device, camera, gameTime, effect, waterEffect);
 
             RasterizerState rs2 = new()
             {
@@ -113,14 +114,14 @@ namespace UOClient
                 FillMode = FillMode.WireFrame
             };
 
-            device.RasterizerState = rs2;
+            //device.RasterizerState = rs2;
 
-            foreach (EffectPass pass in wireframeEffect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-                camera.Test(device);
-                terrain.DrawBoundaries(device);
-            }
+            //foreach (EffectPass pass in wireframeEffect.CurrentTechnique.Passes)
+            //{
+            //    pass.Apply();
+            //    camera.Test(device);
+            //    terrain.DrawBoundaries(device);
+            //}
 
             //Vector3 position = device.Viewport.Project(Vector3.Subtract(camera.Target, new Vector3(5, 5, 0)), camera.ProjectionMatrix, camera.ViewMatrix, Matrix.Identity);
 

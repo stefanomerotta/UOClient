@@ -17,12 +17,13 @@ namespace UOClient
 
         public Vector3 Target => target;
         public Vector3 Position => position;
+        public float Zoom => zoom;
 
         public IsometricCamera()
         {
             float val = (float)Math.Cos(Math.PI / 4);
 
-            target = new(170, 0, 230);
+            target = new(1134, 0, 675);
             position = (new Vector3(val, val * 10, val) * 127) + target;
             zoom = 1;
 

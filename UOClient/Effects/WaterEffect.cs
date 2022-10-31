@@ -10,12 +10,16 @@ namespace UOClient.Effects
         private readonly Effect effect;
 
         private readonly EffectParameter texture0;
-        private readonly EffectParameter texture1;
-        private readonly EffectParameter alphaMask;
+        private readonly EffectParameter normal;
 
         private readonly EffectParameter texture0Stretch;
-        private readonly EffectParameter texture1Stretch;
-        private readonly EffectParameter alphaMaskStretch;
+        private readonly EffectParameter normalStretch;
+
+        private readonly EffectParameter waveHeight;
+        private readonly EffectParameter windDirection;
+        private readonly EffectParameter windForce;
+        private readonly EffectParameter time;
+        private readonly EffectParameter center;
 
         private readonly EffectParameter textureIndex;
         private readonly EffectParameter diffuseColorParam;
@@ -37,6 +41,7 @@ namespace UOClient.Effects
         private bool fogEnabled;
         private bool textureEnabled;
         private bool vertexColorEnabled;
+        private bool followCenter;
 
         private Matrix world = Matrix.Identity;
         private Matrix view = Matrix.Identity;
@@ -282,16 +287,10 @@ namespace UOClient.Effects
             set => texture0.SetValue(value);
         }
 
-        public Texture2D Texture1
+        public Texture2D Normal
         {
-            get => texture1.GetValueTexture2D();
-            set => texture1.SetValue(value);
-        }
-
-        public Texture2D AlphaMask
-        {
-            get => alphaMask.GetValueTexture2D();
-            set => alphaMask.SetValue(value);
+            get => normal.GetValueTexture2D();
+            set => normal.SetValue(value);
         }
 
         public int Texture0Stretch
@@ -300,16 +299,10 @@ namespace UOClient.Effects
             set => texture0Stretch.SetValue(value);
         }
 
-        public int Texture1Stretch
+        public int NormalStretch
         {
-            get => texture1Stretch.GetValueInt32();
-            set => texture1Stretch.SetValue(value);
-        }
-
-        public int AlphaMaskStretch
-        {
-            get => alphaMaskStretch.GetValueInt32();
-            set => alphaMaskStretch.SetValue(value);
+            get => normalStretch.GetValueInt32();
+            set => normalStretch.SetValue(value);
         }
 
         public int TextureIndex
@@ -318,17 +311,57 @@ namespace UOClient.Effects
             set => textureIndex.SetValue(value);
         }
 
+        public float WaveHeight
+        {
+            get => waveHeight.GetValueSingle();
+            set => waveHeight.SetValue(value);
+        }
+
+        public Vector2 WindDirection
+        {
+            get => windDirection.GetValueVector2();
+            set => windDirection.SetValue(value);
+        }
+
+        public float WindForce
+        {
+            get => windForce.GetValueSingle();
+            set => windForce.SetValue(value);
+        }
+
+        public float Time
+        {
+            get => time.GetValueSingle();
+            set => time.SetValue(value);
+        }
+
+        public Vector2 Center
+        {
+            get => center.GetValueVector2();
+            set => center.SetValue(value);
+        }
+
+        public bool FollowCenter
+        {
+            get => followCenter;
+            set { followCenter = value; dirtyFlags |= EffectDirtyFlags.ShaderIndex; PreDraw(); }
+        }
+
         public WaterEffect(ContentManager contentManager)
         {
-            effect = contentManager.Load<Effect>("shaders/basic-array");
+            effect = contentManager.Load<Effect>("shaders/water");
 
             texture0 = effect.Parameters["Texture0"];
-            texture1 = effect.Parameters["Texture1"];
-            alphaMask = effect.Parameters["AlphaMask"];
+            normal = effect.Parameters["Normal"];
 
             texture0Stretch = effect.Parameters["Texture0Stretch"];
-            texture1Stretch = effect.Parameters["Texture1Stretch"];
-            alphaMaskStretch = effect.Parameters["AlphaMaskStretch"];
+            normalStretch = effect.Parameters["NormalStretch"];
+
+            waveHeight = effect.Parameters["WaveHeight"];
+            windDirection = effect.Parameters["WindDirection"];
+            windForce = effect.Parameters["WindForce"];
+            time = effect.Parameters["Time"];
+            center = effect.Parameters["Center"];
 
             textureIndex = effect.Parameters["TextureIndex"];
 
@@ -428,6 +461,9 @@ namespace UOClient.Effects
                         shaderIndex |= ShaderIndex.Lights;
                 }
 
+                if (followCenter)
+                    shaderIndex |= ShaderIndex.FollowCenter;
+
                 dirtyFlags &= ~EffectDirtyFlags.ShaderIndex;
 
                 if (_shaderIndex != shaderIndex)
@@ -447,7 +483,8 @@ namespace UOClient.Effects
             Texture = 0x4,
             Lights = 0x8,
             OneLight = 0x10,
-            LightPerPixel = 0x12,
+            LightPerPixel = 0x18,
+            FollowCenter = 0x20
         }
     }
 }
