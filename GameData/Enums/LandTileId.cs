@@ -7,15 +7,20 @@
         Furrows = 2,
         Sand = 3,
         Dirt = 4,
-        Water = 5,
-        Jungle = 6,
-        Forest = 7,
-        Snow = 8,
-        Lava = 9,
-        Rock = 10,
-        Acid = 11,
-        Swamp = 12,
+        Jungle = 5,
+        Forest = 6,
+        Snow = 7,
+        Rock = 8,
+        SandCliff_E_W = 9,
+        SandCliff_NW_SE = 10,
+        SandCliff_N_S = 11,
+        SandCliff_NE_SW = 12,
 
-        Length = 13
+        Water = 13,
+        Lava = 14,
+        Acid = 15,
+        Swamp = 16,
+
+        Length = 17
     }
 }

@@ -23,6 +23,7 @@ namespace UOClient
 
         private BasicEffect wireframeEffect;
         private BasicArrayEffect effect;
+        private WaterEffect waterEffect;
 
         public Game1()
         {
@@ -53,6 +54,7 @@ namespace UOClient
             device = graphics.GraphicsDevice;
 
             effect = new(Content) { TextureEnabled = true, };
+            waterEffect = new(Content) { TextureEnabled = true };
             wireframeEffect = new(device) { VertexColorEnabled = true };
 
             spriteBatch = new(device);
@@ -83,6 +85,10 @@ namespace UOClient
             effect.Projection = camera.ProjectionMatrix;
             effect.World = camera.WorldMatrix;
 
+            waterEffect.View = camera.ViewMatrix;
+            waterEffect.Projection = camera.ProjectionMatrix;
+            waterEffect.World = camera.WorldMatrix;
+
             wireframeEffect.View = camera.ViewMatrix;
             wireframeEffect.Projection = camera.ProjectionMatrix;
             wireframeEffect.World = camera.WorldMatrix;
@@ -96,8 +102,10 @@ namespace UOClient
             device.RasterizerState = rs;
             device.BlendState = BlendState.AlphaBlend;
 
+            waterEffect.PreDraw();
             effect.PreDraw();
-            terrain.Draw(device, effect);
+
+            terrain.Draw(device, effect, waterEffect);
 
             RasterizerState rs2 = new()
             {

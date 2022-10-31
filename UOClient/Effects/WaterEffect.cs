@@ -5,7 +5,7 @@ using System;
 
 namespace UOClient.Effects
 {
-    public class BasicArrayEffect
+    public class WaterEffect
     {
         private readonly Effect effect;
 
@@ -318,10 +318,7 @@ namespace UOClient.Effects
             set => textureIndex.SetValue(value);
         }
 
-        /// <summary>
-        /// Creates a new BasicEffect with default parameter settings.
-        /// </summary>
-        public BasicArrayEffect(ContentManager contentManager)
+        public WaterEffect(ContentManager contentManager)
         {
             effect = contentManager.Load<Effect>("shaders/basic-array");
 

@@ -71,7 +71,7 @@ namespace UOClient.Terrain
             }
         }
 
-        public void Draw(GraphicsDevice device, BasicArrayEffect effect)
+        public void Draw(GraphicsDevice device, BasicArrayEffect effect, WaterEffect waterEffect)
         {
             int startX = Math.Clamp(blockX - halfSize, 0, blockMaxX);
             int startY = Math.Clamp(blockY - halfSize, 0, blockMaxY);
@@ -84,11 +84,11 @@ namespace UOClient.Terrain
                 effect.TextureIndex = k;
                 effect.Texture0 = info.Texture0;
                 effect.Texture1 = info.Texture1;
-                effect.AlphaMask = info.AlphaMask;
+                effect.AlphaMask = info.Texture2;
 
                 effect.Texture0Stretch = info.Texture0Stretch;
                 effect.Texture1Stretch = info.Texture1Stretch;
-                effect.AlphaMaskStretch = info.AlphaMaskStretch;
+                effect.AlphaMaskStretch = info.Texture2Stretch;
 
                 pass.Apply();
 

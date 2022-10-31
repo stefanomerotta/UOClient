@@ -5,9 +5,9 @@ namespace MapConverter
 {
     internal class MapTileTranscoder
     {
-        private static readonly LandTileId[] ids = new LandTileId[ushort.MaxValue];
+        private static readonly ushort[] ids = new ushort[ushort.MaxValue];
 
-        public static LandTileId GetNewId(ushort oldId)
+        public static ushort GetNewId(ushort oldId)
         {
             return ids[oldId];
         }
@@ -18,7 +18,7 @@ namespace MapConverter
             {
                 Debug.Assert(ids[oldIds[i]] == 0);
 
-                ids[oldIds[i]] = newId;
+                ids[oldIds[i]] = (ushort)newId;
             }
         }
 
@@ -28,8 +28,7 @@ namespace MapConverter
             Set(LandTileId.Forest, 196, 197, 198, 199);
             Set(LandTileId.Furrows, 9, 14, 336, 341);
             Set(LandTileId.Jungle, 172, 173, 174, 175);
-            Set(LandTileId.Lava, 500, 501, 502, 503);
-
+            
             Set(LandTileId.Rock, 556, 557, 558, 559, 1754, 1755, 1756, 1757,
                 1787, 1788, 1789, 1790, 1851, 1852, 1853, 1854, 1881, 1882, 1883, 1884,
                 2001, 2002, 2003, 2004);
@@ -37,23 +36,20 @@ namespace MapConverter
             Set(LandTileId.Sand, 22, 23, 24, 25);
             Set(LandTileId.Snow, 282, 283, 284, 285);
             Set(LandTileId.Unused, 0, 1, 2);
-            Set(LandTileId.Water, 168, 169, 170, 171, 310, 311);
-            Set(LandTileId.Swamp, 15849, 15850, 15851, 15852);
 
             Set(LandTileId.Grass, 3, 4, 5, 6);
 
-            Set(LandTileId.Acid, 11790, 11791, 11818, 11819,
-                11820, 11821, 11822, 11823, 11824, 11825, 11826, 11827, 11828, 11829,
-                11830, 11831, 11832, 11833, 11834, 11835);
+            // Sand cliffs N-S
+            Set(LandTileId.SandCliff_N_S, 27, 33, 36, 37, 40, 41, 44, 49, 68, 71, 442, 448, 451, 452, 455, 456, 459, 464);
 
-            // Sand cliffs
-            Set(LandTileId.Sand, 26, 27, 442, 443, 444, 445, 446, 447, 448, 449,
-                450, 451, 452, 453, 454, 455, 456, 457, 458, 459,
-                460, 461, 462, 463, 464, 465);
+            // Sand cliffs NE-SW
+            Set(LandTileId.SandCliff_NE_SW, 30, 31, 45, 73, 74, 445, 446, 460);
 
-            // Sand cliffs -> grass
-            Set(LandTileId.Sand, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
-                40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 68, 69, 70, 71, 72, 73, 74, 75);
+            // Sand cliffs E-W
+            Set(LandTileId.SandCliff_E_W, 26, 34, 35, 38, 39, 42, 43, 50, 69, 70, 441, 449, 450, 453, 454, 457, 458, 465);
+
+            // Sand cliffs NW-SE
+            Set(LandTileId.SandCliff_NW_SE, 28, 29, 32, 46, 47, 48, 72, 75, 443, 444, 461, 462, 463);
 
             // Forest <-> grass
             Set(LandTileId.Grass, 192, 193, 194, 195,
@@ -130,7 +126,13 @@ namespace MapConverter
             Set(LandTileId.Grass, 1401, 1402, 1403, 1404, 1405, 1406, 1407, 1408, 1409, 1410,
                 1411, 1412, 1413, 1414, 1415, 1416, 1417, 1418, 1419, 1420);
 
+            Set(LandTileId.Lava, 500, 501, 502, 503);
+            Set(LandTileId.Water, 168, 169, 170, 171, 310, 311);
+            Set(LandTileId.Swamp, 15849, 15850, 15851, 15852);
 
+            Set(LandTileId.Acid, 11790, 11791, 11818, 11819,
+                11820, 11821, 11822, 11823, 11824, 11825, 11826, 11827, 11828, 11829,
+                11830, 11831, 11832, 11833, 11834, 11835);
         }
     }
 }

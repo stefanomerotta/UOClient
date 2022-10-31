@@ -10,14 +10,14 @@ namespace UOClient.Effects
     [Flags]
     internal enum EffectDirtyFlags
     {
-        WorldViewProj = 1,
-        World = 2,
-        EyePosition = 4,
-        MaterialColor = 8,
-        Fog = 16,
-        FogEnable = 32,
-        AlphaTest = 64,
-        ShaderIndex = 128,
+        WorldViewProj = 0x1,
+        World = 0x2,
+        EyePosition = 0x4,
+        MaterialColor = 0x8,
+        Fog = 0x10,
+        FogEnable = 0x20,
+        AlphaTest = 0x40,
+        ShaderIndex = 0x80,
         All = -1
     }
 
