@@ -103,7 +103,7 @@ namespace UOClient.Terrain
                 }
             }
 
-            EffectPass waterPass = waterEffect.CurrentTechnique.Passes[0];
+            EffectPass waterPass;
 
             for (int k = (int)LandTileId.Water; k < (int)LandTileId.Length; k++)
             {
@@ -121,7 +121,7 @@ namespace UOClient.Terrain
                 if (info.WindSpeed == 0)
                 {
                     waterEffect.WindForce = 0.05f;
-                    waterEffect.WindDirection = new(1, 1);
+                    waterEffect.WindDirection = new(0, 1);
                 }
                 else
                 {
@@ -133,6 +133,7 @@ namespace UOClient.Terrain
                 waterEffect.Center = new Vector2(camera.Target.X, camera.Target.Z);
                 waterEffect.FollowCenter = info.FollowCenter;
 
+                waterPass = waterEffect.CurrentTechnique.Passes[0];
                 waterPass.Apply();
 
                 for (int i = startX; i < startX + size && i <= blockMaxX; i++)
