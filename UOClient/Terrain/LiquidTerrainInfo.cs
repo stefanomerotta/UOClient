@@ -47,7 +47,7 @@ namespace UOClient.Terrain
         {
             Set(LandTileId.Acid, 0.3f, false, 0.01f, "01000012_lava_normal", 12, "02000490_Acid_A", 8, null, 0, "02000490_Acid_A", 8);
             Set(LandTileId.Lava, 0.2f, false, 0.01f, "01000012_lava_normal", 12, "02000100_Lava_A", 8, "02000101_Lava_B", 8, "02000100_Lava_A", 6);
-            Set(LandTileId.Swamp, 0.3f, true, 0, "02000703_Swamp_Water_D", 16, "02000700_Swamp_Water_A", 4, "02000704_Swamp_Water_E", 10, "02000702_Swamp_Water_C", 3);
+            Set(LandTileId.Swamp, 0.3f, true, 0.01f, "02000703_Swamp_Water_D", 16, "02000702_Swamp_Water_C", 20, "02000700_Swamp_Water_A", 4, "02000704_Swamp_Water_E", 10);
             Set(LandTileId.Water, 0.3f, true, 0, "01000013_water_alpha", 16, "01000017_cube3", 30, null, 0, "02000051_water", 4);
 
             void Set(LandTileId id, float waveHeight, bool followCenter, float windSpeed, string normal, byte normalStretch,

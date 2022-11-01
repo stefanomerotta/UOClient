@@ -33,7 +33,7 @@ namespace UOClient
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
-            terrain = new(4, 1448, 1448);
+            terrain = new(1448, 1448);
             camera = new();
             fps = new();
         }
@@ -60,7 +60,6 @@ namespace UOClient
             spriteBatch = new(device);
             font = Content.Load<SpriteFont>("fonts/File");
 
-            Map.LoadTextures(Content);
             SolidTerrainInfo.Load(Content);
             LiquidTerrainInfo.Load(Content);
         }

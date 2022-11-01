@@ -113,21 +113,18 @@ struct VSOutputPixelLightingTxArray
 
 float4 GetMainTextCoord(float4 position)
 {
-    float x0 = position.x / Texture0Stretch;
-    float y0 = position.z / Texture0Stretch;
-    float x1 = position.x / Texture1Stretch;
-    float y1 = position.z / Texture1Stretch;
+    float2 xy = position.xz / Texture0Stretch;
+    float2 zw = position.xz / Texture1Stretch;
     
-    return float4(x0, y0, x1, y1);
+    return float4(xy, zw);
 }
 
 float3 GetAlphaTextCoord(float4 position, uint textId)
 {
-    float x = position.x / AlphaMaskStretch;
-    float y = position.z / AlphaMaskStretch;
+    float2 xy = position.xz / AlphaMaskStretch;
     bool a = TextureIndex <= textId;
     
-    return float3(x, y, a);
+    return float3(xy, a);
 }
 
 // Vertex shader: basic.

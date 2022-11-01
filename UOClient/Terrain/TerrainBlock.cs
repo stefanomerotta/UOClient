@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Diagnostics;
 using UOClient.Effects;
 using UOClient.Structures;
 using PrimitiveType = Microsoft.Xna.Framework.Graphics.PrimitiveType;
@@ -12,12 +13,13 @@ namespace UOClient.Terrain
     internal sealed class TerrainBlock : IDisposable
     {
         public const int Size = 64;
+        public const int SizeOffset = 6;
         public const int VertexSize = Size + 1;
 
         private readonly int blockX;
         private readonly int blockY;
 
-        private readonly MapTile[,] tiles;
+        private readonly MapTile[] tiles;
         private readonly VertexPositionTextureArray[] vertices;
         private readonly VertexPositionColor[] boundaries;
         private readonly BitMapBlock64[] indices;
@@ -25,8 +27,10 @@ namespace UOClient.Terrain
         private readonly VertexBuffer vBuffer;
         private readonly IndexBuffer[] iBuffers;
 
-        public TerrainBlock(GraphicsDevice device, int blockX, int blockY, MapTile[,] tiles)
+        public TerrainBlock(GraphicsDevice device, int blockX, int blockY, MapTile[] tiles)
         {
+            Debug.Assert(tiles.Length == VertexSize * VertexSize);
+
             this.blockX = blockX;
             this.blockY = blockY;
             this.tiles = tiles;
@@ -52,8 +56,10 @@ namespace UOClient.Terrain
             {
                 for (int x = 0; x < VertexSize; x++)
                 {
-                    ref VertexPositionTextureArray vertex = ref vertices[x + y * VertexSize];
-                    MapTile tile = tiles[x, y];
+                    int index = x + y * VertexSize;
+
+                    ref VertexPositionTextureArray vertex = ref vertices[index];
+                    MapTile tile = tiles[index];
 
                     vertex.Position = Vector3.Transform(new Vector3(x, tile.Z, y), m);
                     vertex.TextureIndex = tile.Id;

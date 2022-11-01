@@ -1,10 +1,7 @@
 ﻿using GameData.Enums;
-using Microsoft.Win32.SafeHandles;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Runtime.InteropServices;
 using UOClient.Data;
 using UOClient.Effects;
 using UOClient.Structures;
@@ -13,12 +10,12 @@ namespace UOClient.Terrain
 {
     internal class Terrain
     {
-        private const int size = 3;
-        private const int halfSize = size / 2;
+        private const int outerSize = 5;
+        private const int innerSize = outerSize - 2;
+        private const int halfInnerSize = innerSize / 2;
+        private const int halfOuterSize = outerSize / 2;
 
-        private static readonly Texture2D[] textures = new Texture2D[(int)LandTileId.Length];
-
-        private readonly TerrainBlock[,] blocks;
+        private readonly TerrainBlock?[,] blocks;
         private readonly Map map;
         private int blockX;
         private int blockY;
@@ -26,29 +23,24 @@ namespace UOClient.Terrain
         private readonly int blockMaxX;
         private readonly int blockMaxY;
 
-        public Terrain(int id, int width, int height)
+        public Terrain(int width, int height)
         {
+            blockX = -1;
+            blockY = -1;
+
             blockMaxX = width / TerrainBlock.Size - 1;
             blockMaxY = height / TerrainBlock.Size - 1;
-            map = new MyMap(id, width, height);
+            map = new MyMap(width, height);
 
-            blocks = new TerrainBlock[width / TerrainBlock.Size, height / TerrainBlock.Size];
+            blocks = new TerrainBlock[blockMaxX + 1, blockMaxY + 1];
         }
 
-        private unsafe MapTile[,] GetTiles(int blockX, int blockY)
+        private unsafe MapTile[] GetTiles(int blockX, int blockY)
         {
-            MapTile[,] toRet = new MapTile[TerrainBlock.VertexSize, TerrainBlock.VertexSize];
-
-            Span<byte> rawTiles = stackalloc byte[TerrainBlock.VertexSize * TerrainBlock.VertexSize * sizeof(MapTile)];
-            Span<MapTile> tiles = MemoryMarshal.Cast<byte, MapTile>(rawTiles);
+            MapTile[] tiles = new MapTile[TerrainBlock.VertexSize * TerrainBlock.VertexSize];
             map.FillChunk(blockX, blockY, tiles);
 
-            for (int i = 0; i < tiles.Length; i++)
-            {
-                toRet[i % TerrainBlock.VertexSize, i / TerrainBlock.VertexSize] = tiles[i];
-            }
-
-            return toRet;
+            return tiles;
         }
 
         public void Load(GraphicsDevice device, int x, int y)
@@ -58,25 +50,74 @@ namespace UOClient.Terrain
 
         public void OnLocationChanged(GraphicsDevice device, int newX, int newY)
         {
-            blockX = newX / TerrainBlock.Size;
-            blockY = newY / TerrainBlock.Size;
+            int newBlockX = newX >> TerrainBlock.SizeOffset;
+            int newBlockY = newY >> TerrainBlock.SizeOffset;
 
-            int startX = Math.Clamp(blockX - halfSize, 0, blockMaxX);
-            int startY = Math.Clamp(blockY - halfSize, 0, blockMaxY);
+            if (blockX == newBlockX && blockY == newBlockY)
+                return;
 
-            for (int j = startY; j < startY + size && j <= blockMaxY; j++)
+            blockX = newBlockX;
+            blockY = newBlockY;
+
+            LoadBlocks(device);
+            UnloadUnusedBlocks();
+        }
+
+        private void LoadBlocks(GraphicsDevice device)
+        {
+            int startX = Math.Clamp(blockX - halfInnerSize, 0, blockMaxX);
+            int startY = Math.Clamp(blockY - halfInnerSize, 0, blockMaxY);
+            int endX = Math.Clamp(blockX + halfInnerSize, 0, blockMaxX);
+            int endY = Math.Clamp(blockY + halfInnerSize, 0, blockMaxY);
+
+            for (int y = startY; y <= endY; y++)
             {
-                for (int i = startX; i < startX + size && i <= blockMaxX; i++)
+                for (int x = startX; x <= endX; x++)
                 {
-                    blocks[i, j] ??= new(device, i, j, GetTiles(i, j));
+                    blocks[x, y] ??= new(device, x, y, GetTiles(x, y));
                 }
+            }
+        }
+
+        private void UnloadUnusedBlocks()
+        {
+            int startX = blockX - halfOuterSize;
+            int startY = blockY + halfOuterSize;
+            int endX = blockX - halfOuterSize;
+            int endY = blockY + halfOuterSize;
+
+            for (int k = 0; k < outerSize; k++)
+            {
+                Unload(startX + k, startY);
+                Unload(startX + k, endY);
+                Unload(startX, startY + k);
+                Unload(endX, startY + k);
+            }
+
+            void Unload(int x, int y)
+            {
+                if (x < 0 || x > blockMaxX)
+                    return;
+
+                if (y < 0 || y > blockMaxY)
+                    return;
+
+                ref TerrainBlock? block = ref blocks[x, y];
+                if (block is null)
+                    return;
+
+                block.Dispose();
+                block = null;
             }
         }
 
         public void Draw(GraphicsDevice device, IsometricCamera camera, GameTime gameTime, BasicArrayEffect effect, WaterEffect waterEffect)
         {
-            int startX = Math.Clamp(blockX - halfSize, 0, blockMaxX);
-            int startY = Math.Clamp(blockY - halfSize, 0, blockMaxY);
+            int startX = Math.Clamp(blockX - halfInnerSize, 0, blockMaxX);
+            int startY = Math.Clamp(blockY - halfInnerSize, 0, blockMaxY);
+            int endX = Math.Clamp(blockX + halfInnerSize, 0, blockMaxX);
+            int endY = Math.Clamp(blockY + halfInnerSize, 0, blockMaxY);
+
             EffectPass pass = effect.CurrentTechnique.Passes[0];
 
             for (int k = 1; k < (int)LandTileId.Water; k++)
@@ -94,11 +135,11 @@ namespace UOClient.Terrain
 
                 pass.Apply();
 
-                for (int i = startX; i < startX + size && i <= blockMaxX; i++)
+                for (int x = startX; x <= endX; x++)
                 {
-                    for (int j = startY; j < startY + size && j <= blockMaxY; j++)
+                    for (int y = startY; y <= endY; y++)
                     {
-                        blocks[i, j].Draw(device, k);
+                        blocks[x, y]!.Draw(device, k);
                     }
                 }
             }
@@ -136,11 +177,11 @@ namespace UOClient.Terrain
                 waterPass = waterEffect.CurrentTechnique.Passes[0];
                 waterPass.Apply();
 
-                for (int i = startX; i < startX + size && i <= blockMaxX; i++)
+                for (int i = startX; i <= endX; i++)
                 {
-                    for (int j = startY; j < startY + size && j <= blockMaxY; j++)
+                    for (int j = startY; j <= endY; j++)
                     {
-                        blocks[i, j].Draw(device, k);
+                        blocks[i, j]!.Draw(device, k);
                     }
                 }
             }
@@ -148,36 +189,15 @@ namespace UOClient.Terrain
 
         public void DrawBoundaries(GraphicsDevice device)
         {
-            int startX = Math.Clamp(blockX - halfSize, 0, blockMaxX);
-            int startY = Math.Clamp(blockY - halfSize, 0, blockMaxY);
+            int startX = Math.Clamp(blockX - halfInnerSize, 0, blockMaxX);
+            int startY = Math.Clamp(blockY - halfInnerSize, 0, blockMaxY);
 
-            for (int i = startX; i < startX + size && i <= blockMaxX; i++)
+            for (int i = startX; i < startX + innerSize && i <= blockMaxX; i++)
             {
-                for (int j = startY; j < startY + size && j <= blockMaxY; j++)
+                for (int j = startY; j < startY + innerSize && j <= blockMaxY; j++)
                 {
                     blocks[i, j].DrawBoundaries(device);
                 }
-            }
-        }
-
-        public static void LoadTextures(ContentManager contentManager)
-        {
-            Set(LandTileId.Dirt, "02000020_Dirt_A");
-            Set(LandTileId.Forest, "02000040_Forest_A");
-            Set(LandTileId.Grass, "02000010_Grass_C");
-            Set(LandTileId.Jungle, "02000030_Jungle_A");
-            Set(LandTileId.Lava, "02000100_Lava_A");
-            Set(LandTileId.Rock, "02000060_Rock_A");
-            Set(LandTileId.Sand, "02000070_Sand_A");
-            Set(LandTileId.Snow, "02000080_Snow_A");
-            Set(LandTileId.Swamp, "02000700_Swamp_Water_A");
-            Set(LandTileId.Unused, "02000000_Black_Void_A");
-            Set(LandTileId.Water, "02000051_water");
-            Set(LandTileId.Acid, "02000490_Acid_A");
-
-            void Set(LandTileId id, string landTexture)
-            {
-                textures[(int)id] = contentManager.Load<Texture2D>($"land/{landTexture}");
             }
         }
     }

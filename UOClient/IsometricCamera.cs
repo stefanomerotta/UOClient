@@ -23,7 +23,7 @@ namespace UOClient
         {
             float val = (float)Math.Cos(Math.PI / 4);
 
-            target = new(1134, 0, 675);
+            target = new(249, 0, 1026);
             position = (new Vector3(val, val * 10, val) * 127) + target;
             zoom = 1;
 

@@ -3,12 +3,13 @@ using System;
 using System.IO;
 using UOClient.IO;
 using UOClient.Structures;
+using UOClient.Terrain;
 
 namespace UOClient.Data
 {
     internal abstract class Map
     {
-        public abstract void FillChunk(int x, int y, Span<MapTile> chunk);
+        public abstract void FillChunk(int chunkX, int chunkY, Span<MapTile> chunk);
     }
 
     internal class UOPMap : Map
@@ -60,17 +61,17 @@ namespace UOClient.Data
         private readonly PackageReader reader;
         private readonly int chunksHeight;
 
-        public MyMap(int id, int width, int height)
+        public MyMap(int width, int height)
         {
             FileStream stream = File.Open(Path.Combine(Settings.FilePath, "converted.bin"), FileMode.Open);
             reader = new(stream);
 
-            chunksHeight = (int)Math.Ceiling(height / 64d);
+            chunksHeight = (int)Math.Ceiling(height / (double)TerrainBlock.Size);
         }
 
-        public override void FillChunk(int x, int y, Span<MapTile> chunk)
+        public override void FillChunk(int chunkX, int chunkY, Span<MapTile> chunk)
         {
-            reader.ReadSpan(x + y * chunksHeight, chunk);
+            reader.ReadSpan(chunkX + chunkY * chunksHeight, chunk);
         }
 
         public void Dispose()
