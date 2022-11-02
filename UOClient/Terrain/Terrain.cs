@@ -10,15 +10,14 @@ namespace UOClient.Terrain
 {
     internal class Terrain
     {
-        private const int outerSize = 5;
-        private const int innerSize = outerSize - 2;
-        private const int halfInnerSize = innerSize / 2;
-        private const int halfOuterSize = outerSize / 2;
+        private const int size = 3;
+        private const int halfSize = size / 2;
 
         private readonly TerrainBlock?[,] blocks;
         private readonly Map map;
         private int blockX;
         private int blockY;
+        private Bounds blockBounds;
 
         private readonly int blockMaxX;
         private readonly int blockMaxY;
@@ -43,11 +42,6 @@ namespace UOClient.Terrain
             return tiles;
         }
 
-        public void Load(GraphicsDevice device, int x, int y)
-        {
-            OnLocationChanged(device, x, y);
-        }
-
         public void OnLocationChanged(GraphicsDevice device, int newX, int newY)
         {
             int newBlockX = newX >> TerrainBlock.SizeOffset;
@@ -59,20 +53,23 @@ namespace UOClient.Terrain
             blockX = newBlockX;
             blockY = newBlockY;
 
+            blockBounds = new
+            (
+                Math.Clamp(blockX - halfSize, 0, blockMaxX),
+                Math.Clamp(blockY - halfSize, 0, blockMaxY),
+                Math.Clamp(blockX + halfSize + 1, 0, blockMaxX),
+                Math.Clamp(blockY + halfSize + 1, 0, blockMaxY)
+            );
+
             LoadBlocks(device);
             UnloadUnusedBlocks();
         }
 
         private void LoadBlocks(GraphicsDevice device)
         {
-            int startX = Math.Clamp(blockX - halfInnerSize, 0, blockMaxX);
-            int startY = Math.Clamp(blockY - halfInnerSize, 0, blockMaxY);
-            int endX = Math.Clamp(blockX + halfInnerSize, 0, blockMaxX);
-            int endY = Math.Clamp(blockY + halfInnerSize, 0, blockMaxY);
-
-            for (int y = startY; y <= endY; y++)
+            for (int y = blockBounds.StartY; y < blockBounds.EndY; y++)
             {
-                for (int x = startX; x <= endX; x++)
+                for (int x = blockBounds.StartX; x < blockBounds.EndX; x++)
                 {
                     blocks[x, y] ??= new(device, x, y, GetTiles(x, y));
                 }
@@ -81,12 +78,12 @@ namespace UOClient.Terrain
 
         private void UnloadUnusedBlocks()
         {
-            int startX = blockX - halfOuterSize;
-            int startY = blockY + halfOuterSize;
-            int endX = blockX - halfOuterSize;
-            int endY = blockY + halfOuterSize;
+            int startX = blockBounds.StartX - 1;
+            int startY = blockBounds.StartY - 1;
+            int endX = blockBounds.EndX + 1;
+            int endY = blockBounds.EndY + 1;
 
-            for (int k = 0; k < outerSize; k++)
+            for (int k = 0; k < size + 2; k++)
             {
                 Unload(startX + k, startY);
                 Unload(startX + k, endY);
@@ -113,11 +110,12 @@ namespace UOClient.Terrain
 
         public void Draw(GraphicsDevice device, IsometricCamera camera, GameTime gameTime, BasicArrayEffect effect, WaterEffect waterEffect)
         {
-            int startX = Math.Clamp(blockX - halfInnerSize, 0, blockMaxX);
-            int startY = Math.Clamp(blockY - halfInnerSize, 0, blockMaxY);
-            int endX = Math.Clamp(blockX + halfInnerSize, 0, blockMaxX);
-            int endY = Math.Clamp(blockY + halfInnerSize, 0, blockMaxY);
+            DrawSolid(device, effect);
+            DrawLiquid(device, waterEffect, camera.Target, gameTime);
+        }
 
+        private void DrawSolid(GraphicsDevice device, BasicArrayEffect effect)
+        {
             EffectPass pass = effect.CurrentTechnique.Passes[0];
 
             for (int k = 1; k < (int)LandTileId.Water; k++)
@@ -135,51 +133,54 @@ namespace UOClient.Terrain
 
                 pass.Apply();
 
-                for (int x = startX; x <= endX; x++)
+                for (int x = blockBounds.StartX; x < blockBounds.EndX; x++)
                 {
-                    for (int y = startY; y <= endY; y++)
+                    for (int y = blockBounds.StartY; y < blockBounds.EndY; y++)
                     {
                         blocks[x, y]!.Draw(device, k);
                     }
                 }
             }
+        }
 
+        private void DrawLiquid(GraphicsDevice device, WaterEffect effect, Vector3 target, GameTime gameTime)
+        {
             EffectPass waterPass;
 
             for (int k = (int)LandTileId.Water; k < (int)LandTileId.Length; k++)
             {
                 ref LiquidTerrainInfo info = ref LiquidTerrainInfo.Values[k];
 
-                waterEffect.TextureIndex = k;
-                waterEffect.Texture0 = info.Texture0;
-                waterEffect.Texture0Stretch = info.Texture0Stretch;
+                effect.TextureIndex = k;
+                effect.Texture0 = info.Texture0;
+                effect.Texture0Stretch = info.Texture0Stretch;
 
-                waterEffect.Normal = info.Normal;
-                waterEffect.NormalStretch = info.NormalStretch;
+                effect.Normal = info.Normal;
+                effect.NormalStretch = info.NormalStretch;
 
-                waterEffect.WaveHeight = info.WaveHeight;
+                effect.WaveHeight = info.WaveHeight;
 
                 if (info.WindSpeed == 0)
                 {
-                    waterEffect.WindForce = 0.05f;
-                    waterEffect.WindDirection = new(0, 1);
+                    effect.WindForce = 0.05f;
+                    effect.WindDirection = new(0, 1);
                 }
                 else
                 {
-                    waterEffect.WindForce = info.WindSpeed;
-                    waterEffect.WindDirection = new(1, 0);
+                    effect.WindForce = info.WindSpeed;
+                    effect.WindDirection = new(1, 0);
                 }
 
-                waterEffect.Time = (float)gameTime.TotalGameTime.TotalMilliseconds / 100.0f;
-                waterEffect.Center = new Vector2(camera.Target.X, camera.Target.Z);
-                waterEffect.FollowCenter = info.FollowCenter;
+                effect.Time = (float)gameTime.TotalGameTime.TotalMilliseconds / 100.0f;
+                effect.Center = new Vector2(target.X, target.Z);
+                effect.FollowCenter = info.FollowCenter;
 
-                waterPass = waterEffect.CurrentTechnique.Passes[0];
+                waterPass = effect.CurrentTechnique.Passes[0];
                 waterPass.Apply();
 
-                for (int i = startX; i <= endX; i++)
+                for (int i = blockBounds.StartX; i < blockBounds.EndX; i++)
                 {
-                    for (int j = startY; j <= endY; j++)
+                    for (int j = blockBounds.StartY; j < blockBounds.EndY; j++)
                     {
                         blocks[i, j]!.Draw(device, k);
                     }
@@ -189,12 +190,12 @@ namespace UOClient.Terrain
 
         public void DrawBoundaries(GraphicsDevice device)
         {
-            int startX = Math.Clamp(blockX - halfInnerSize, 0, blockMaxX);
-            int startY = Math.Clamp(blockY - halfInnerSize, 0, blockMaxY);
+            int startX = Math.Clamp(blockX - halfSize, 0, blockMaxX);
+            int startY = Math.Clamp(blockY - halfSize, 0, blockMaxY);
 
-            for (int i = startX; i < startX + innerSize && i <= blockMaxX; i++)
+            for (int i = startX; i < startX + size && i <= blockMaxX; i++)
             {
-                for (int j = startY; j < startY + innerSize && j <= blockMaxY; j++)
+                for (int j = startY; j < startY + size && j <= blockMaxY; j++)
                 {
                     blocks[i, j].DrawBoundaries(device);
                 }
