@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Diagnostics;
-using UOClient.Effects;
+using UOClient.Effects.Vertices;
 using UOClient.Structures;
 using PrimitiveType = Microsoft.Xna.Framework.Graphics.PrimitiveType;
 using VertexBuffer = Microsoft.Xna.Framework.Graphics.VertexBuffer;
@@ -20,7 +20,7 @@ namespace UOClient.Terrain
         private readonly int blockY;
 
         private readonly MapTile[] tiles;
-        private readonly VertexPositionTextureArray[] vertices;
+        private readonly VertexPositionTextureIndex[] vertices;
         private readonly VertexPositionColor[] boundaries;
         private readonly BitMapBlock64[] indices;
 
@@ -35,11 +35,11 @@ namespace UOClient.Terrain
             this.blockY = blockY;
             this.tiles = tiles;
 
-            vertices = new VertexPositionTextureArray[VertexSize * VertexSize];
+            vertices = new VertexPositionTextureIndex[VertexSize * VertexSize];
             indices = new BitMapBlock64[(int)LandTileId.Length];
             boundaries = new VertexPositionColor[8];
 
-            vBuffer = new(device, VertexPositionTextureArray.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+            vBuffer = new(device, VertexPositionTextureIndex.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
             iBuffers = new IndexBuffer[indices.Length];
 
             SetUpVertices();
@@ -58,7 +58,7 @@ namespace UOClient.Terrain
                 {
                     int index = x + y * VertexSize;
 
-                    ref VertexPositionTextureArray vertex = ref vertices[index];
+                    ref VertexPositionTextureIndex vertex = ref vertices[index];
                     MapTile tile = tiles[index];
 
                     vertex.Position = Vector3.Transform(new Vector3(x, tile.Z, y), m);
@@ -157,7 +157,7 @@ namespace UOClient.Terrain
             SetVertex(vertices[^VertexSize], 6);
             SetVertex(vertices[0], 7);
 
-            void SetVertex(VertexPositionTextureArray v, int i)
+            void SetVertex(VertexPositionTextureIndex v, int i)
             {
                 ref VertexPositionColor vertex = ref boundaries[i];
                 vertex.Position = v.Position;

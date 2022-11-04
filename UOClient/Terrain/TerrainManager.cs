@@ -1,5 +1,6 @@
 ﻿using GameData.Enums;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using UOClient.Data;
@@ -8,7 +9,7 @@ using UOClient.Structures;
 
 namespace UOClient.Terrain
 {
-    internal class Terrain
+    internal class TerrainManager
     {
         private const int size = 3;
         private const int halfSize = size / 2;
@@ -19,10 +20,15 @@ namespace UOClient.Terrain
         private int blockY;
         private Bounds blockBounds;
 
+        private GraphicsDevice device;
+        private IsometricCamera camera;
+        private BasicArrayEffect solid;
+        private WaterEffect liquid;
+
         private readonly int blockMaxX;
         private readonly int blockMaxY;
 
-        public Terrain(int width, int height)
+        public TerrainManager(int width, int height)
         {
             blockX = -1;
             blockY = -1;
@@ -34,18 +40,37 @@ namespace UOClient.Terrain
             blocks = new TerrainBlock[blockMaxX + 1, blockMaxY + 1];
         }
 
-        private unsafe MapTile[] GetTiles(int blockX, int blockY)
+        public void Initialize(GraphicsDevice device, ContentManager contentManager, IsometricCamera camera)
         {
-            MapTile[] tiles = new MapTile[TerrainBlock.VertexSize * TerrainBlock.VertexSize];
-            map.FillChunk(blockX, blockY, tiles);
+            this.device = device;
+            this.camera = camera;
 
-            return tiles;
+            solid = new(contentManager)
+            {
+                TextureEnabled = true,
+                View = camera.ViewMatrix,
+                Projection = camera.ProjectionMatrix,
+                World = camera.WorldMatrix,
+                GridEnabled = true
+            };
+
+            liquid = new(contentManager)
+            {
+                TextureEnabled = true,
+                View = camera.ViewMatrix,
+                Projection = camera.ProjectionMatrix,
+                World = camera.WorldMatrix,
+            };
         }
 
-        public void OnLocationChanged(GraphicsDevice device, int newX, int newY)
+        public void OnLocationChanged()
         {
-            int newBlockX = newX >> TerrainBlock.SizeOffset;
-            int newBlockY = newY >> TerrainBlock.SizeOffset;
+            UpdateMatrices();
+
+            Vector3 target = camera.Target;
+
+            int newBlockX = (int)target.X >> TerrainBlock.SizeOffset;
+            int newBlockY = (int)target.Z >> TerrainBlock.SizeOffset;
 
             if (blockX == newBlockX && blockY == newBlockY)
                 return;
@@ -108,28 +133,37 @@ namespace UOClient.Terrain
             }
         }
 
-        public void Draw(GraphicsDevice device, IsometricCamera camera, GameTime gameTime, BasicArrayEffect effect, WaterEffect waterEffect)
+        private void UpdateMatrices()
         {
-            DrawSolid(device, effect);
-            DrawLiquid(device, waterEffect, camera.Target, gameTime);
+            solid.View = camera.ViewMatrix;
+            liquid.View = camera.ViewMatrix;
         }
 
-        private void DrawSolid(GraphicsDevice device, BasicArrayEffect effect)
+        public void Draw(GameTime gameTime)
         {
-            EffectPass pass = effect.CurrentTechnique.Passes[0];
+            solid.PreDraw();
+            liquid.PreDraw();
+
+            DrawSolid();
+            DrawLiquid(gameTime);
+        }
+
+        private void DrawSolid()
+        {
+            EffectPass pass = solid.CurrentTechnique.Passes[0];
 
             for (int k = 1; k < (int)LandTileId.Water; k++)
             {
                 ref SolidTerrainInfo info = ref SolidTerrainInfo.Values[k];
 
-                effect.TextureIndex = k;
-                effect.Texture0 = info.Texture0;
-                effect.Texture1 = info.Texture1;
-                effect.AlphaMask = info.AlphaMask;
+                solid.TextureIndex = k;
+                solid.Texture0 = info.Texture0;
+                solid.Texture1 = info.Texture1;
+                solid.AlphaMask = info.AlphaMask;
 
-                effect.Texture0Stretch = info.Texture0Stretch;
-                effect.Texture1Stretch = info.Texture1Stretch;
-                effect.AlphaMaskStretch = info.AlphaMaskStretch;
+                solid.Texture0Stretch = info.Texture0Stretch;
+                solid.Texture1Stretch = info.Texture1Stretch;
+                solid.AlphaMaskStretch = info.AlphaMaskStretch;
 
                 pass.Apply();
 
@@ -143,39 +177,41 @@ namespace UOClient.Terrain
             }
         }
 
-        private void DrawLiquid(GraphicsDevice device, WaterEffect effect, Vector3 target, GameTime gameTime)
+        private void DrawLiquid(GameTime gameTime)
         {
             EffectPass waterPass;
+            Vector3 target = camera.Target;
+
+            liquid.Time = (float)gameTime.TotalGameTime.TotalMilliseconds / 100.0f;
+            liquid.Center = new Vector2(target.X, target.Z);
 
             for (int k = (int)LandTileId.Water; k < (int)LandTileId.Length; k++)
             {
                 ref LiquidTerrainInfo info = ref LiquidTerrainInfo.Values[k];
 
-                effect.TextureIndex = k;
-                effect.Texture0 = info.Texture0;
-                effect.Texture0Stretch = info.Texture0Stretch;
+                liquid.TextureIndex = k;
+                liquid.Texture0 = info.Texture0;
+                liquid.Texture0Stretch = info.Texture0Stretch;
 
-                effect.Normal = info.Normal;
-                effect.NormalStretch = info.NormalStretch;
+                liquid.Normal = info.Normal;
+                liquid.NormalStretch = info.NormalStretch;
 
-                effect.WaveHeight = info.WaveHeight;
+                liquid.WaveHeight = info.WaveHeight;
 
                 if (info.WindSpeed == 0)
                 {
-                    effect.WindForce = 0.05f;
-                    effect.WindDirection = new(0, 1);
+                    liquid.WindForce = 0.05f;
+                    liquid.WindDirection = new(0, 1);
                 }
                 else
                 {
-                    effect.WindForce = info.WindSpeed;
-                    effect.WindDirection = new(1, 0);
+                    liquid.WindForce = info.WindSpeed;
+                    liquid.WindDirection = new(1, 0);
                 }
+                
+                liquid.FollowCenter = info.FollowCenter;
 
-                effect.Time = (float)gameTime.TotalGameTime.TotalMilliseconds / 100.0f;
-                effect.Center = new Vector2(target.X, target.Z);
-                effect.FollowCenter = info.FollowCenter;
-
-                waterPass = effect.CurrentTechnique.Passes[0];
+                waterPass = liquid.CurrentTechnique.Passes[0];
                 waterPass.Apply();
 
                 for (int i = blockBounds.StartX; i < blockBounds.EndX; i++)
@@ -200,6 +236,14 @@ namespace UOClient.Terrain
                     blocks[i, j].DrawBoundaries(device);
                 }
             }
+        }
+
+        private MapTile[] GetTiles(int blockX, int blockY)
+        {
+            MapTile[] tiles = new MapTile[TerrainBlock.VertexSize * TerrainBlock.VertexSize];
+            map.FillChunk(blockX, blockY, tiles);
+
+            return tiles;
         }
     }
 }

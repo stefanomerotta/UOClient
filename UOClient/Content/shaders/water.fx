@@ -134,7 +134,7 @@ float2 GetText0Coord(float4 position)
     return position.xz / Texture0Stretch;
 }
 
-float GetAlphaMask(uint textId)
+float GetAlphaMask(int textId)
 {
     return TextureIndex <= textId;
 }

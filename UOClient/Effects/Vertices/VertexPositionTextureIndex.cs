@@ -2,9 +2,9 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 
-namespace UOClient.Effects
+namespace UOClient.Effects.Vertices
 {
-    public struct VertexPositionTextureArray : IVertexType, IEquatable<VertexPositionTextureArray>
+    public struct VertexPositionTextureIndex : IVertexType, IEquatable<VertexPositionTextureIndex>
     {
         public static readonly VertexDeclaration VertexDeclaration = new
         (
@@ -17,7 +17,7 @@ namespace UOClient.Effects
 
         VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
 
-        public VertexPositionTextureArray(Vector3 position, ushort textureIndex)
+        public VertexPositionTextureIndex(Vector3 position, ushort textureIndex)
         {
             Position = position;
             TextureIndex = textureIndex;
@@ -33,22 +33,22 @@ namespace UOClient.Effects
             return $"{{Position:{Position} TextureCoordinate:{TextureIndex}}}";
         }
 
-        public bool Equals(VertexPositionTextureArray other)
+        public bool Equals(VertexPositionTextureIndex other)
         {
             return Position == other.Position && TextureIndex == other.TextureIndex;
         }
 
         public override bool Equals(object? obj)
         {
-            return obj is VertexPositionTextureArray texture && Equals(texture);
+            return obj is VertexPositionTextureIndex texture && Equals(texture);
         }
 
-        public static bool operator ==(VertexPositionTextureArray left, VertexPositionTextureArray right)
+        public static bool operator ==(VertexPositionTextureIndex left, VertexPositionTextureIndex right)
         {
             return left.Equals(right);
         }
 
-        public static bool operator !=(VertexPositionTextureArray left, VertexPositionTextureArray right)
+        public static bool operator !=(VertexPositionTextureIndex left, VertexPositionTextureIndex right)
         {
             return !(left == right);
         }

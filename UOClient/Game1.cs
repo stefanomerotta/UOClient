@@ -1,11 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using UOClient.Effects;
+using UOClient.Statics;
 using UOClient.Terrain;
 using CullMode = Microsoft.Xna.Framework.Graphics.CullMode;
 using FillMode = Microsoft.Xna.Framework.Graphics.FillMode;
-using Map = UOClient.Terrain.Terrain;
 using RasterizerState = Microsoft.Xna.Framework.Graphics.RasterizerState;
 using SpriteBatch = Microsoft.Xna.Framework.Graphics.SpriteBatch;
 
@@ -16,32 +15,34 @@ namespace UOClient
         private GraphicsDeviceManager graphics;
         private GraphicsDevice device;
         private readonly IsometricCamera camera;
-        private readonly Map terrain;
+        private readonly TerrainManager terrain;
+        private readonly StaticsManager statics;
         private SpriteBatch spriteBatch;
         private readonly FPSCounter fps;
         private SpriteFont font;
 
         private BasicEffect wireframeEffect;
-        private BasicArrayEffect effect;
-        private WaterEffect waterEffect;
 
         public Game1()
         {
-            graphics = new(this);
-            graphics.GraphicsProfile = GraphicsProfile.HiDef;
+            graphics = new(this)
+            {
+                GraphicsProfile = GraphicsProfile.HiDef
+            };
 
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
             terrain = new(1448, 1448);
+            statics = new();
             camera = new();
             fps = new();
         }
 
         protected override void Initialize()
         {
-            graphics.PreferredBackBufferWidth = 1600;
-            graphics.PreferredBackBufferHeight = 1000;
+            graphics.PreferredBackBufferWidth = 1200;
+            graphics.PreferredBackBufferHeight = 1200;
             graphics.IsFullScreen = false;
             graphics.ApplyChanges();
             Window.Title = "Riemer's MonoGame Tutorials -- 3D Series 1";
@@ -53,8 +54,6 @@ namespace UOClient
         {
             device = graphics.GraphicsDevice;
 
-            effect = new(Content) { TextureEnabled = true, };
-            waterEffect = new(Content) { TextureEnabled = true };
             wireframeEffect = new(device) { VertexColorEnabled = true };
 
             spriteBatch = new(device);
@@ -62,6 +61,9 @@ namespace UOClient
 
             SolidTerrainInfo.Load(Content);
             LiquidTerrainInfo.Load(Content);
+
+            terrain.Initialize(device, Content, camera);
+            statics.Initialize(device, Content, camera);
         }
 
         protected override void Update(GameTime gameTime)
@@ -69,8 +71,12 @@ namespace UOClient
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            camera.HandleKeyboardInput();
-            terrain.OnLocationChanged(device, (int)camera.Target.X, (int)camera.Target.Z);
+            if (camera.HandleKeyboardInput()) ;
+            //{
+                terrain.OnLocationChanged();
+                statics.OnLocationChanged();
+            //}
+
             fps.Update(gameTime);
 
             base.Update(gameTime);
@@ -80,14 +86,6 @@ namespace UOClient
         {
             device.Clear(Color.DarkSlateBlue);
             //device.Clear(Color.Black);
-
-            effect.View = camera.ViewMatrix;
-            effect.Projection = camera.ProjectionMatrix;
-            effect.World = camera.WorldMatrix;
-
-            waterEffect.View = camera.ViewMatrix;
-            waterEffect.Projection = camera.ProjectionMatrix;
-            waterEffect.World = camera.WorldMatrix;
 
             wireframeEffect.View = camera.ViewMatrix;
             wireframeEffect.Projection = camera.ProjectionMatrix;
@@ -102,16 +100,14 @@ namespace UOClient
             device.RasterizerState = rs;
             device.BlendState = BlendState.AlphaBlend;
 
-            waterEffect.PreDraw();
-            effect.PreDraw();
+            terrain.Draw(gameTime);
+            statics.Draw();
 
-            terrain.Draw(device, camera, gameTime, effect, waterEffect);
-
-            RasterizerState rs2 = new()
-            {
-                CullMode = CullMode.None,
-                FillMode = FillMode.WireFrame
-            };
+            //RasterizerState rs2 = new()
+            //{
+            //    CullMode = CullMode.None,
+            //    FillMode = FillMode.WireFrame
+            //};
 
             //device.RasterizerState = rs2;
 

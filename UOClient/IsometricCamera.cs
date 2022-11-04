@@ -7,7 +7,8 @@ namespace UOClient
 {
     public sealed class IsometricCamera
     {
-        private Vector3 position;
+        private static readonly Vector3 transformPosition = new Vector3(1, (float)Math.Sqrt(2), 1) * 127;
+
         private Vector3 target;
         private float zoom;
 
@@ -15,27 +16,28 @@ namespace UOClient
         public Matrix ViewMatrix { get; private set; }
         public Matrix ProjectionMatrix { get; private set; }
 
+        public Vector3 Position => target + transformPosition;
         public Vector3 Target => target;
-        public Vector3 Position => position;
         public float Zoom => zoom;
 
         public IsometricCamera()
         {
-            float val = (float)Math.Cos(Math.PI / 4);
-
-            target = new(249, 0, 1026);
-            position = (new Vector3(val, val * 10, val) * 127) + target;
+            target = new(185, 0, 300);
             zoom = 1;
 
-            WorldMatrix = Matrix.Identity;
-            ViewMatrix = Matrix.CreateLookAt(position, target, Vector3.UnitY);
+            WorldMatrix = Matrix.CreateScale(1, .1f, 1);
+            
+            ProjectionMatrix = Matrix.CreateTranslation(-0.5f, -0.5f, 0)
+                * Matrix.CreateOrthographic(20, 20, 0, 3000.0f)
+                * Matrix.CreateScale(1, (float)Math.Sqrt(2), 1);
 
-            ProjectionMatrix = Matrix.CreateOrthographic(20, 20, 0, 3000.0f)
-                * Matrix.CreateScale(1, 1.5f, 1);
+            UpdateViewMatrix();
         }
 
-        public void HandleKeyboardInput()
+        public bool HandleKeyboardInput()
         {
+            bool modified = false;
+
             KeyboardState keyboard = Keyboard.GetState();
 
             bool up = keyboard.IsKeyDown(Keys.Up);
@@ -44,44 +46,48 @@ namespace UOClient
             bool down = keyboard.IsKeyDown(Keys.Down);
 
             if (keyboard.IsKeyDown(Keys.OemPlus))
+            {
                 zoom += .01f;
+                modified = true;
+            }
             else if (keyboard.IsKeyDown(Keys.OemMinus))
+            {
                 zoom -= .01f;
+                modified = true;
+            }
 
             if (up)
             {
-                position.X -= 1;
-                position.Z -= 1;
                 target.X -= 1;
                 target.Z -= 1;
+                modified = true;
             }
 
             if (right)
             {
-                position.X += 1;
-                position.Z -= 1;
                 target.X += 1;
                 target.Z -= 1;
+                modified = true;
             }
 
             if (left)
             {
-                position.X -= 1;
-                position.Z += 1;
                 target.X -= 1;
                 target.Z += 1;
+                modified = true;
             }
 
             if (down)
             {
-                position.X += 1;
-                position.Z += 1;
                 target.X += 1;
                 target.Z += 1;
+                modified = true;
             }
 
-            ViewMatrix = Matrix.CreateLookAt(position, target, Vector3.UnitY)
-                * Matrix.CreateScale(zoom, zoom, 1);
+            if (modified)
+                UpdateViewMatrix();
+
+            return modified;
         }
 
         public void Test(GraphicsDevice device)
@@ -128,6 +134,12 @@ namespace UOClient
                 new(Vector3.Add(v, new Vector3(0, 1, 0)), color),
                 new(Vector3.Add(v, new Vector3(0, 0, 0)), color)
             };
+        }
+
+        private void UpdateViewMatrix()
+        {
+            ViewMatrix = Matrix.CreateLookAt(target + transformPosition, target, Vector3.UnitY)
+                * Matrix.CreateScale(zoom, zoom, 1);
         }
     }
 }

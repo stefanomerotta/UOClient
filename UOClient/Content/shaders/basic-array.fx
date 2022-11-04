@@ -101,6 +101,15 @@ struct VSOutputTxArrayNoFog
     float3 AlphaMaskCoord : TEXCOORD1;
 };
 
+struct VSOutputTxArrayNoFogGrid
+{
+    float4 PositionPS : SV_Position;
+    float4 Diffuse : COLOR0;
+    float4 TexCoord : TEXCOORD0;
+    float3 AlphaMaskCoord : TEXCOORD1;
+    float4 Position : TEXCOORD2;
+};
+
 struct VSOutputPixelLightingTxArray
 {
     float4 PositionPS : SV_Position;
@@ -119,7 +128,7 @@ float4 GetMainTextCoord(float4 position)
     return float4(xy, zw);
 }
 
-float3 GetAlphaTextCoord(float4 position, uint textId)
+float3 GetAlphaTextCoord(float4 position, int textId)
 {
     float2 xy = position.xz / AlphaMaskStretch;
     bool a = TextureIndex <= textId;
@@ -204,6 +213,20 @@ VSOutputTxArrayNoFog VSBasicTxNoFog(VSInputTxArray vin)
     
     vout.TexCoord = GetMainTextCoord(vin.Position);
     vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
+    
+    return vout;
+}
+
+VSOutputTxArrayNoFogGrid VSBasicTxNoFogGrid(VSInputTxArray vin)
+{
+    VSOutputTxArrayNoFogGrid vout;
+    
+    CommonVSOutput cout = ComputeCommonVSOutput(vin.Position);
+    SetCommonVSOutputParamsNoFog;
+    
+    vout.TexCoord = GetMainTextCoord(vin.Position);
+    vout.AlphaMaskCoord = GetAlphaTextCoord(vin.Position, vin.TexIndex);
+    vout.Position = vin.Position;
     
     return vout;
 }
@@ -461,6 +484,27 @@ float4 PSBasicTxNoFog(VSOutputTxArrayNoFog pin) : SV_Target0
     return color * pin.Diffuse;
 }
 
+// Pixel shader: texture, no fog.
+float4 PSBasicTxNoFogGrid(VSOutputTxArrayNoFogGrid pin) : SV_Target0
+{
+    float4 color0 = Texture0.SampleLevel(TextureSampler, pin.TexCoord.xy, 0);
+    float4 color1 = Texture1.SampleLevel(TextureSampler, pin.TexCoord.zw, 0);
+    float4 alpha = AlphaMask.SampleLevel(TextureSampler, pin.AlphaMaskCoord.xy, 0);
+    
+    float4 color = lerp(color0, color1, alpha.a);
+    
+    color = lerp(color, 0, 1 - pin.AlphaMaskCoord.z);
+    color.a = pin.AlphaMaskCoord.z;
+    
+    if (frac(pin.Position.x) >= 0 && frac(pin.Position.x) < 0.01)
+        color = 1;
+    
+    if (frac(pin.Position.z) >= 0 && frac(pin.Position.z) < 0.01)
+        color = 1;
+    
+    return color * pin.Diffuse;
+}
+
 
 // Pixel shader: vertex lighting.
 float4 PSBasicVertexLighting(VSOutput pin) : SV_Target0
@@ -584,3 +628,12 @@ TECHNIQUE(BasicEffect_PixelLighting_Texture, VSBasicPixelLightingTx, PSBasicPixe
 TECHNIQUE(BasicEffect_PixelLighting_Texture_NoFog, VSBasicPixelLightingTx, PSBasicPixelLightingTx);
 TECHNIQUE(BasicEffect_PixelLighting_Texture_VertexColor, VSBasicPixelLightingTxVc, PSBasicPixelLightingTx);
 TECHNIQUE(BasicEffect_PixelLighting_Texture_VertexColor_NoFog, VSBasicPixelLightingTxVc, PSBasicPixelLightingTx);
+
+TECHNIQUE(BasicEffect_Grid, VSBasic, PSBasic);
+TECHNIQUE(BasicEffect_Grid_NoFog, VSBasicNoFog, PSBasicNoFog);
+TECHNIQUE(BasicEffect_Grid_VertexColor, VSBasicVc, PSBasic);
+TECHNIQUE(BasicEffect_Grid_VertexColor_NoFog, VSBasicVcNoFog, PSBasicNoFog);
+TECHNIQUE(BasicEffect_Grid_Texture, VSBasicTx, PSBasicTx);
+TECHNIQUE(BasicEffect_Grid_Texture_NoFog, VSBasicTxNoFogGrid, PSBasicTxNoFogGrid);
+TECHNIQUE(BasicEffect_Grid_Texture_VertexColor, VSBasicTxVc, PSBasicTx);
+TECHNIQUE(BasicEffect_Grid_Texture_VertexColor_NoFog, VSBasicTxVcNoFog, PSBasicTxNoFog);
