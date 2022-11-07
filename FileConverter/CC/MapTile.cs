@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace UOClient.Structures
+namespace FileConverter.CC
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct MapTile

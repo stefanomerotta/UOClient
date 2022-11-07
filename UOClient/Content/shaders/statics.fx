@@ -10,14 +10,15 @@ sampler TextureSampler : register(s0) = sampler_state
 cbuffer Parameters : register(b0)
 {
     float2 TextureSize;
-    
+    float3x3 Rotation;
     float4x4 WorldViewProjection;
 };
 
 struct VertexShaderInput
 {
     float4 Position : POSITION0;
-    float3 TexCoord : TEXCOORD0;
+    float2 Bounds : TEXCOORD0;
+    float3 TexCoord : TEXCOORD1;
 };
 
 struct VertexShaderOutput
@@ -30,7 +31,10 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 {
     VertexShaderOutput output = (VertexShaderOutput) 0;
 
-    output.Position = mul(input.Position, WorldViewProjection);
+    float3 billboard = mul(float3(input.Bounds, 0), Rotation);
+    float4 translatedPosition = float4(input.Position.xyz + billboard, input.Position.w);
+    
+    output.Position = mul(translatedPosition, WorldViewProjection);
     output.TexCoord = float3(input.TexCoord.xy / TextureSize, input.TexCoord.z);
 
     return output;
@@ -40,8 +44,9 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 {
     float4 color = Texture0.SampleLevel(TextureSampler, input.TexCoord.xy, 0);
     clip(color.a - 1);
-    color.rgb *= color.a;
+    //color.rgb *= color.a;
     //color.a = 0.5;
+    //color.a = 1;
     
     return color;
 }

@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FileSystem\FileSystem.csproj" />
+    <ProjectReference Include="..\GameData\GameData.csproj" />
+    <ProjectReference Include="..\Mythic.Package.Core\Mythic.Package.Core.csproj" />
+  </ItemGroup>
+
+</Project>

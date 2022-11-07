@@ -9,9 +9,6 @@ namespace UOClient.Statics
 {
     internal class StaticsManager
     {
-        private static readonly Vector3 billboardStartOffset = new(0, 0, 2);
-        private static readonly Vector3 billboardEndOffset = new(2, 0, 0);
-
         private GraphicsDevice device;
         private IsometricCamera camera;
         private StaticsEffect effect;
@@ -71,7 +68,8 @@ namespace UOClient.Statics
                 View = camera.ViewMatrix,
                 Projection = camera.ProjectionMatrix,
                 Texture0 = textureAtlas,
-                TextureSize = new(1024, 256)
+                TextureSize = new(1024, 256),
+                Rotation = Matrix.CreateRotationY(MathHelper.ToRadians(45))
             };
 
             vBuffer = new(device, StaticsVertex.VertexDeclaration, 12, BufferUsage.WriteOnly);
@@ -267,10 +265,10 @@ namespace UOClient.Statics
             Vector3 textureUpperLeft = new(data.StartX, data.StartY, index);
             Vector3 textureUpperRight = new(data.StartX + data.Width, data.StartY, index);
 
-            vertices[0] = new(lowerLeft, textureLowerLeft);
-            vertices[1] = new(upperLeft, textureUpperLeft);
-            vertices[2] = new(upperRight, textureUpperRight);
-            vertices[3] = new(lowerRight, textureLowerRight);
+            //vertices[0] = new(lowerLeft, textureLowerLeft);
+            //vertices[1] = new(upperLeft, textureUpperLeft);
+            //vertices[2] = new(upperRight, textureUpperRight);
+            //vertices[3] = new(lowerRight, textureLowerRight);
         }
 
         private void BuildBillboard2(Vector3 position, StaticData data, int index, Span<StaticsVertex> vertices)
@@ -279,29 +277,35 @@ namespace UOClient.Statics
             float bbWidth = data.Width * rateo;
             float bbHeight = data.Height * 10 * rateo;
 
-            Matrix m = Matrix.CreateTranslation(new Vector3(data.OffsetX * rateo, -data.OffsetY * 10 * rateo, 0))
-                * Matrix.CreateRotationY(MathHelper.ToRadians(45))
-                * Matrix.CreateTranslation(position);
+            //Matrix m = Matrix.CreateTranslation(new Vector3(data.OffsetX * rateo, -data.OffsetY * 10 * rateo, 0))
+            //    * Matrix.CreateRotationY(MathHelper.ToRadians(45))
+            //    * Matrix.CreateTranslation(position);
+            Matrix m = Matrix.CreateTranslation(position);
 
-            Vector3 lowerLeft = Vector3.Zero;
-            Vector3 lowerRight = new(bbWidth, 0, 0);
-            Vector3 upperLeft = lowerLeft with { Y = bbHeight };
-            Vector3 upperRight = lowerRight with { Y = bbHeight };
+            Vector2 lowerLeft = new(data.OffsetX * rateo, -data.OffsetY * 10 * rateo);
+            Vector2 lowerRight = lowerLeft with { X = lowerLeft.X + bbWidth };
+            Vector2 upperLeft = lowerLeft with { Y = lowerLeft.Y + bbHeight };
+            Vector2 upperRight = lowerRight with { Y = lowerRight.Y + bbHeight };
+
+            //Vector2 lowerLeft = Vector2.Zero;
+            //Vector2 lowerRight = new(bbWidth, 0);
+            //Vector2 upperLeft = lowerLeft with { Y = lowerLeft.Y + bbHeight };
+            //Vector2 upperRight = lowerRight with { Y = lowerRight.Y + bbHeight };
 
             Vector3 textureLowerLeft = new(data.StartX, data.StartY + data.Height, index);
             Vector3 textureLowerRight = new(data.StartX + data.Width, data.StartY + data.Height, index);
             Vector3 textureUpperLeft = new(data.StartX, data.StartY, index);
             Vector3 textureUpperRight = new(data.StartX + data.Width, data.StartY, index);
 
-            lowerLeft = Vector3.Transform(lowerLeft, m);
-            lowerRight = Vector3.Transform(lowerRight, m);
-            upperLeft = Vector3.Transform(upperLeft, m);
-            upperRight = Vector3.Transform(upperRight, m);
+            //lowerLeft = Vector3.Transform(lowerLeft, m);
+            //lowerRight = Vector3.Transform(lowerRight, m);
+            //upperLeft = Vector3.Transform(upperLeft, m);
+            //upperRight = Vector3.Transform(upperRight, m);
 
-            vertices[0] = new(lowerLeft, textureLowerLeft);
-            vertices[1] = new(upperLeft, textureUpperLeft);
-            vertices[2] = new(upperRight, textureUpperRight);
-            vertices[3] = new(lowerRight, textureLowerRight);
+            vertices[0] = new(position, lowerLeft, textureLowerLeft);
+            vertices[1] = new(position, upperLeft, textureUpperLeft);
+            vertices[2] = new(position, upperRight, textureUpperRight);
+            vertices[3] = new(position, lowerRight, textureLowerRight);
         }
 
         private struct StaticData

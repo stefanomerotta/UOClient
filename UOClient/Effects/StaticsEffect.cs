@@ -11,6 +11,7 @@ namespace UOClient.Effects
         private readonly EffectParameter texture0;
         private readonly EffectParameter textureSize;
         private readonly EffectParameter worldViewProjection;
+        private readonly EffectParameter rotation;
 
         private Matrix world = Matrix.Identity;
         private Matrix view = Matrix.Identity;
@@ -19,6 +20,12 @@ namespace UOClient.Effects
         public Matrix World { get => world; init => world = value; }
         public Matrix View { get => view; set => SetViewMatrix(value); }
         public Matrix Projection { get => projection; init => projection = value; }
+        
+        public Matrix Rotation
+        {
+            get => rotation.GetValueMatrix(); 
+            set => rotation.SetValue(value);
+        }
 
         public Texture2D Texture0
         {
@@ -41,6 +48,7 @@ namespace UOClient.Effects
             texture0 = effect.Parameters["Texture0"];
             textureSize = effect.Parameters["TextureSize"];
             worldViewProjection = effect.Parameters["WorldViewProjection"];
+            rotation = effect.Parameters["Rotation"];
         }
 
         private void SetViewMatrix(Matrix view)

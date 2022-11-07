@@ -103,20 +103,20 @@ namespace UOClient
             terrain.Draw(gameTime);
             statics.Draw();
 
-            //RasterizerState rs2 = new()
-            //{
-            //    CullMode = CullMode.None,
-            //    FillMode = FillMode.WireFrame
-            //};
+            RasterizerState rs2 = new()
+            {
+                CullMode = CullMode.None,
+                FillMode = FillMode.WireFrame
+            };
 
-            //device.RasterizerState = rs2;
+            device.RasterizerState = rs2;
 
-            //foreach (EffectPass pass in wireframeEffect.CurrentTechnique.Passes)
-            //{
-            //    pass.Apply();
-            //    camera.Test(device);
-            //    terrain.DrawBoundaries(device);
-            //}
+            foreach (EffectPass pass in wireframeEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                camera.Test(device);
+                terrain.DrawBoundaries(device);
+            }
 
             //Vector3 position = device.Viewport.Project(Vector3.Subtract(camera.Target, new Vector3(5, 5, 0)), camera.ProjectionMatrix, camera.ViewMatrix, Matrix.Identity);
 

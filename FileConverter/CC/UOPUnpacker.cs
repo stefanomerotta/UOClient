@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
-using MapConverter.IO;
+using FileConverter.IO;
 
-namespace MapConverter.UOP
+namespace FileConverter.CC
 {
     internal sealed class UOPUnpacker
     {

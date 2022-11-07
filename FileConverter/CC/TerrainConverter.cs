@@ -1,20 +1,17 @@
-﻿using FileSystem.Enums;
-using FileSystem.IO;
-using MapConverter.UOP;
-using System.Diagnostics;
-using System.IO.MemoryMappedFiles;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
+using NewMapTile = FileConverter.Structures.TerrainTile;
 
-namespace MapConverter
+namespace FileConverter.CC
 {
-    internal class CCMapConverter
+    internal class TerrainConverter
     {
         private const int oldSize = 8;
-        private const int oldSizeOffset = 3;
+        private const int oldSizeShift = 3;
         private const int newSize = 64;
-        private const int newSizeOffset = 6;
-        private const int deltaSizeOffset = newSizeOffset - oldSizeOffset;
-        private const int deltaSize = newSize >> deltaSizeOffset;
+        private const int newSizeShift = 6;
+        private const int deltaSizeShift = newSizeShift - oldSizeShift;
+        private const int deltaSize = newSize >> deltaSizeShift;
 
         private readonly int width;
         private readonly int height;
@@ -25,14 +22,14 @@ namespace MapConverter
         private readonly string path;
         private readonly UOPMap map;
 
-        public CCMapConverter(string path, int id, int width, int height)
+        public TerrainConverter(string path, int id, int width, int height)
         {
             this.path = path;
             this.width = width;
             this.height = height;
 
-            oldChunkWidth = width >> oldSizeOffset;
-            oldChunkHeight = height >> oldSizeOffset;
+            oldChunkWidth = width >> oldSizeShift;
+            oldChunkHeight = height >> oldSizeShift;
 
             newChunkWidth = (int)Math.Ceiling(width / (double)newSize);
             newChunkHeight = (int)Math.Ceiling(height / (double)newSize);
@@ -40,46 +37,19 @@ namespace MapConverter
             map = new(path, id, width, height);
         }
 
-        public unsafe void Convert(string fileName)
+        public unsafe void ConvertChunk(int x, int y, Span<NewMapTile> chunk)
         {
-            using FileStream stream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", fileName));
-            using PackageWriter writer = new(stream);
+            Debug.Assert(chunk.Length == (newSize + 1) * (newSize + 1));
 
-            Span<MapTile> newChunk = new MapTile[(newSize + 1) * (newSize + 1)];
+            int oldX = x << deltaSizeShift;
+            int oldY = y << deltaSizeShift;
 
-            for (int y = 0; y < newChunkHeight; y++)
-            {
-                for (int x = 0; x < newChunkWidth; x++)
-                {
-                    int oldX = x << deltaSizeOffset;
-                    int oldY = y << deltaSizeOffset;
+            Span<MapTile> newChunk = MemoryMarshal.Cast<NewMapTile, MapTile>(chunk);
 
-                    LoadOldChunks(oldX, oldY, newChunk);
-                    LoadRightDelimiters(oldX, oldY, newChunk);
-                    LoadBottomDelimiters(oldX, oldY, newChunk);
-                    LoadCornerDelimiter(oldX, oldY, newChunk);
-
-                    writer.WriteSpan(x + y * newChunkHeight, newChunk, CompressionAlgorithm.Zstd);
-
-                    newChunk.Clear();
-                }
-            }
-        }
-
-        private void LoadOldChunk(int x, int y, Span<MapTile> tiles)
-        {
-            Debug.Assert(tiles.Length == oldSize * oldSize);
-
-            if (x >= oldChunkWidth || y >= oldChunkHeight)
-                return;
-
-            map.FillChunk(x, y, tiles);
-
-            for (int i = 0; i < tiles.Length; i++)
-            {
-                ref MapTile tile = ref tiles[i];
-                tile.Id = (ushort)MapTileTranscoder.GetNewId(tile.Id);
-            }
+            LoadOldChunks(oldX, oldY, newChunk);
+            LoadRightDelimiters(oldX, oldY, newChunk);
+            LoadBottomDelimiters(oldX, oldY, newChunk);
+            LoadCornerDelimiter(oldX, oldY, newChunk);
         }
 
         private unsafe void LoadOldChunks(int startX, int startY, Span<MapTile> tiles)
@@ -92,12 +62,12 @@ namespace MapConverter
             for (int x = 0; x < deltaSize; x++)
             {
                 int oldX = startX + x;
-                int tileX = x << deltaSizeOffset;
+                int tileX = x << deltaSizeShift;
 
                 for (int y = 0; y < deltaSize; y++)
                 {
                     int oldY = startY + y;
-                    int tileY = y << deltaSizeOffset;
+                    int tileY = y << deltaSizeShift;
 
                     LoadOldChunk(oldX, oldY, oldChunk);
 
@@ -125,7 +95,7 @@ namespace MapConverter
             for (int y = 0; y < deltaSize; y++)
             {
                 int oldY = startY + y;
-                int tileY = y << deltaSizeOffset;
+                int tileY = y << deltaSizeShift;
 
                 LoadOldChunk(oldX, oldY, oldChunk);
 
@@ -152,7 +122,7 @@ namespace MapConverter
             for (int x = 0; x < deltaSize; x++)
             {
                 int oldX = startX + x;
-                int tileX = x << deltaSizeOffset;
+                int tileX = x << deltaSizeShift;
 
                 LoadOldChunk(oldX, oldY, oldChunk);
 
@@ -182,6 +152,22 @@ namespace MapConverter
             LoadOldChunk(oldX, oldY, oldChunk);
 
             tiles[tileX + tileY * (newSize + 1)] = oldChunk[0];
+        }
+
+        private void LoadOldChunk(int x, int y, Span<MapTile> tiles)
+        {
+            Debug.Assert(tiles.Length == oldSize * oldSize);
+
+            if (x >= oldChunkWidth || y >= oldChunkHeight)
+                return;
+
+            map.FillChunk(x, y, tiles);
+
+            for (int i = 0; i < tiles.Length; i++)
+            {
+                ref MapTile tile = ref tiles[i];
+                tile.Id = MapTileTranscoder.GetNewId(tile.Id);
+            }
         }
     }
 }

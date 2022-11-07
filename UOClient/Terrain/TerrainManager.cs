@@ -33,9 +33,9 @@ namespace UOClient.Terrain
             blockX = -1;
             blockY = -1;
 
-            blockMaxX = width / TerrainBlock.Size - 1;
-            blockMaxY = height / TerrainBlock.Size - 1;
-            map = new MyMap(width, height);
+            blockMaxX = (int)Math.Ceiling(width / (double)TerrainBlock.Size) - 1;
+            blockMaxY = (int)Math.Ceiling(height / (double)TerrainBlock.Size) - 1;
+            map = new Map(width, height);
 
             blocks = new TerrainBlock[blockMaxX + 1, blockMaxY + 1];
         }
@@ -51,7 +51,7 @@ namespace UOClient.Terrain
                 View = camera.ViewMatrix,
                 Projection = camera.ProjectionMatrix,
                 World = camera.WorldMatrix,
-                GridEnabled = true
+                //GridEnabled = true
             };
 
             liquid = new(contentManager)
@@ -226,22 +226,19 @@ namespace UOClient.Terrain
 
         public void DrawBoundaries(GraphicsDevice device)
         {
-            int startX = Math.Clamp(blockX - halfSize, 0, blockMaxX);
-            int startY = Math.Clamp(blockY - halfSize, 0, blockMaxY);
-
-            for (int i = startX; i < startX + size && i <= blockMaxX; i++)
+            for (int i = blockBounds.StartX; i < blockBounds.EndX; i++)
             {
-                for (int j = startY; j < startY + size && j <= blockMaxY; j++)
+                for (int j = blockBounds.StartY; j < blockBounds.EndY; j++)
                 {
-                    blocks[i, j].DrawBoundaries(device);
+                    blocks[i, j]!.DrawBoundaries(device);
                 }
             }
         }
 
-        private MapTile[] GetTiles(int blockX, int blockY)
+        private TerrainTile[] GetTiles(int blockX, int blockY)
         {
-            MapTile[] tiles = new MapTile[TerrainBlock.VertexSize * TerrainBlock.VertexSize];
-            map.FillChunk(blockX, blockY, tiles);
+            TerrainTile[] tiles = new TerrainTile[TerrainBlock.VertexSize * TerrainBlock.VertexSize];
+            map.GetBlock(blockX, blockY, tiles);
 
             return tiles;
         }

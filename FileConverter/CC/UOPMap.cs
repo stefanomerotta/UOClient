@@ -1,7 +1,6 @@
-﻿using System.Runtime.InteropServices;
-using MapConverter.IO;
+﻿using FileConverter.IO;
 
-namespace MapConverter.UOP
+namespace FileConverter.CC
 {
     internal class UOPMap
     {
@@ -45,12 +44,5 @@ namespace MapConverter.UOP
             reader.Skip(4);
             reader.ReadSpan(chunk);
         }
-    }
-
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct MapTile
-    {
-        public ushort Id;
-        public sbyte Z;
     }
 }

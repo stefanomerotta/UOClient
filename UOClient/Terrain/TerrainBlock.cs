@@ -19,7 +19,7 @@ namespace UOClient.Terrain
         private readonly int blockX;
         private readonly int blockY;
 
-        private readonly MapTile[] tiles;
+        private readonly TerrainTile[] tiles;
         private readonly VertexPositionTextureIndex[] vertices;
         private readonly VertexPositionColor[] boundaries;
         private readonly BitMapBlock64[] indices;
@@ -27,7 +27,7 @@ namespace UOClient.Terrain
         private readonly VertexBuffer vBuffer;
         private readonly IndexBuffer[] iBuffers;
 
-        public TerrainBlock(GraphicsDevice device, int blockX, int blockY, MapTile[] tiles)
+        public TerrainBlock(GraphicsDevice device, int blockX, int blockY, TerrainTile[] tiles)
         {
             Debug.Assert(tiles.Length == VertexSize * VertexSize);
 
@@ -59,7 +59,7 @@ namespace UOClient.Terrain
                     int index = x + y * VertexSize;
 
                     ref VertexPositionTextureIndex vertex = ref vertices[index];
-                    MapTile tile = tiles[index];
+                    TerrainTile tile = tiles[index];
 
                     vertex.Position = Vector3.Transform(new Vector3(x, tile.Z, y), m);
                     vertex.TextureIndex = tile.Id;
@@ -190,79 +190,5 @@ namespace UOClient.Terrain
             for (int i = 0; i < iBuffers.Length; i++)
                 iBuffers[i]?.Dispose();
         }
-
-        //[StructLayout(LayoutKind.Sequential, Pack = 1)]
-        //public struct VertexPositionDualTexture : IVertexType, IEquatable<VertexPositionDualTexture>
-        //{
-        //    public static readonly VertexDeclaration VertexDeclaration;
-
-        //    public Vector3 Position;
-        //    public Vector2 TextureCoordinate;
-        //    public Vector2 Texture2Coordinate;
-        //    public Vector2 Texture3Coordinate;
-
-        //    VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
-
-        //    public VertexPositionDualTexture(Vector3 position, Vector2 textureCoordinate, Vector2 texture2Coordinate, Vector2 texture3Coordinate)
-        //    {
-        //        Position = position;
-        //        TextureCoordinate = textureCoordinate;
-        //        Texture2Coordinate = texture2Coordinate;
-        //        Texture3Coordinate = texture3Coordinate;
-        //    }
-
-        //    public override int GetHashCode()
-        //    {
-        //        return HashCode.Combine(
-        //            Position.GetHashCode(),
-        //            TextureCoordinate.GetHashCode(),
-        //            Texture2Coordinate.GetHashCode(),
-        //            Texture3Coordinate.GetHashCode()
-        //        );
-        //    }
-
-        //    public override string ToString()
-        //    {
-        //        return $"{{Position:{Position} TextureCoordinate: {TextureCoordinate} " +
-        //            $"Texture2Coordinate: {Texture2Coordinate} Texture3Coordinate: {Texture3Coordinate}}}";
-        //    }
-
-        //    bool IEquatable<VertexPositionDualTexture>.Equals(VertexPositionDualTexture other)
-        //    {
-        //        return Position == other.Position
-        //            && TextureCoordinate == other.TextureCoordinate
-        //            && Texture2Coordinate == other.Texture2Coordinate
-        //            && Texture3Coordinate == other.Texture3Coordinate;
-        //    }
-
-        //    public static bool operator ==(VertexPositionDualTexture left, VertexPositionDualTexture right)
-        //    {
-        //        return left.Position == right.Position
-        //            && left.TextureCoordinate == right.TextureCoordinate
-        //            && left.Texture2Coordinate == right.Texture2Coordinate
-        //            && left.Texture3Coordinate == right.Texture3Coordinate;
-        //    }
-
-        //    public static bool operator !=(VertexPositionDualTexture left, VertexPositionDualTexture right)
-        //    {
-        //        return !(left == right);
-        //    }
-
-        //    static VertexPositionDualTexture()
-        //    {
-        //        VertexDeclaration = new VertexDeclaration(
-        //            new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
-        //            new VertexElement(12, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
-        //            new VertexElement(20, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 1),
-        //            new VertexElement(28, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 2)
-        //        );
-        //    }
-
-        //    public override bool Equals(object? obj)
-        //    {
-        //        return obj is VertexPositionDualTexture texture
-        //            && ((IEquatable<VertexPositionDualTexture>)this).Equals(texture);
-        //    }
-        //}
     }
 }
