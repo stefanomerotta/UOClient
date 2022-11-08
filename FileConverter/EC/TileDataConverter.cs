@@ -43,6 +43,10 @@ namespace FileConverter.EC
             reader.Skip(2);
 
             TileDataHeader header = reader.Read<TileDataHeader>();
+
+            if (header.TileId >= ushort.MaxValue)
+                return new StaticData() { Id = ushort.MaxValue };
+
             TextureOffset ecOffsets = reader.Read<TextureOffset>();
             TextureOffset ccOffsets = reader.Read<TextureOffset>();
 
@@ -71,7 +75,7 @@ namespace FileConverter.EC
 
             StaticData data = new()
             {
-                Id = header.TileId,
+                Id = (ushort)header.TileId,
                 RadarColor = new()
                 {
                     R = radarColors.R,

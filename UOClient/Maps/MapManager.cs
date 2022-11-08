@@ -3,8 +3,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using UOClient.Data;
-using UOClient.Structures;
-using UOClient.Terrain;
+using UOClient.Maps.Components;
 
 namespace UOClient.Maps
 {
@@ -14,7 +13,7 @@ namespace UOClient.Maps
         private const int halfSize = size / 2;
 
         private readonly MapBlock?[,] blocks;
-        private readonly Map map;
+        private readonly MapFile map;
         private int blockX;
         private int blockY;
         private Bounds blockBounds;
@@ -30,11 +29,12 @@ namespace UOClient.Maps
             blockX = -1;
             blockY = -1;
 
-            blockMaxX = width / TerrainBlock.Size - 1;
-            blockMaxY = height / TerrainBlock.Size - 1;
-            map = new Map(width, height);
+            map = new MapFile(width, height);
 
-            blocks = new MapBlock[blockMaxX + 1, blockMaxY + 1];
+            blockMaxX = map.BlocksWidth - 1;
+            blockMaxY = map.BlocksHeight - 1;
+
+            blocks = new MapBlock[map.BlocksWidth, map.BlocksHeight];
         }
 
         public void Initialize(GraphicsDevice device, ContentManager contentManager, IsometricCamera camera)
@@ -47,8 +47,8 @@ namespace UOClient.Maps
         {
             Vector3 target = camera.Target;
 
-            int newBlockX = (int)target.X >> TerrainBlock.SizeOffset;
-            int newBlockY = (int)target.Z >> TerrainBlock.SizeOffset;
+            int newBlockX = (int)target.X >> MapFile.BlockSizeShift;
+            int newBlockY = (int)target.Z >> MapFile.BlockSizeShift;
 
             if (blockX == newBlockX && blockY == newBlockY)
                 return;
@@ -64,17 +64,17 @@ namespace UOClient.Maps
                 Math.Clamp(blockY + halfSize + 1, 0, blockMaxY)
             );
 
-            LoadBlocks(device);
+            LoadBlocks();
             UnloadUnusedBlocks();
         }
 
-        private void LoadBlocks(GraphicsDevice device)
+        private void LoadBlocks()
         {
             for (int y = blockBounds.StartY; y < blockBounds.EndY; y++)
             {
                 for (int x = blockBounds.StartX; x < blockBounds.EndX; x++)
                 {
-                    //blocks[x, y] ??= new(device, x, y, GetTiles(x, y));
+                    blocks[x, y] ??= new(x, y, map);
                 }
             }
         }

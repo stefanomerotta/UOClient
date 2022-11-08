@@ -22,18 +22,10 @@ namespace UOClient.Utilities
             }
         }
 
-        //public static TextureArray LoadFromContentFolder(GraphicsDevice graphicsDevice, int widthPerTex, int heightPerTex, string path)
-        //{
-        //    var paths = Directory.GetFiles(Environment.CurrentDirectory + @"\Content\" + path);
-
-        //    TextureArray pTexArray = new TextureArray(graphicsDevice, widthPerTex, heightPerTex, paths.Length);
-
-        //    int index = 0;
-
-        //    foreach (var file in paths)
-        //        pTexArray.Add(index++, Content.Load<Texture2D>(path + @"\" + Path.GetFileNameWithoutExtension(file)));
-
-        //    return pTexArray;
-        //}
+        public void Add(int index, byte[] texture, int width, int height)
+        {
+            Rectangle rect = new(0, 0, width, height);
+            SetData(0, index, rect, texture, 0, texture.Length);
+        }
     }
 }

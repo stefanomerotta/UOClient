@@ -1,4 +1,4 @@
-﻿namespace UOClient.Structures
+﻿namespace UOClient.Maps.Components
 {
     internal readonly struct Bounds
     {

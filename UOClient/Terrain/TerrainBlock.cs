@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Diagnostics;
 using UOClient.Effects.Vertices;
-using UOClient.Structures;
+using UOClient.Maps.Components;
 using PrimitiveType = Microsoft.Xna.Framework.Graphics.PrimitiveType;
 using VertexBuffer = Microsoft.Xna.Framework.Graphics.VertexBuffer;
 

@@ -1,5 +1,4 @@
-﻿using GameData.Enums;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace FileConverter.Structures
 {

@@ -54,6 +54,8 @@ namespace UOClient
         {
             device = graphics.GraphicsDevice;
 
+            Globals.Device = device;
+
             wireframeEffect = new(device) { VertexColorEnabled = true };
 
             spriteBatch = new(device);

@@ -3,48 +3,50 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
-using UOClient.Structures;
+using UOClient.Maps.Components;
 using UOClient.Utilities;
 
 namespace UOClient.Data
 {
-    internal sealed class Map : IDisposable
+    internal sealed class MapFile : IDisposable
     {
         public const int BlockSize = 64;
         public const int BlockSizeShift = 6; // number of byteshift for converting between block and tile coordinates
-        private const int terrainBlockLength = (BlockSize + 1) * (BlockSize + 1);
-        private const int staticsBlockLength = BlockSize * BlockSize;
+        public const int TerrainBlockLength = (BlockSize + 1) * (BlockSize + 1);
+        public const int StaticsBlockLength = BlockSize * BlockSize;
 
-        private static readonly int terrainBlockByteLength = terrainBlockLength * Unsafe.SizeOf<TerrainTile>();
+        private static readonly int terrainBlockByteLength = TerrainBlockLength * Unsafe.SizeOf<TerrainTile>();
 
         private readonly PackageReader reader;
-        private readonly int blocksWidth;
-        private readonly int blocksHeight;
+        public readonly int BlocksWidth;
+        public readonly int BlocksHeight;
 
-        public Map(int width, int height)
+        public MapFile(int width, int height)
         {
             FileStream stream = File.Open(Path.Combine(Settings.FilePath, "converted.bin"), FileMode.Open);
             reader = new(stream);
 
-            blocksWidth = (int)Math.Ceiling(width / (double)BlockSize);
-            blocksHeight = (int)Math.Ceiling(height / (double)BlockSize);
+            BlocksWidth = (int)Math.Ceiling(width / (double)BlockSize);
+            BlocksHeight = (int)Math.Ceiling(height / (double)BlockSize);
         }
 
-        public unsafe Span<StaticTile[]> GetBlock(int blockX, int blockY, TerrainTile[] terrain)
+        public unsafe int FillBlock(int blockX, int blockY, TerrainTile[] terrain, StaticTile[][] statics)
         {
-            Debug.Assert(terrain.Length == terrainBlockLength);
-            Debug.Assert(blockX >= 0 && blockX < blocksWidth);
-            Debug.Assert(blockY >= 0 && blockY < blocksHeight);
+            Debug.Assert(blockX >= 0 && blockX < BlocksWidth);
+            Debug.Assert(blockY >= 0 && blockY < BlocksHeight);
+            Debug.Assert(terrain.Length == TerrainBlockLength);
+            Debug.Assert(statics.Length == StaticsBlockLength);
 
-            Span<byte> block = reader.ReadSpan(blockX + blockY * blocksWidth);
+            Span<byte> block = reader.ReadSpan(blockX + blockY * BlocksWidth);
 
             block[..terrainBlockByteLength].Cast<byte, TerrainTile>().CopyTo(terrain);
 
             Span<byte> staticsBlock = block[terrainBlockByteLength..];
-            Span<StaticTile[]> statics = new StaticTile[staticsBlockLength][];
-            
+
             int counter = 0;
-            for (int i = 0; i < staticsBlockLength; i++)
+            int totalCount = 0;
+            
+            for (int i = 0; i < StaticsBlockLength; i++)
             {
                 int count = staticsBlock[counter++];
 
@@ -57,10 +59,12 @@ namespace UOClient.Data
                 int byteCount = count * sizeof(StaticTile);
 
                 statics[i] = staticsBlock.Slice(counter, byteCount).Cast<byte, StaticTile>().ToArray();
+                totalCount += count;
+
                 counter += byteCount;
             }
 
-            return statics;
+            return totalCount;
         }
 
         public void Dispose()

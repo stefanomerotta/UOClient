@@ -1,4 +1,4 @@
-﻿namespace UOClient.Structures
+﻿namespace UOClient.Maps.Components
 {
     public unsafe struct BitMapBlock64
     {
@@ -8,7 +8,7 @@
 
         public bool this[int x, int y]
         {
-            get => (flags[y] & (0x1UL << x)) != 0;
+            get => (flags[y] & 0x1UL << x) != 0;
             set => Set(x, y, value);
         }
 
@@ -16,7 +16,7 @@
         {
             ref ulong pointer = ref flags[y];
 
-            if ((pointer & (0x1UL << x)) != 0 == value)
+            if ((pointer & 0x1UL << x) != 0 == value)
                 return;
 
             if (value)

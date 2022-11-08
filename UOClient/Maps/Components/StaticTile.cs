@@ -1,11 +1,12 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace UOClient.Structures
+namespace UOClient.Maps.Components
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct TerrainTile
+    internal struct StaticTile
     {
         public ushort Id;
+        public ushort Color;
         public sbyte Z;
     }
 }

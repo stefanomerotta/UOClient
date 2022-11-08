@@ -80,7 +80,7 @@ namespace FileConverter
 
                     if (!hasECTexture && !hasCCTexture)
                     {
-                        data[i] = new() { Id = -1 };
+                        data[i] = new() { Id = ushort.MaxValue };
                         continue;
                     }
                 }

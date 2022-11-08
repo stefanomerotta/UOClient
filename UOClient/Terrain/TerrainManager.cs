@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using UOClient.Data;
 using UOClient.Effects;
-using UOClient.Structures;
+using UOClient.Maps.Components;
 
 namespace UOClient.Terrain
 {
@@ -15,7 +15,7 @@ namespace UOClient.Terrain
         private const int halfSize = size / 2;
 
         private readonly TerrainBlock?[,] blocks;
-        private readonly Map map;
+        private readonly MapFile map;
         private int blockX;
         private int blockY;
         private Bounds blockBounds;
@@ -35,7 +35,7 @@ namespace UOClient.Terrain
 
             blockMaxX = (int)Math.Ceiling(width / (double)TerrainBlock.Size) - 1;
             blockMaxY = (int)Math.Ceiling(height / (double)TerrainBlock.Size) - 1;
-            map = new Map(width, height);
+            map = new MapFile(width, height);
 
             blocks = new TerrainBlock[blockMaxX + 1, blockMaxY + 1];
         }
