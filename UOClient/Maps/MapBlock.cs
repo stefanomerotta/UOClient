@@ -5,7 +5,6 @@ using UOClient.Data;
 using UOClient.Maps.Components;
 using UOClient.Maps.Statics;
 using UOClient.Maps.Terrain;
-using UOClient.Structures;
 using UOClient.Utilities;
 
 namespace UOClient.Maps
@@ -14,33 +13,32 @@ namespace UOClient.Maps
     {
         public static readonly ObjectPool<MapBlock> Pool = Utility.CreatePool(16, new MapBlockPoolPolicy());
 
-        private readonly TerrainBlock terrain;
-        private readonly StaticsBlock statics;
+        public readonly TerrainBlock Terrain;
+        public readonly StaticsBlock Statics;
 
-        public MapBlock(GraphicsDevice device)
+        private MapBlock(GraphicsDevice device)
         {
-            terrain = new(device);
-            statics = new();
+            Terrain = new(device);
+            Statics = new();
         }
 
-        public void Initialize(GraphicsDevice device, int blockX, int blockY, MapFile map, StaticsDataFile staticsData)
+        public void Initialize(GraphicsDevice device, int blockX, int blockY, MapFile map, StaticData[] staticsData)
         {
-            int staticsCount = map.FillBlock(blockX, blockY, terrain.Tiles, statics.Tiles);
-
-            terrain.Initialize(device, blockX, blockY);
-            statics.Initialize(device, staticsData);
+            int staticsCount = map.FillBlock(blockX, blockY, Terrain.Tiles, Statics.Tiles);
+            Terrain.Initialize(device, blockX, blockY);
+            Statics.Initialize(device, blockX, blockY, staticsData, staticsCount);
         }
 
         public void CleanUp()
         {
-            terrain.CleanUp();
-            statics.CleanUp();
+            Terrain.CleanUp();
+            Statics.CleanUp();
         }
 
         public void Dispose()
         {
-            terrain.Dispose();
-            statics.Dispose();
+            Terrain.Dispose();
+            Statics.Dispose();
         }
 
         private struct MapBlockPoolPolicy : IPooledObjectPolicy<MapBlock>

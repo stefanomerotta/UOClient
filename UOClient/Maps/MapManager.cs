@@ -1,9 +1,13 @@
-﻿using Microsoft.Xna.Framework;
+﻿using GameData.Enums;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Reflection.Metadata;
 using UOClient.Data;
+using UOClient.Effects;
 using UOClient.Maps.Components;
+using UOClient.Maps.Terrain;
 
 namespace UOClient.Maps
 {
@@ -20,9 +24,13 @@ namespace UOClient.Maps
 
         private GraphicsDevice device;
         private IsometricCamera camera;
+        private BasicArrayEffect solid;
+        private WaterEffect liquid;
+        private StaticsEffect statics;
 
         private readonly int blockMaxX;
         private readonly int blockMaxY;
+        private readonly StaticData[] staticsData;
 
         public MapManager(int width, int height)
         {
@@ -35,16 +43,48 @@ namespace UOClient.Maps
             blockMaxY = map.BlocksHeight - 1;
 
             blocks = new MapBlock[map.BlocksWidth, map.BlocksHeight];
+            
+            using StaticsDataFile staticsDataFile = new();
+            staticsData = staticsDataFile.Load(false);
         }
 
         public void Initialize(GraphicsDevice device, ContentManager contentManager, IsometricCamera camera)
         {
             this.device = device;
             this.camera = camera;
+
+            SolidTerrainInfo.Load(contentManager);
+            LiquidTerrainInfo.Load(contentManager);
+
+            solid = new(contentManager)
+            {
+                TextureEnabled = true,
+                View = camera.ViewMatrix,
+                Projection = camera.ProjectionMatrix,
+                World = camera.WorldMatrix,
+                //GridEnabled = true
+            };
+
+            liquid = new(contentManager)
+            {
+                TextureEnabled = true,
+                View = camera.ViewMatrix,
+                Projection = camera.ProjectionMatrix,
+                World = camera.WorldMatrix,
+            };
+
+            statics = new(contentManager)
+            {
+                View = camera.ViewMatrix,
+                Projection = camera.ProjectionMatrix,
+                World = camera.WorldMatrix,
+            };
         }
 
         public void OnLocationChanged()
         {
+            UpdateMatrices();
+
             Vector3 target = camera.Target;
 
             int newBlockX = (int)target.X >> MapFile.BlockSizeShift;
@@ -68,13 +108,126 @@ namespace UOClient.Maps
             UnloadUnusedBlocks();
         }
 
+        private void UpdateMatrices()
+        {
+            solid.View = camera.ViewMatrix;
+            liquid.View = camera.ViewMatrix;
+        }
+
+        public void Draw(GameTime gameTime)
+        {
+            solid.PreDraw();
+            liquid.PreDraw();
+            
+            DrawSolid();
+            DrawLiquid(gameTime);
+            DrawStatics();
+        }
+
+        private void DrawSolid()
+        {
+            EffectPass pass = solid.CurrentTechnique.Passes[0];
+
+            for (int k = 1; k < (int)LandTileId.Water; k++)
+            {
+                ref SolidTerrainInfo info = ref SolidTerrainInfo.Values[k];
+
+                solid.TextureIndex = k;
+                solid.Texture0 = info.Texture0;
+                solid.Texture1 = info.Texture1;
+                solid.AlphaMask = info.AlphaMask;
+
+                solid.Texture0Stretch = info.Texture0Stretch;
+                solid.Texture1Stretch = info.Texture1Stretch;
+                solid.AlphaMaskStretch = info.AlphaMaskStretch;
+
+                pass.Apply();
+
+                for (int x = blockBounds.StartX; x < blockBounds.EndX; x++)
+                {
+                    for (int y = blockBounds.StartY; y < blockBounds.EndY; y++)
+                    {
+                        blocks[x, y]!.Terrain.Draw(device, k);
+                    }
+                }
+            }
+        }
+
+        private void DrawLiquid(GameTime gameTime)
+        {
+            EffectPass waterPass;
+            Vector3 target = camera.Target;
+
+            liquid.Time = (float)gameTime.TotalGameTime.TotalMilliseconds / 100.0f;
+            liquid.Center = new Vector2(target.X, target.Z);
+
+            for (int k = (int)LandTileId.Water; k < (int)LandTileId.Length; k++)
+            {
+                ref LiquidTerrainInfo info = ref LiquidTerrainInfo.Values[k];
+
+                liquid.TextureIndex = k;
+                liquid.Texture0 = info.Texture0;
+                liquid.Texture0Stretch = info.Texture0Stretch;
+
+                liquid.Normal = info.Normal;
+                liquid.NormalStretch = info.NormalStretch;
+
+                liquid.WaveHeight = info.WaveHeight;
+
+                if (info.WindSpeed == 0)
+                {
+                    liquid.WindForce = 0.05f;
+                    liquid.WindDirection = new(0, 1);
+                }
+                else
+                {
+                    liquid.WindForce = info.WindSpeed;
+                    liquid.WindDirection = new(1, 0);
+                }
+
+                liquid.FollowCenter = info.FollowCenter;
+
+                waterPass = liquid.CurrentTechnique.Passes[0];
+                waterPass.Apply();
+
+                for (int i = blockBounds.StartX; i < blockBounds.EndX; i++)
+                {
+                    for (int j = blockBounds.StartY; j < blockBounds.EndY; j++)
+                    {
+                        blocks[i, j]!.Terrain.Draw(device, k);
+                    }
+                }
+            }
+        }
+
+        private void DrawStatics()
+        {
+            EffectPass pass = statics.CurrentTechnique.Passes[0];
+
+            pass.Apply();
+
+            for (int x = blockBounds.StartX; x < blockBounds.EndX; x++)
+            {
+                for (int y = blockBounds.StartY; y < blockBounds.EndY; y++)
+                {
+                    blocks[x, y]!.Statics.Draw(device);
+                }
+            }
+        }
+
         private void LoadBlocks()
         {
             for (int y = blockBounds.StartY; y < blockBounds.EndY; y++)
             {
                 for (int x = blockBounds.StartX; x < blockBounds.EndX; x++)
                 {
-                    blocks[x, y] ??= new(x, y, map);
+                    ref MapBlock? block = ref blocks[x, y];
+
+                    if (block is null)
+                    {
+                        block = MapBlock.Pool.Get();
+                        block.Initialize(device, x, y, map, staticsData);
+                    }
                 }
             }
         }
@@ -106,7 +259,7 @@ namespace UOClient.Maps
                 if (block is null)
                     return;
 
-                block.Dispose();
+                MapBlock.Pool.Return(block);
                 block = null;
             }
         }

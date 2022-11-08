@@ -12,7 +12,7 @@ namespace UOClient.Data
 
         public StaticsDataFile()
         {
-            FileStream stream = File.Open(Path.Combine(Settings.FilePath, "staticsData.bin"), FileMode.Open);
+            FileStream stream = File.Open(Path.Combine(Settings.FilePath, "tiledata.bin"), FileMode.Open, FileAccess.Read);
             reader = new(stream);
         }
 
@@ -25,6 +25,9 @@ namespace UOClient.Data
             {
                 ref FileStaticData data = ref buffer[i];
                 ref FileStaticTextureInfo texture = ref legacy ? ref data.CCTexture : ref data.ECTexture;
+
+                if (data.Id >= ushort.MaxValue)
+                    continue;
 
                 toRet[data.Id] = new(texture.Id, texture.StartX, texture.StartY, texture.EndX, texture.EndY, texture.OffsetX, texture.OffsetY);
             }

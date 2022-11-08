@@ -1,26 +1,21 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using UOClient.Statics;
-using UOClient.Terrain;
+using UOClient.Maps;
+//using UOClient.Terrain;
 using CullMode = Microsoft.Xna.Framework.Graphics.CullMode;
 using FillMode = Microsoft.Xna.Framework.Graphics.FillMode;
 using RasterizerState = Microsoft.Xna.Framework.Graphics.RasterizerState;
-using SpriteBatch = Microsoft.Xna.Framework.Graphics.SpriteBatch;
 
 namespace UOClient
 {
     public class Game1 : Game
     {
-        private GraphicsDeviceManager graphics;
-        private GraphicsDevice device;
+        private readonly GraphicsDeviceManager graphics;
         private readonly IsometricCamera camera;
-        private readonly TerrainManager terrain;
-        private readonly StaticsManager statics;
-        private SpriteBatch spriteBatch;
-        private readonly FPSCounter fps;
-        private SpriteFont font;
+        private readonly MapManager map;
 
+        private GraphicsDevice device;
         private BasicEffect wireframeEffect;
 
         public Game1()
@@ -33,10 +28,8 @@ namespace UOClient
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
-            terrain = new(1448, 1448);
-            statics = new();
+            map = new(1448, 1448);
             camera = new();
-            fps = new();
         }
 
         protected override void Initialize()
@@ -58,14 +51,7 @@ namespace UOClient
 
             wireframeEffect = new(device) { VertexColorEnabled = true };
 
-            spriteBatch = new(device);
-            font = Content.Load<SpriteFont>("fonts/File");
-
-            SolidTerrainInfo.Load(Content);
-            LiquidTerrainInfo.Load(Content);
-
-            terrain.Initialize(device, Content, camera);
-            statics.Initialize(device, Content, camera);
+            map.Initialize(device, Content, camera);
         }
 
         protected override void Update(GameTime gameTime)
@@ -75,11 +61,8 @@ namespace UOClient
 
             if (camera.HandleKeyboardInput()) ;
             //{
-                terrain.OnLocationChanged();
-                statics.OnLocationChanged();
+            map.OnLocationChanged();
             //}
-
-            fps.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -102,23 +85,21 @@ namespace UOClient
             device.RasterizerState = rs;
             device.BlendState = BlendState.AlphaBlend;
 
-            terrain.Draw(gameTime);
-            statics.Draw();
+            map.Draw(gameTime);
 
-            RasterizerState rs2 = new()
-            {
-                CullMode = CullMode.None,
-                FillMode = FillMode.WireFrame
-            };
+            //RasterizerState rs2 = new()
+            //{
+            //    CullMode = CullMode.None,
+            //    FillMode = FillMode.WireFrame
+            //};
 
-            device.RasterizerState = rs2;
+            //device.RasterizerState = rs2;
 
-            foreach (EffectPass pass in wireframeEffect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-                camera.Test(device);
-                terrain.DrawBoundaries(device);
-            }
+            //foreach (EffectPass pass in wireframeEffect.CurrentTechnique.Passes)
+            //{
+            //    pass.Apply();
+            //    camera.Test(device);
+            //}
 
             //Vector3 position = device.Viewport.Project(Vector3.Subtract(camera.Target, new Vector3(5, 5, 0)), camera.ProjectionMatrix, camera.ViewMatrix, Matrix.Identity);
 

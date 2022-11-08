@@ -4,6 +4,7 @@ using System;
 using UOClient.Data;
 using UOClient.Effects.Vertices;
 using UOClient.Maps.Components;
+using UOClient.Utilities;
 
 namespace UOClient.Maps.Statics
 {
@@ -15,8 +16,10 @@ namespace UOClient.Maps.Statics
         public readonly StaticTile[][] Tiles;
         private StaticsVertex[] vertices;
         private short[] indices;
+        private TextureAtlas atlas;
         private VertexBuffer vBuffer;
         private IndexBuffer iBuffer;
+        private int totalStaticsCount;
 
         public StaticsBlock()
         {
@@ -25,6 +28,11 @@ namespace UOClient.Maps.Statics
 
         public void Initialize(GraphicsDevice device, int blockX, int blockY, StaticData[] staticsData, int totalStaticsCount)
         {
+            if (totalStaticsCount == 0)
+                return;
+
+            this.totalStaticsCount = totalStaticsCount;
+
             vertices = new StaticsVertex[totalStaticsCount];
             indices = new short[totalStaticsCount * 6];
 
@@ -61,6 +69,39 @@ namespace UOClient.Maps.Statics
             iBuffer.SetData(indices);
         }
 
+        public void Draw(GraphicsDevice device)
+        {
+            if (totalStaticsCount == 0)
+                return;
+
+            device.SetVertexBuffer(vBuffer);
+            device.Indices = iBuffer;
+
+            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, totalStaticsCount);
+        }
+
+        public void CleanUp()
+        {
+            if (totalStaticsCount == 0)
+                return;
+
+            vBuffer.Dispose();
+            iBuffer.Dispose();
+            vBuffer = null;
+            iBuffer = null;
+        }
+
+        public void Dispose()
+        {
+            if (totalStaticsCount == 0)
+                return;
+
+            vBuffer.Dispose();
+            iBuffer.Dispose();
+            vBuffer = null;
+            iBuffer = null;
+        }
+
         private void BuildBillboard(int x, int y, int z, ref StaticData data, int vIndex, int iIndex, int texureIndex)
         {
             float rateo = (float)(1 / Math.Sqrt(64 * 64 / 2));
@@ -93,24 +134,6 @@ namespace UOClient.Maps.Statics
             indices[iIndex++] = (short)(index + 2);
             indices[iIndex++] = (short)(index + 3);
             indices[iIndex] = index;
-        }
-
-        public void CleanUp()
-        {
-            vBuffer.Dispose();
-            iBuffer.Dispose();
-
-            vBuffer = null;
-            iBuffer = null;
-        }
-
-        public void Dispose()
-        {
-            vBuffer.Dispose();
-            iBuffer.Dispose();
-
-            vBuffer = null;
-            iBuffer = null;
         }
     }
 }
