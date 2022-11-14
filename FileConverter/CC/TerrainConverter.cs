@@ -56,8 +56,7 @@ namespace FileConverter.CC
         {
             Debug.Assert(tiles.Length == (newSize + 1) * (newSize + 1));
 
-            Span<byte> rawOldChunk = stackalloc byte[oldSize * oldSize * sizeof(MapTile)];
-            Span<MapTile> oldChunk = MemoryMarshal.Cast<byte, MapTile>(rawOldChunk);
+            Span<MapTile> oldChunk = stackalloc MapTile[oldSize * oldSize];
 
             for (int x = 0; x < deltaSize; x++)
             {
@@ -89,8 +88,7 @@ namespace FileConverter.CC
             int oldX = startX + deltaSize;
             const int tileX = newSize;
 
-            Span<byte> rawOldChunk = stackalloc byte[oldSize * oldSize * sizeof(MapTile)];
-            Span<MapTile> oldChunk = MemoryMarshal.Cast<byte, MapTile>(rawOldChunk);
+            Span<MapTile> oldChunk = stackalloc MapTile[oldSize * oldSize];
 
             for (int y = 0; y < deltaSize; y++)
             {
@@ -116,8 +114,7 @@ namespace FileConverter.CC
             int oldY = startY + deltaSize;
             const int tileY = newSize;
 
-            Span<byte> rawOldChunk = stackalloc byte[oldSize * oldSize * sizeof(MapTile)];
-            Span<MapTile> oldChunk = MemoryMarshal.Cast<byte, MapTile>(rawOldChunk);
+            Span<MapTile> oldChunk = stackalloc MapTile[oldSize * oldSize];
 
             for (int x = 0; x < deltaSize; x++)
             {
@@ -146,8 +143,7 @@ namespace FileConverter.CC
             const int tileX = newSize;
             const int tileY = newSize;
 
-            Span<byte> rawOldChunk = stackalloc byte[oldSize * oldSize * sizeof(MapTile)];
-            Span<MapTile> oldChunk = MemoryMarshal.Cast<byte, MapTile>(rawOldChunk);
+            Span<MapTile> oldChunk = stackalloc MapTile[oldSize * oldSize];
 
             LoadOldChunk(oldX, oldY, oldChunk);
 
@@ -166,7 +162,7 @@ namespace FileConverter.CC
             for (int i = 0; i < tiles.Length; i++)
             {
                 ref MapTile tile = ref tiles[i];
-                tile.Id = MapTileTranscoder.GetNewId(tile.Id);
+                tile.Id = TerrainTileTranscoder.GetNewId(tile.Id);
             }
         }
     }

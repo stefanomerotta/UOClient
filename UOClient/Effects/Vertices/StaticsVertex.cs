@@ -9,26 +9,23 @@ namespace UOClient.Effects.Vertices
         public static readonly VertexDeclaration VertexDeclaration = new
         (
             new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
-            new VertexElement(12, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 0),
-            new VertexElement(20, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 1)
+            new VertexElement(12, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 0)
         );
 
         public Vector3 Position;
-        public Vector2 Bounds;
-        public Vector3 Texture0;
+        public Vector4 Bounds;
 
         VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
 
-        public StaticsVertex(Vector3 position, Vector2 bounds, Vector3 texture0)
+        public StaticsVertex(Vector3 position, Vector4 bounds)
         {
             Position = position;
             Bounds = bounds;
-            Texture0 = texture0;
         }
 
         public bool Equals(StaticsVertex other)
         {
-            return Position == other.Position && Bounds == other.Bounds && Texture0 == other.Texture0;
+            return Position == other.Position && Bounds == other.Bounds;
         }
 
         public override bool Equals(object? obj)
@@ -51,8 +48,7 @@ namespace UOClient.Effects.Vertices
             return HashCode.Combine
             (
                 Position.GetHashCode(),
-                Bounds.GetHashCode(),
-                Texture0.GetHashCode()
+                Bounds.GetHashCode()
             );
         }
     }

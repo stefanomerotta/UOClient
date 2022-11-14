@@ -31,9 +31,14 @@ namespace FileConverter.CC
             staticsReader = new(Path.Combine(path, $"statics{id}.mul"));
         }
 
-        public unsafe void ConvertChunk(int startX, int startY, Span<List<NewStaticTile>> tiles)
+        public unsafe int ConvertChunk(int startX, int startY, Span<List<NewStaticTile>> tiles)
         {
             Debug.Assert(tiles.Length == newSize * newSize);
+
+            startX <<= deltaSizeShift;
+            startY <<= deltaSizeShift;
+
+            int totalCount = 0;
 
             for (int x = 0; x < deltaSize; x++)
             {
@@ -42,15 +47,17 @@ namespace FileConverter.CC
                 for (int y = 0; y < deltaSize; y++)
                 {
                     int oldY = startY + y;
-                    LoadOldChunk(oldX, oldY, tiles);
+                    totalCount += LoadOldChunk(oldX, oldY, tiles);
                 }
             }
+
+            return totalCount;
         }
 
-        private unsafe void LoadOldChunk(int oldX, int oldY, Span<List<NewStaticTile>> tiles)
+        private unsafe int LoadOldChunk(int oldX, int oldY, Span<List<NewStaticTile>> tiles)
         {
             if (oldX >= oldChunkWidth || oldY >= oldChunkHeight)
-                return;
+                return 0;
 
             int startX = oldX >> deltaSizeShift;
             int startY = oldY >> deltaSizeShift;
@@ -61,10 +68,10 @@ namespace FileConverter.CC
             int length = idxReader.ReadInt32();
 
             if (offset < 0 || length <= 0)
-                return;
+                return 0;
 
-            Span<byte> rawOldChunk = stackalloc byte[length];
-            Span<StaticTile> oldChunk = MemoryMarshal.Cast<byte, StaticTile>(rawOldChunk);
+            int count = 0;
+            Span<StaticTile> oldChunk = stackalloc StaticTile[length / sizeof(StaticTile)];
 
             staticsReader.Seek(offset);
             staticsReader.ReadSpan(oldChunk);
@@ -82,7 +89,11 @@ namespace FileConverter.CC
                     Z = oldTile.Z,
                     Color = oldTile.Color
                 });
+
+                count++;
             }
+
+            return count;
         }
     }
 }

@@ -13,35 +13,12 @@ namespace UOClient.Effects
         private readonly EffectParameter worldViewProjection;
         private readonly EffectParameter rotation;
 
-        private Matrix world = Matrix.Identity;
-        private Matrix view = Matrix.Identity;
-        private Matrix projection = Matrix.Identity;
-
-        public Matrix World { get => world; init => world = value; }
-        public Matrix View { get => view; set => SetViewMatrix(value); }
-        public Matrix Projection { get => projection; init => projection = value; }
-        
-        public Matrix Rotation
-        {
-            get => rotation.GetValueMatrix(); 
-            set => rotation.SetValue(value);
-        }
-
-        public Texture2D Texture0
-        {
-            get => texture0.GetValueTexture2D();
-            set => texture0.SetValue(value);
-        }
-
-        public Vector2 TextureSize
-        {
-            get => textureSize.GetValueVector2();
-            set => textureSize.SetValue(value);
-        }
-
+        public Matrix Rotation { get => rotation.GetValueMatrix(); set => rotation.SetValue(value); }
+        public Texture2D Texture0 { get => texture0.GetValueTexture2D(); set => texture0.SetValue(value); }
+        public Vector2 TextureSize { get => textureSize.GetValueVector2(); set => textureSize.SetValue(value); }
         public EffectTechnique CurrentTechnique => effect.CurrentTechnique;
 
-        public StaticsEffect(ContentManager contentManager)
+        public StaticsEffect(ContentManager contentManager, in Matrix worldViewProj)
         {
             effect = contentManager.Load<Effect>("shaders/statics");
 
@@ -49,16 +26,13 @@ namespace UOClient.Effects
             textureSize = effect.Parameters["TextureSize"];
             worldViewProjection = effect.Parameters["WorldViewProjection"];
             rotation = effect.Parameters["Rotation"];
-        }
-
-        private void SetViewMatrix(Matrix view)
-        {
-            this.view = view;
-
-            Matrix.Multiply(ref world, ref view, out Matrix worldView);
-            Matrix.Multiply(ref worldView, ref projection, out Matrix worldViewProj);
 
             worldViewProjection.SetValue(worldViewProj);
+        }
+
+        public void SetWorldViewProjection(in Matrix matrix)
+        {
+            worldViewProjection.SetValue(matrix);
         }
     }
 }

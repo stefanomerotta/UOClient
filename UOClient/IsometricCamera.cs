@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using UOClient.Utilities.Polyfills;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Vector3 = Microsoft.Xna.Framework.Vector3;
 
@@ -12,13 +13,18 @@ namespace UOClient
         public static readonly Vector3 positionFromOrigin = new Vector3(1, (float)Math.Sqrt(2), 1) * 127;
 
         private Vector3 target;
-        private Matrix scaleMatrix;
+        private readonly Matrix worldMatrix;
+        private readonly Matrix projectionMatrix;
         private Matrix viewMatrix;
+        private Matrix scaleMatrix;
+        private Matrix worldViewProjection;
+        private Matrix invertedProjectionMatrix;
 
-        public Matrix WorldMatrix { get; private set; }
-        public Matrix ViewMatrix => viewMatrix;
-        public Matrix ProjectionMatrix { get; private set; }
-        public Matrix ScaleMatrix => scaleMatrix;
+        public ref readonly Matrix WorldMatrix => ref worldMatrix;
+        public ref readonly Matrix ViewMatrix => ref viewMatrix;
+        public ref readonly Matrix ProjectionMatrix => ref projectionMatrix;
+        public ref readonly Matrix ScaleMatrix => ref scaleMatrix;
+        public ref readonly Matrix WorldViewProjection => ref worldViewProjection;
 
         public Vector3 Target => target;
         public float Zoom { get; private set; }
@@ -30,13 +36,13 @@ namespace UOClient
             target = new(300, 0, 364); //new(185, 0, 300);
             scaleMatrix = Matrix.CreateScale(Zoom, Zoom, 1);
 
-            WorldMatrix = Matrix.CreateScale(1, .1f, 1);
+            worldMatrix = Matrix.CreateScale(1, .1f, 1);
 
-            ProjectionMatrix = Matrix.CreateTranslation(-0.5f, -0.5f, 0)
+            projectionMatrix = Matrix.CreateTranslation(-0.5f, -0.5f, 0)
                 * Matrix.CreateOrthographic(20, 20, 0, 3000.0f)
                 * Matrix.CreateScale(1, (float)Math.Sqrt(2), 1);
 
-            UpdateViewMatrix();
+            UpdateMatrices();
         }
 
         public bool HandleKeyboardInput()
@@ -92,7 +98,7 @@ namespace UOClient
             }
 
             if (modified)
-                UpdateViewMatrix();
+                UpdateMatrices();
 
             return modified;
         }
@@ -103,10 +109,15 @@ namespace UOClient
             scaleMatrix.M22 = Zoom;
         }
 
-        private void UpdateViewMatrix()
+        private void UpdateMatrices()
         {
             viewMatrix = Matrix.CreateLookAt(target + positionFromOrigin, target, Vector3.Up);
-            Matrix.Multiply(ref viewMatrix, ref scaleMatrix, out viewMatrix);
+            MatrixUtilities.Multiply(in viewMatrix, in scaleMatrix, out viewMatrix);
+
+            Matrix worldView = MatrixUtilities.Multiply(in worldMatrix, in viewMatrix);
+            MatrixUtilities.Multiply(in worldView, in projectionMatrix, out worldViewProjection);
+
+            MatrixUtilities.Invert(in worldViewProjection, out invertedProjectionMatrix);
         }
 
         public void Test(GraphicsDevice device)

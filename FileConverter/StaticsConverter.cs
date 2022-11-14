@@ -1,130 +1,68 @@
 ﻿using FileConverter.Structures;
 using FileSystem.Enums;
 using FileSystem.IO;
+using System.Runtime.InteropServices;
 
 namespace FileConverter
 {
     internal class StaticsConverter
     {
-        private static readonly TileDataComparer tileDataComparer = new();
+        private const int newSize = 64;
+        private const int newChunkLength = newSize * newSize;
 
-        private readonly EC.TileDataConverter converter;
-        private readonly EC.TextureLoader ecTextureLoader;
-        private readonly EC.TextureLoader ccTextureLoader;
-        private readonly byte[] unusedCCTextureData;
+        private readonly int newChunkWidth;
+        private readonly int newChunkHeight;
+        private readonly CC.StaticsConverter staticsConverter;
 
-        public StaticsConverter(string path)
+        public StaticsConverter(string path, int id, int width, int height)
         {
-            converter = new(path);
-            ecTextureLoader = new(Path.Combine(path, "Texture.uop"), "build/worldart/");
-            ccTextureLoader = new(Path.Combine(path, "LegacyTexture.uop"), "build/tileartlegacy/");
+            newChunkWidth = (int)Math.Ceiling(width / (double)newSize);
+            newChunkHeight = (int)Math.Ceiling(height / (double)newSize);
 
-            if (!ccTextureLoader.TryLoad(506, out unusedCCTextureData!))
-                throw new Exception("Failed to load unused texture for compare");
+            staticsConverter = new(path, id, width, height);
         }
 
-        public void Convert(string staticsDataName, string ecTextureName, string ccTextureName)
-        {
-            List<StaticData> converted = converter.ConvertTileData();
-            converted.Sort(tileDataComparer);
-
-            HashSet<MissingIdData> missings = ConvertTextures(converted, ecTextureName, ccTextureName);
-            ConvertStaticsData(converted, staticsDataName);
-            WriteMissingIds(missings);
-        }
-
-        private static void ConvertStaticsData(List<StaticData> data, string fileName)
+        public unsafe void Convert(string fileName)
         {
             using FileStream stream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", fileName));
             using PackageWriter writer = new(stream);
 
-            writer.WriteSpan(0, data.Where(d => d.Id >= 0).ToArray().AsSpan(), CompressionAlgorithm.Zstd);
-        }
+            Span<List<StaticTile>> staticsChunk = new List<StaticTile>[newChunkLength];
+            Span<byte> chunk = Span<byte>.Empty;
 
-        private HashSet<MissingIdData> ConvertTextures(List<StaticData> data, string ecFileName, string ccFileName)
-        {
-            using FileStream ecStream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", ecFileName));
-            using PackageWriter ecWriter = new(ecStream);
-
-            using FileStream ccStream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", ccFileName));
-            using PackageWriter ccWriter = new(ccStream);
-
-            HashSet<int> ecIds = new();
-            HashSet<int> ccIds = new();
-
-            HashSet<MissingIdData> missings = new();
-
-            for (int i = 0; i < data.Count; i++)
+            for (int y = 0; y < newChunkHeight; y++)
             {
-                StaticData @static = data[i];
-
-                int ecId = @static.ECTexture.Id;
-                int ccId = @static.CCTexture.Id;
-
-                bool hasECTexture = ecTextureLoader.TryLoad(ecId, out byte[]? ecTexture);
-                bool hasCCTexture = ccTextureLoader.TryLoad(ecId, out byte[]? ccTexture);
-
-                if(hasCCTexture)
-                    hasCCTexture = !unusedCCTextureData.SequenceEqual(ccTexture!);
-
-                if (!hasECTexture || !hasCCTexture)
+                for (int x = 0; x < newChunkWidth; x++)
                 {
-                    missings.Add(new()
-                    {
-                        Id = @static.Id,
-                        ECTextureId = ecId,
-                        CCTextureId = ccId,
-                        MissingEC = !hasECTexture,
-                        MissingCC = !hasCCTexture
-                    });
-
-                    if (!hasECTexture && !hasCCTexture)
-                    {
-                        data[i] = new() { Id = ushort.MaxValue };
+                    int count = staticsConverter.ConvertChunk(x, y, staticsChunk);
+                    if (count == 0)
                         continue;
+
+                    if (chunk.Length < count * sizeof(StaticTile) + newChunkLength)
+                        chunk = new byte[count * sizeof(StaticTile) + newChunkLength];
+
+                    int index = 0;
+                    for (int k = 0; k < newChunkLength; k++)
+                    {
+                        List<StaticTile> list = staticsChunk[k];
+
+                        if (list is not { Count: > 0 })
+                        {
+                            chunk[index++] = 0;
+                            continue;
+                        }
+                        
+                        chunk[index++] = (byte)list.Count;
+
+                        MemoryMarshal.AsBytes(CollectionsMarshal.AsSpan(list)).CopyTo(chunk[index..]);
+                        index += list.Count * sizeof(StaticTile);
+
+                        list.Clear();
                     }
+
+                    writer.WriteSpan(x + y * newChunkWidth, chunk[..index], CompressionAlgorithm.Zstd);
                 }
-
-                if (ecIds.Add(ecId) && hasECTexture)
-                    ecWriter.WriteSpan(ecId, ecTexture, CompressionAlgorithm.Zstd);
-
-                if (ccIds.Add(ccId) && hasCCTexture)
-                    ccWriter.WriteSpan(ccId, ccTexture, CompressionAlgorithm.Zstd);
             }
-
-            return missings;
-        }
-
-        private static void WriteMissingIds(HashSet<MissingIdData> data)
-        {
-            using FileStream stream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", "missings.txt"));
-            using StreamWriter writer = new(stream);
-
-            MissingIdData[] missings = data.OrderBy(x => x.Id).ToArray();
-
-            for (int i = 0; i < missings.Length; i++)
-            {
-                ref MissingIdData entry = ref missings[i];
-
-                writer.WriteLine($"{entry.Id};{entry.ECTextureId};{entry.CCTextureId};{entry.MissingEC};{entry.MissingCC}");
-            }
-        }
-
-        private class TileDataComparer : IComparer<StaticData>
-        {
-            public int Compare(StaticData x, StaticData y)
-            {
-                return x.Id.CompareTo(y.Id);
-            }
-        }
-
-        private struct MissingIdData
-        {
-            public int Id;
-            public int ECTextureId;
-            public int CCTextureId;
-            public bool MissingEC;
-            public bool MissingCC;
         }
     }
 }

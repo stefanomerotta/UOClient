@@ -1,5 +1,4 @@
 ﻿using GameData.Enums;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using UOClient.Data;
@@ -12,36 +11,43 @@ namespace UOClient.Maps.Terrain
 {
     internal sealed class TerrainBlock : IDisposable
     {
-        private const int blockSize = MapFile.BlockSize;
-        private const int terrainBlockLength = MapFile.TerrainBlockLength;
+        private const int blockSize = TerrainFile.BlockSize;
+        private const int terrainBlockLength = TerrainFile.BlockLength;
         private const int vertexSize = blockSize + 1;
 
-        private readonly VertexPositionTextureIndex[] vertices;
-        private readonly BitMapBlock64[] indices;
-        private readonly VertexBuffer vBuffer;
+        private readonly TerrainVertex[] vertices;
+        private readonly short[][] indices;
         private readonly IndexBuffer?[] iBuffers;
         public readonly TerrainTile[] Tiles;
+        private VertexBuffer vBuffer = null!;
 
-        public TerrainBlock(GraphicsDevice device)
+        public int X;
+        public int Y;
+
+        public TerrainBlock()
         {
             Tiles = new TerrainTile[terrainBlockLength];
-            vertices = new VertexPositionTextureIndex[terrainBlockLength];
-            indices = new BitMapBlock64[(int)LandTileId.Length];
-            vBuffer = new(device, VertexPositionTextureIndex.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+            vertices = new TerrainVertex[terrainBlockLength];
+            indices = new short[(int)LandTileId.Length][];
             iBuffers = new IndexBuffer[indices.Length];
         }
 
-        public void Initialize(GraphicsDevice device, int blockX, int blockY)
+        public void Initialize()
         {
-            SetUpVertices(blockX, blockY);
-            SetUpIndices(device);
+            SetUpIndices();
         }
 
-        public void CleanUp()
+        public void SendToVRAM(GraphicsDevice device)
+        {
+            UpdateVertexBuffer(device, X, Y);
+            UpdateIndexBuffers(device);
+        }
+
+        public void ClearVRAM()
         {
             for (int i = 0; i < iBuffers.Length; i++)
             {
-                indices[i] = new();
+                indices[i] = null!;
 
                 ref IndexBuffer? iBuffer = ref iBuffers[i];
 
@@ -55,15 +61,15 @@ namespace UOClient.Maps.Terrain
 
         public void Draw(GraphicsDevice device, int id)
         {
-            ref BitMapBlock64 flags = ref indices[id];
+            short[] indices = this.indices[id];
 
-            if (flags.TrueCount == 0)
+            if (indices.Length == 0)
                 return;
 
             device.SetVertexBuffer(vBuffer);
             device.Indices = iBuffers[id];
 
-            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, flags.TrueCount * 4);
+            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indices.Length);
         }
 
         public void Dispose()
@@ -71,12 +77,18 @@ namespace UOClient.Maps.Terrain
             vBuffer.Dispose();
 
             for (int i = 0; i < iBuffers.Length; i++)
+            {
                 iBuffers[i]?.Dispose();
+                iBuffers[i] = null;
+            }
         }
 
-        private void SetUpVertices(int blockX, int blockY)
+        private void UpdateVertexBuffer(GraphicsDevice device, int blockX, int blockY)
         {
-            Matrix m = Matrix.CreateTranslation(blockX * blockSize, 0, blockY * blockSize);
+            vBuffer = new(device, TerrainVertex.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+
+            int startX = blockX << TerrainFile.BlockSizeShift;
+            int startY = blockY << TerrainFile.BlockSizeShift;
 
             for (int y = 0; y < vertexSize; y++)
             {
@@ -84,10 +96,10 @@ namespace UOClient.Maps.Terrain
                 {
                     int index = x + y * vertexSize;
 
-                    ref VertexPositionTextureIndex vertex = ref vertices[index];
+                    ref TerrainVertex vertex = ref vertices[index];
                     TerrainTile tile = Tiles[index];
 
-                    vertex.Position = Vector3.Transform(new Vector3(x, tile.Z, y), m);
+                    vertex.Position = new(startX + x, tile.Z, startY + y);
                     vertex.TextureIndex = tile.Id;
                 }
             }
@@ -95,14 +107,38 @@ namespace UOClient.Maps.Terrain
             vBuffer.SetData(vertices);
         }
 
-        private void SetUpIndices(GraphicsDevice device)
+        private void UpdateIndexBuffers(GraphicsDevice device)
         {
-            short[] indices = new short[blockSize * blockSize * 6];
+            for (int i = 0; i < (int)LandTileId.Length; i++)
+            {
+                short[] indices = this.indices[i];
+                int indicesCount = indices.Length;
 
+                if (indicesCount == 0)
+                    continue;
+
+                IndexBuffer iBuffer = new(device, IndexElementSize.SixteenBits, indicesCount, BufferUsage.WriteOnly);
+                iBuffer.SetData(indices, 0, indicesCount);
+
+                iBuffers[i] = iBuffer;
+            }
+        }
+
+        private void SetUpIndices()
+        {
             for (int i = 0; i < (int)LandTileId.Length; i++)
             {
                 int counter = 0;
-                ref BitMapBlock64 flags = ref SetupBitMap(i);
+                BitMapBlock64 bitmap = new();
+                SetupBitMap(i, ref bitmap);
+
+                if (bitmap.TrueCount == 0)
+                {
+                    this.indices[i] = Array.Empty<short>();
+                    continue;
+                }
+
+                short[] indices = new short[bitmap.TrueCount * 6];
 
                 for (int y = 0; y < blockSize; y++)
                 {
@@ -110,7 +146,7 @@ namespace UOClient.Maps.Terrain
 
                     for (int x = 0; x < blockSize; x++)
                     {
-                        if (!flags[x, y])
+                        if (!bitmap[x, y])
                             continue;
 
                         short topLeft = (short)(x + yVertexSize);
@@ -128,49 +164,37 @@ namespace UOClient.Maps.Terrain
                     }
                 }
 
-                if (counter == 0)
-                    continue;
-
-                ref IndexBuffer? iBuffer = ref iBuffers[i];
-
-                iBuffer = new(device, IndexElementSize.SixteenBits, indices.Length, BufferUsage.WriteOnly);
-                iBuffer.SetData(indices, 0, counter);
-
-                Array.Clear(indices, 0, counter);
+                this.indices[i] = indices;
             }
         }
 
-        private ref BitMapBlock64 SetupBitMap(int id)
+        private void SetupBitMap(int id, ref BitMapBlock64 bitmap)
         {
-            ref BitMapBlock64 indices = ref this.indices[id];
-
             for (int y = 0; y < blockSize; y++)
             {
                 int ySize = y * vertexSize;
 
                 for (int x = 0; x < blockSize; x++)
                 {
-                    if (vertices[x + ySize].TextureIndex != id)
+                    if (Tiles[x + ySize].Id != id)
                         continue;
 
-                    SetBit(ref indices, x, y);
-                    SetBit(ref indices, x - 1, y);
-                    SetBit(ref indices, x, y - 1);
-                    SetBit(ref indices, x - 1, y - 1);
-                    SetBit(ref indices, x, y + 1);
-                    SetBit(ref indices, x + 1, y);
-                    SetBit(ref indices, x + 1, y + 1);
+                    SetBit(ref bitmap, x, y);
+                    SetBit(ref bitmap, x - 1, y);
+                    SetBit(ref bitmap, x, y - 1);
+                    SetBit(ref bitmap, x - 1, y - 1);
+                    SetBit(ref bitmap, x, y + 1);
+                    SetBit(ref bitmap, x + 1, y);
+                    SetBit(ref bitmap, x + 1, y + 1);
                 }
             }
 
-            return ref indices;
-
-            static void SetBit(ref BitMapBlock64 indices, int x, int y)
+            static void SetBit(ref BitMapBlock64 bitmap, int x, int y)
             {
                 x = Math.Clamp(x, 0, blockSize - 1);
                 y = Math.Clamp(y, 0, blockSize - 1);
 
-                indices[x, y] = true;
+                bitmap[x, y] = true;
             }
         }
     }

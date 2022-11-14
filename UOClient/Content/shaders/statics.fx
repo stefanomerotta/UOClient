@@ -17,25 +17,24 @@ cbuffer Parameters : register(b0)
 struct VertexShaderInput
 {
     float4 Position : POSITION0;
-    float2 Bounds : TEXCOORD0;
-    float3 TexCoord : TEXCOORD1;
+    float4 Bounds : TEXCOORD0;
 };
 
 struct VertexShaderOutput
 {
     float4 Position : SV_POSITION;
-    float3 TexCoord : TEXCOORD0;
+    float2 TexCoord : TEXCOORD0;
 };
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
 {
     VertexShaderOutput output = (VertexShaderOutput) 0;
 
-    float3 billboard = mul(float3(input.Bounds, 0), Rotation);
+    float3 billboard = mul(float3(input.Bounds.xy, 0), Rotation);
     float4 translatedPosition = float4(input.Position.xyz + billboard, input.Position.w);
     
     output.Position = mul(translatedPosition, WorldViewProjection);
-    output.TexCoord = float3(input.TexCoord.xy / TextureSize, input.TexCoord.z);
+    output.TexCoord = input.Bounds.zw / TextureSize;
 
     return output;
 }

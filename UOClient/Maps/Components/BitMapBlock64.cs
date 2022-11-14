@@ -1,6 +1,6 @@
 ﻿namespace UOClient.Maps.Components
 {
-    public unsafe struct BitMapBlock64
+    public unsafe ref struct BitMapBlock64
     {
         public fixed ulong flags[64];
 

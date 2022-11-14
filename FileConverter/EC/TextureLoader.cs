@@ -1,4 +1,5 @@
-﻿using Mythic.Package;
+﻿using FileConverter.Utilities;
+using Mythic.Package;
 using System.Diagnostics.CodeAnalysis;
 
 namespace FileConverter.EC
@@ -14,15 +15,19 @@ namespace FileConverter.EC
             this.dictionaryPrefix = dictionaryPrefix;
         }
 
-        public bool TryLoad(int textureId, [NotNullWhen(true)] out byte[]? data)
+        public bool TryLoad(int textureId, [NotNullWhen(true)] out Span<byte> data, out int width, out int height)
         {
             data = null;
+            width = 0;
+            height = 0;
 
             SearchResult result = package.SearchExactFileName($"{dictionaryPrefix}{textureId:D8}.dds");
             if (!result.Found)
                 return false;
 
-            data = result.File.Unpack();
+            byte[] unpacked = result.File.Unpack();
+            data = DDSReader.GetContent(unpacked, out width, out height);
+
             return true;
         }
     }

@@ -6,7 +6,7 @@ namespace UOClient.Utilities
     public class TextureArray : Texture2D
     {
         public TextureArray(GraphicsDevice graphicsDevice, int width, int height, int arraySize)
-            : base(graphicsDevice, width, height, true, SurfaceFormat.Dxt5, SurfaceType.Texture, false, arraySize)
+            : base(graphicsDevice, width, height, false, SurfaceFormat.Dxt5, arraySize)
         { }
 
         public void Add(int index, Texture2D texture)

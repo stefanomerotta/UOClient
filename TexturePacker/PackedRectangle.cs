@@ -2,7 +2,7 @@
 
 namespace TexturePacker
 {
-    public readonly struct PackedRectangle
+    public readonly record struct PackedRectangle
     {
         public readonly int X;
         public readonly int Y;

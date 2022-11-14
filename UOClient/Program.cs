@@ -1,3 +1,3 @@
 ﻿
-using var game = new UOClient.Game1();
+using var game = new UOClient.MainGame();
 game.Run();
