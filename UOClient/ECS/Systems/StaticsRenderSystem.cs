@@ -37,19 +37,18 @@ namespace UOClient.ECS.Systems
 
         public void Update(GameTime state)
         {
-            EffectPass pass = statics.CurrentTechnique.Passes[0];
+            //EffectPass pass = statics.CurrentTechnique.Passes[0];
 
-            statics.SetWorldViewProjection(in camera.WorldViewProjection);
+            //statics.SetWorldViewProjection(in camera.WorldViewProjection);
             
-            pass.Apply();
+            //pass.Apply();
 
-            foreach (StaticsBlock block in activeBlocks.Keys)
-            {
-                statics.Texture0 = block.TextureArray;
-                statics.TextureSize = new(TextureBuffer.MaxTextureWidth, TextureBuffer.MaxTextureHeight);
+            //foreach (StaticsBlock block in activeBlocks.Keys)
+            //{
+            //    statics.Texture0 = block.TextureArray;
 
-                block.Draw(device);
-            }
+            //    block.Draw(device);
+            //}
         }
 
         public void Dispose()

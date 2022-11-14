@@ -77,7 +77,7 @@ namespace UOClient
 
             postRenderSystem = new SequentialSystem<GameTime>
             (
-                new SectorsSystem(world, 1448, 1448)
+                new BlocksSystem(world, 1448, 1448)
             );
 
             //var v = Content.Load<Texture2D>("statics/00003369");

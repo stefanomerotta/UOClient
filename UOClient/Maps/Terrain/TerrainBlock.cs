@@ -21,8 +21,8 @@ namespace UOClient.Maps.Terrain
         public readonly TerrainTile[] Tiles;
         private VertexBuffer vBuffer = null!;
 
-        public int X;
-        public int Y;
+        public ushort X;
+        public ushort Y;
 
         public TerrainBlock()
         {

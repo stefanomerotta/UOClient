@@ -30,11 +30,11 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DefaultEcs" Version="0.17.2" />
     <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.1.303" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\DefaultEcs\source\DefaultEcs\DefaultEcs.csproj" />
     <ProjectReference Include="..\FileSystem\FileSystem.csproj" />
     <ProjectReference Include="..\GameData\GameData.csproj" />
     <ProjectReference Include="..\TexturePacker\TexturePacker.csproj" />

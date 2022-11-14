@@ -2,15 +2,12 @@
 using DefaultEcs.System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UOClient.Data;
 using UOClient.ECS.Components;
-using UOClient.ECS.Events;
 using UOClient.Maps.Components;
 using UOClient.Maps.Statics;
-using UOClient.Maps.Terrain;
 using UOClient.Utilities;
 using UOClient.Utilities.SingleThreaded;
 
@@ -27,18 +24,15 @@ namespace UOClient.ECS.Systems
         private readonly StaticsFile staticsFile;
         private readonly TextureFile textureFile;
         private readonly StaticData[] staticsData;
-        private readonly EntityMap<Sector> statics;
-        
+        private readonly EntityMap<Block> blocks;
+
         private readonly AsyncCommandProcessor<StaticsBlock> staticsToLoad;
         private readonly CommandQueue<StaticsBlock> staticsToSync;
         private readonly CancellationTokenSource source;
 
-        private readonly IDisposable sectorAddedSubscription;
-        private readonly IDisposable sectorRemovedSubscription;
-
         public bool IsEnabled { get; set; }
 
-        public StaticsLoaderSystem(World world, GraphicsDevice device, StaticsFile staticsFile, 
+        public StaticsLoaderSystem(World world, GraphicsDevice device, StaticsFile staticsFile,
             TextureFile textureFile, StaticData[] staticsData)
         {
             this.world = world;
@@ -52,77 +46,70 @@ namespace UOClient.ECS.Systems
             staticsToLoad = new(poolSize, LoadBlock, source.Token);
             staticsToSync = new(poolSize);
 
-            statics = world.GetEntities()
-                .With<StaticsBlock>()
-                .Without<TerrainBlock>()
-                .AsMap<Sector>();
+            blocks = world.GetEntities()
+                .AsMap<Block>();
 
-            sectorAddedSubscription = world.Subscribe<SectorAdded>(OnSectorAdded);
-            sectorRemovedSubscription = world.Subscribe<SectorRemoved>(OnSectorRemoved);
+            blocks.EntityAdded += OnBlockAdded;
+            blocks.EntityRemoved += OnBlockRemoved;
         }
 
         public void Update(GameTime state)
         {
             while (staticsToSync.TryDequeue(out StaticsBlock? block))
             {
-                Entity e = world.CreateEntity();
+                if (!blocks.TryGetEntity(new(block.X, block.Y), out Entity e))
+                {
+                    pool.Return(block);
+                    continue;
+                }
 
-                e.Set(new Sector(block.X, block.Y));
                 e.Set(block);
 
-                if (block.TotalStaticsCount == 0)
-                    continue;
+                StaticTile[][] tiles = block.Tiles;
 
-                block.SendToVRAM(device);
+                for (int i = 0; i < tiles.Length; i++)
+                {
+                    StaticTile[] tileStatics = tiles[i];
 
-                //StaticTile[][] tiles = block.Tiles;
+                    if (tileStatics.Length == 0)
+                        continue;
 
-                //for (int i = 0; i < tiles.Length; i++)
-                //{
-                //    StaticTile[] tileStatics = tiles[i];
+                    int x = i % TerrainFile.BlockSize;
+                    int y = i / TerrainFile.BlockSize;
 
-                //    if (tileStatics.Length == 0)
-                //        continue;
+                    for (int j = 0; j < tileStatics.Length; j++)
+                    {
+                        ref StaticTile tile = ref tileStatics[j];
 
-                //    int x = i % TerrainFile.BlockSize;
-                //    int y = i / TerrainFile.BlockSize;
+                        Entity @static = world.CreateEntity();
 
-                //    for (int j = 0; j < tileStatics.Length; j++)
-                //    {
-                //        ref StaticTile tile = ref tileStatics[j];
-
-                //        Entity @static = world.CreateEntity();
-
-                //        @static.Set(new Position(x, y, tile.Z));
-                //        @static.Set(new Sector(block.X, block.Y));
-                //        @static.Set(new StaticTexture(tile.Id));
-                //    }
-                //}
+                        @static.Set(new Position(x, y, tile.Z));
+                        @static.Set(new Sector(block.X, block.Y));
+                        @static.Set(new StaticTexture(tile.Id));
+                    }
+                }
             }
         }
 
-        private void OnSectorAdded(in SectorAdded sector)
+        private void OnBlockAdded(in Entity e)
         {
             if (!pool.TryGet(out StaticsBlock? block))
                 block = new(textureFile);
 
-            block.X = sector.X;
-            block.Y = sector.Y;
+            Block blockComponent = e.Get<Block>();
+
+            block.X = blockComponent.X;
+            block.Y = blockComponent.Y;
 
             staticsToLoad.TryEnqueue(block);
         }
 
-        private void OnSectorRemoved(in SectorRemoved sector)
+        private void OnBlockRemoved(in Entity e)
         {
-            if (!statics.TryGetEntity(UnsafeUtility.As<SectorRemoved, Sector>(sector), out Entity e))
-                return;
-
             StaticsBlock block = e.Get<StaticsBlock>();
-            
+
             block.ClearVRAM();
             pool.Return(block);
-
-            e.Dispose();
         }
 
         private ValueTask LoadBlock(StaticsBlock block)
@@ -135,9 +122,6 @@ namespace UOClient.ECS.Systems
 
         public void Dispose()
         {
-            sectorAddedSubscription.Dispose();
-            sectorRemovedSubscription.Dispose();
-
             source.Cancel();
 
 #pragma warning disable CA2012

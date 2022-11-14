@@ -2,13 +2,10 @@
 using DefaultEcs.System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UOClient.Data;
 using UOClient.ECS.Components;
-using UOClient.ECS.Events;
-using UOClient.Maps.Statics;
 using UOClient.Maps.Terrain;
 using UOClient.Utilities;
 using UOClient.Utilities.SingleThreaded;
@@ -24,16 +21,11 @@ namespace UOClient.ECS.Systems
         private readonly GraphicsDevice device;
         private readonly TerrainFile terrainFile;
         private readonly World world;
-        private readonly EntityMap<Sector> terrains;
+        private readonly EntityMap<Block> blocks;
 
         private readonly AsyncCommandProcessor<TerrainBlock> blocksToLoad;
         private readonly CommandQueue<TerrainBlock> blocksToSync;
         private readonly CancellationTokenSource source;
-
-        private readonly IDisposable sectorAddedSubscription;
-        private readonly IDisposable sectorRemovedSubscription;
-
-        private bool disposed;
 
         public bool IsEnabled { get; set; }
 
@@ -48,50 +40,47 @@ namespace UOClient.ECS.Systems
             blocksToLoad = new(poolSize, LoadBlock, source.Token);
             blocksToSync = new(poolSize);
 
-            terrains = world.GetEntities()
-                .With<TerrainBlock>()
-                .Without<StaticsBlock>()
-                .AsMap<Sector>();
+            blocks = world.GetEntities()
+                .AsMap<Block>();
 
-            sectorAddedSubscription = world.Subscribe<SectorAdded>(OnSectorAdded);
-            sectorRemovedSubscription = world.Subscribe<SectorRemoved>(OnSectorRemoved);
+            blocks.EntityAdded += OnBlockAdded;
+            blocks.EntityRemoved += OnBlockRemoved;
         }
 
         public void Update(GameTime state)
         {
             while (blocksToSync.TryDequeue(out TerrainBlock? block))
             {
-                block.SendToVRAM(device);
-
-                Entity e = world.CreateEntity();
+                if (!blocks.TryGetEntity(new(block.X, block.Y), out Entity e))
+                {
+                    pool.Return(block);
+                    continue;
+                }
 
                 e.Set(block);
-                e.Set(new Sector(block.X, block.Y));
+                block.SendToVRAM(device);
             }
         }
 
-        private void OnSectorAdded(in SectorAdded sector)
+        private void OnBlockAdded(in Entity e)
         {
             if (!pool.TryGet(out TerrainBlock? block))
                 block = new();
 
-            block.X = sector.X;
-            block.Y = sector.Y;
+            Block blockComponent = e.Get<Block>();
+
+            block.X = blockComponent.X;
+            block.Y = blockComponent.Y;
 
             blocksToLoad.TryEnqueue(block);
         }
 
-        private void OnSectorRemoved(in SectorRemoved sector)
+        private void OnBlockRemoved(in Entity e)
         {
-            if (!terrains.TryGetEntity(UnsafeUtility.As<SectorRemoved, Sector>(in sector), out Entity e))
-                return;
-
             TerrainBlock block = e.Get<TerrainBlock>();
 
             block.ClearVRAM();
             pool.Return(block);
-
-            e.Dispose();
         }
 
         private ValueTask LoadBlock(TerrainBlock block)
@@ -104,15 +93,7 @@ namespace UOClient.ECS.Systems
 
         public void Dispose()
         {
-            if (disposed)
-                return;
-
-            disposed = true;
-
             source.Cancel();
-
-            sectorAddedSubscription.Dispose();
-            sectorRemovedSubscription.Dispose();
 
             blocksToSync.Dispose();
 

@@ -21,8 +21,8 @@ namespace UOClient.Maps.Statics
         private VertexBuffer vBuffer;
         private IndexBuffer iBuffer;
 
-        public int X;
-        public int Y;
+        public ushort X;
+        public ushort Y;
 
         public int TotalStaticsCount { get; private set; }
         public TextureArray TextureArray { get; private set; }
@@ -67,8 +67,8 @@ namespace UOClient.Maps.Statics
                         if (data.TextureId is >= ushort.MaxValue)
                             continue;
 
-                        PackedRectangle rect = textureBuffer.GetOrAdd((ushort)data.TextureId);
-                        BuildBillboard(startX + x, startY + y, tile.Z, ref data, vIndex, iIndex, 0);
+                        //PackedRectangle rect = textureBuffer.GetOrAdd((ushort)data.TextureId);
+                        //BuildBillboard(startX + x, startY + y, tile.Z, ref data, vIndex, iIndex, 0);
 
                         vIndex += 4;
                         iIndex += 6;
@@ -87,8 +87,6 @@ namespace UOClient.Maps.Statics
 
             vBuffer.SetData(vertices);
             iBuffer.SetData(indices);
-
-            TextureArray = textureBuffer.CreateTextureArray(device);
         }
 
         public void Draw(GraphicsDevice device)

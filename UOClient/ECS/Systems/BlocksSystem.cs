@@ -8,28 +8,27 @@ using UOClient.ECS.Events;
 
 namespace UOClient.ECS.Systems
 {
-    internal class SectorsSystem : ISystem<GameTime>
+    internal class BlocksSystem : ISystem<GameTime>
     {
         private readonly World world;
-        private readonly EntityMultiMap<Sector> activeSectors;
+        private readonly EntityMap<Block> activeBlocks;
         private readonly int blocksWidth;
         private readonly int blocksHeight;
-        private readonly IDisposable sectorSubscription;
+        private readonly IDisposable blockSubscription;
 
         public bool IsEnabled { get; set; }
 
-        public SectorsSystem(World world, int mapWidth, int mapHeight)
+        public BlocksSystem(World world, int mapWidth, int mapHeight)
         {
             this.world = world;
 
             blocksWidth = (int)Math.Ceiling(mapWidth / (double)TerrainFile.BlockSize);
             blocksHeight = (int)Math.Ceiling(mapHeight / (double)TerrainFile.BlockSize);
 
-            activeSectors = world.GetEntities()
-                .With<Sector>()
-                .AsMultiMap<Sector>();
+            activeBlocks = world.GetEntities()
+                .AsMap<Block>();
 
-            sectorSubscription = world.Subscribe<CurrentSectorChanged>(OnCurrentSectorChanged);
+            blockSubscription = world.Subscribe<CurrentSectorChanged>(OnCurrentSectorChanged);
         }
 
         public void Update(GameTime state)
@@ -43,16 +42,16 @@ namespace UOClient.ECS.Systems
 
             Span<bool> area = stackalloc bool[size * size];
 
-            foreach (Sector sector in activeSectors.Keys)
+            foreach (Block block in activeBlocks.Keys)
             {
-                int deltaX = sector.X - newSector.X;
-                int deltaY = sector.Y - newSector.Y;
+                int deltaX = block.X - newSector.X;
+                int deltaY = block.Y - newSector.Y;
 
                 int absDeltaX = Math.Abs(deltaX);
                 int absDeltaY = Math.Abs(deltaY);
 
                 if (absDeltaX is > disabledRange || absDeltaY is > disabledRange)
-                    world.Publish(new SectorRemoved(sector.X, sector.Y));
+                    activeBlocks[block].Dispose();
 
                 else if (absDeltaX is <= activeRange && absDeltaY is <= activeRange)
                     area[deltaX + activeRange + (deltaY + activeRange) * size] = true;
@@ -63,19 +62,20 @@ namespace UOClient.ECS.Systems
                 if (area[i])
                     continue;
 
-                int x = newSector.X + (i % size) - 1;
-                int y = newSector.Y + (i / size) - 1;
+                ushort x = (ushort)(newSector.X + (i % size) - 1);
+                ushort y = (ushort)(newSector.Y + (i / size) - 1);
 
                 if (x < 0 || x >= blocksWidth || y < 0 || y >= blocksHeight)
                     continue;
 
-                world.Publish(new SectorAdded((ushort)x, (ushort)y));
+                Entity e = world.CreateEntity();
+                e.Set(new Block(x, y));
             }
         }
 
         public void Dispose()
         {
-            sectorSubscription.Dispose();
+            blockSubscription.Dispose();
         }
     }
 }
