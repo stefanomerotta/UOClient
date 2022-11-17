@@ -11,7 +11,7 @@ namespace FileConverter.EC
     internal class TileDataConverter
     {
         private static readonly Regex idRegex = new(@"(?<filename>\d+)(_.+)*\.tga", RegexOptions.Compiled);
-        
+
         private readonly MythicPackage package;
         private readonly StringDictionary dictionary;
 
@@ -76,6 +76,7 @@ namespace FileConverter.EC
             StaticData data = new()
             {
                 Id = (ushort)header.TileId,
+                Flags = header.Flags1,
                 RadarColor = new()
                 {
                     R = radarColors.R,
@@ -106,9 +107,11 @@ namespace FileConverter.EC
 
             TextureEntry ecTexture = ecShader.Textures[0];
 
-            if (GetStaticTypeFromDictionary(ecShader.DictionaryShaderIndex) == StaticTileType.Liquid)
+            data.Type = GetStaticTypeFromDictionary(in ecShader);
+
+            if (data.Type == StaticTileType.Liquid)
                 ecTexture = ecShader.Textures[1];
-            
+
             data.ECTexture = new()
             {
                 Id = GetIdFromDictionary(ecTexture.DictionaryIndex),
@@ -119,7 +122,7 @@ namespace FileConverter.EC
                 OffsetX = (short)ecOffsets.OffsetX,
                 OffsetY = (short)ecOffsets.OffsetY
             };
-            
+
             TextureEntry ccTexture = ccShader.Textures[0];
 
             data.CCTexture = new()
@@ -218,11 +221,11 @@ namespace FileConverter.EC
             return int.Parse(group.Value);
         }
 
-        private StaticTileType GetStaticTypeFromDictionary(int dictionaryId)
+        private StaticTileType GetStaticTypeFromDictionary(in ShaderEntry shader)
         {
-            return dictionary.Entries[dictionaryId] switch
+            return dictionary.Entries[shader.DictionaryShaderIndex] switch
             {
-                "UOSpriteShader" => StaticTileType.Static,
+                "UOSpriteShader" => shader.Textures[0].TextureStretch != 1 ? StaticTileType.Solid : StaticTileType.Static,
                 "UOWaterShader" => StaticTileType.Liquid,
                 "UOStaticTerrainShader" => StaticTileType.Solid,
                 _ => throw new Exception()

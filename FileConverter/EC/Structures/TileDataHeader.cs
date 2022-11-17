@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using GameData.Enums;
+using System.Runtime.InteropServices;
 
 namespace FileConverter.EC.Structures
 {
@@ -22,7 +23,7 @@ namespace FileConverter.EC.Structures
         public int Light2;
         public int Unk9;
 
-        public long Flags1;
+        public StaticFlags Flags1;
         public long Flags2;
         public int Facing;
     }

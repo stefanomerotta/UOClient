@@ -6,7 +6,7 @@ using UOClient.Maps.Statics;
 using UOClient.Maps.Terrain;
 using UOClient.Utilities.SingleThreaded;
 
-namespace UOClient.Maps
+namespace UOClient.Old
 {
     internal sealed class MapBlock : IDisposable
     {

@@ -6,7 +6,6 @@ using System;
 using System.Threading.Channels;
 using UOClient.Data;
 using UOClient.Effects;
-using UOClient.Maps;
 using UOClient.Maps.Components;
 using UOClient.Maps.Terrain;
 

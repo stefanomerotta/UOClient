@@ -1,4 +1,5 @@
 ﻿using TexturePacker.Components;
+using TexturePacker.Enums;
 using static TexturePacker.PackerMethods;
 
 namespace TexturePacker
@@ -13,7 +14,7 @@ namespace TexturePacker
         public int Width => context.Width;
         public int Height => context.Height;
 
-        public Packer(int width = 256, int height = 256)
+        public Packer(int width = 256, int height = 256, HeuristicSkylineType heuristicType = HeuristicSkylineType.BLSortHeight)
         {
             if (width <= 0)
                 throw new ArgumentOutOfRangeException(nameof(width));
@@ -21,13 +22,11 @@ namespace TexturePacker
             if (height <= 0)
                 throw new ArgumentOutOfRangeException(nameof(height));
 
-            // Initialize the context
-            int numNodes = width;
-            context = new Context(numNodes);
+            context = new Context(width, heuristicType);
 
             fixed (Context* contextPtr = &context)
             {
-                InitTarget(contextPtr, width, height, context.AllNodes, numNodes);
+                InitTarget(contextPtr, width, height, context.AllNodes, width);
             }
         }
 
@@ -42,7 +41,7 @@ namespace TexturePacker
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <returns></returns>
-        public PackedRectangle PackRect(int width, int height)
+        public PackedRectangle Pack(int width, int height)
         {
             Rect rect = new()
             {

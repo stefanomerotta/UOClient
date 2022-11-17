@@ -1,25 +1,25 @@
-﻿namespace TexturePacker.Components
+﻿using TexturePacker.Enums;
+
+namespace TexturePacker.Components
 {
     internal unsafe struct Context : IDisposable
     {
         public int Width;
         public int Height;
         public int Align;
-        public int InitMode;
-        public int Heuristic;
+        public HeuristicSkylineType Heuristic;
         public int NumNodes;
         public Node* ActiveHead;
         public Node* FreeHead;
         public Node* Extra;
         public Node* AllNodes;
 
-        public Context(int nodesCount)
+        public Context(int nodesCount, HeuristicSkylineType heuristicType)
         {
             if (nodesCount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(nodesCount));
 
-            Width = Height = Align = InitMode = Heuristic = NumNodes = 0;
-            ActiveHead = FreeHead = null;
+            Heuristic = heuristicType;
 
             // Allocate nodes
             AllNodes = (Node*)CRuntime.Malloc(sizeof(Node) * nodesCount);

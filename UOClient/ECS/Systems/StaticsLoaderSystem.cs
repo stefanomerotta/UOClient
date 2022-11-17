@@ -2,6 +2,7 @@
 using DefaultEcs.System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UOClient.Data;
@@ -20,7 +21,6 @@ namespace UOClient.ECS.Systems
         private static readonly ObjectPool<StaticsBlock> pool = new(poolSize);
 
         private readonly GraphicsDevice device;
-        private readonly World world;
         private readonly StaticsFile staticsFile;
         private readonly TextureFile textureFile;
         private readonly StaticData[] staticsData;
@@ -35,7 +35,6 @@ namespace UOClient.ECS.Systems
         public StaticsLoaderSystem(World world, GraphicsDevice device, StaticsFile staticsFile,
             TextureFile textureFile, StaticData[] staticsData)
         {
-            this.world = world;
             this.device = device;
             this.staticsFile = staticsFile;
             this.textureFile = textureFile;
@@ -46,8 +45,7 @@ namespace UOClient.ECS.Systems
             staticsToLoad = new(poolSize, LoadBlock, source.Token);
             staticsToSync = new(poolSize);
 
-            blocks = world.GetEntities()
-                .AsMap<Block>();
+            blocks = world.GetEntities().AsMap<Block>();
 
             blocks.EntityAdded += OnBlockAdded;
             blocks.EntityRemoved += OnBlockRemoved;
@@ -64,30 +62,31 @@ namespace UOClient.ECS.Systems
                 }
 
                 e.Set(block);
+                block.SendToVRAM(device);
 
-                StaticTile[][] tiles = block.Tiles;
+                //StaticTile[][] tiles = block.Tiles;
 
-                for (int i = 0; i < tiles.Length; i++)
-                {
-                    StaticTile[] tileStatics = tiles[i];
+                //for (int i = 0; i < tiles.Length; i++)
+                //{
+                //    StaticTile[] tileStatics = tiles[i];
 
-                    if (tileStatics.Length == 0)
-                        continue;
+                //    if (tileStatics.Length == 0)
+                //        continue;
 
-                    int x = i % TerrainFile.BlockSize;
-                    int y = i / TerrainFile.BlockSize;
+                //    int x = i % TerrainFile.BlockSize;
+                //    int y = i / TerrainFile.BlockSize;
 
-                    for (int j = 0; j < tileStatics.Length; j++)
-                    {
-                        ref StaticTile tile = ref tileStatics[j];
+                //    for (int j = 0; j < tileStatics.Length; j++)
+                //    {
+                //        ref StaticTile tile = ref tileStatics[j];
 
-                        Entity @static = world.CreateEntity();
+                //        Entity @static = world.CreateEntity();
 
-                        @static.Set(new Position(x, y, tile.Z));
-                        @static.Set(new Sector(block.X, block.Y));
-                        @static.Set(new StaticTexture(tile.Id));
-                    }
-                }
+                //        @static.Set(new Position(x, y, tile.Z));
+                //        @static.Set(new Sector(block.X, block.Y));
+                //        @static.Set(new StaticTexture(tile.Id));
+                //    }
+                //}
             }
         }
 
@@ -106,6 +105,9 @@ namespace UOClient.ECS.Systems
 
         private void OnBlockRemoved(in Entity e)
         {
+            if (!e.Has<StaticsBlock>())
+                return;
+
             StaticsBlock block = e.Get<StaticsBlock>();
 
             block.ClearVRAM();
@@ -114,10 +116,17 @@ namespace UOClient.ECS.Systems
 
         private ValueTask LoadBlock(StaticsBlock block)
         {
-            int count = staticsFile.FillBlock(block.X, block.Y, block.Tiles);
-            block.Initialize(staticsData, count);
+            try
+            {
+                int count = staticsFile.FillBlock(block.X, block.Y, block.Tiles);
+                block.Initialize(staticsData, count);
 
-            return staticsToSync.EnqueueAsync(block);
+                return staticsToSync.EnqueueAsync(block);
+            }
+            catch(Exception e)
+            {
+                throw;
+            }
         }
 
         public void Dispose()

@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using GameData.Enums;
+using System.Runtime.InteropServices;
 
 namespace UOClient.Maps.Components
 {
@@ -12,8 +13,9 @@ namespace UOClient.Maps.Components
         public readonly short EndY;
         public readonly short OffsetX;
         public readonly short OffsetY;
+        public readonly StaticTileType Type;
 
-        public StaticData(int textureId, short startX, short startY, short endX, short endY, short offsetX, short offsetY)
+        public StaticData(int textureId, short startX, short startY, short endX, short endY, short offsetX, short offsetY, StaticTileType type)
         {
             TextureId = textureId;
             StartX = startX;
@@ -22,6 +24,7 @@ namespace UOClient.Maps.Components
             EndY = endY;
             OffsetX = offsetX;
             OffsetY = offsetY;
+            Type = type;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using GameData.Enums;
+using System.Runtime.InteropServices;
 
 namespace FileConverter.Structures
 {
@@ -9,5 +10,7 @@ namespace FileConverter.Structures
         public StaticTextureInfo ECTexture;
         public StaticTextureInfo CCTexture;
         public RadarColor RadarColor;
+        public StaticTileType Type;
+        public StaticFlags Flags;
     }
 }

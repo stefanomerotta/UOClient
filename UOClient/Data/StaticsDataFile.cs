@@ -1,4 +1,5 @@
 ﻿using FileSystem.IO;
+using GameData.Enums;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -29,7 +30,8 @@ namespace UOClient.Data
                 if (data.Id >= ushort.MaxValue)
                     continue;
 
-                toRet[data.Id] = new(texture.Id, texture.StartX, texture.StartY, texture.EndX, texture.EndY, texture.OffsetX, texture.OffsetY);
+                toRet[data.Id] = new(texture.Id, texture.StartX, texture.StartY, 
+                    texture.EndX, texture.EndY, texture.OffsetX, texture.OffsetY, data.Type);
             }
 
             return toRet;
@@ -47,6 +49,8 @@ namespace UOClient.Data
             public FileStaticTextureInfo ECTexture;
             public FileStaticTextureInfo CCTexture;
             public FileRadarColor RadarColor;
+            public StaticTileType Type;
+            public StaticFlags Flags;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]

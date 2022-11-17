@@ -26,9 +26,7 @@ namespace UOClient.ECS.Systems
             this.camera = camera;
             this.device = device;
 
-            activeBlocks = world.GetEntities()
-                .With<TerrainBlock>()
-                .AsMap<TerrainBlock>();
+            activeBlocks = world.GetEntities().AsMap<TerrainBlock>();
 
             SolidTerrainInfo.Load(contentManager);
             LiquidTerrainInfo.Load(contentManager);
@@ -121,8 +119,8 @@ namespace UOClient.ECS.Systems
         }
 
         public void Dispose()
-        { 
-            foreach(TerrainBlock block in activeBlocks.Keys)
+        {
+            foreach (TerrainBlock block in activeBlocks.Keys)
             {
                 block.Dispose();
             }

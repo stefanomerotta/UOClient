@@ -29,8 +29,8 @@ namespace UOClient
 
         public Rectangle GetOrAdd(ushort id)
         {
-            int width;
-            int height;
+            ushort width;
+            ushort height;
 
             if (globalTextures[id] == default)
             {
@@ -55,14 +55,14 @@ namespace UOClient
 
             ref TextureBufferEntry current = ref entriesSpan[^1];
 
-            PackedRectangle rect = current.Packer.PackRect(width, height);
+            PackedRectangle rect = current.Packer.Pack(width, height);
 
             if (rect == default)
             {
                 current = new TextureBufferEntry();
                 entries.Add(current);
 
-                rect = current.Packer.PackRect(width, height);
+                rect = current.Packer.Pack(width, height);
             }
 
             loadedTextures.Add(id, entries.Count - 1);

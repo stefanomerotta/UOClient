@@ -7,9 +7,9 @@ namespace TexturePacker
     {
         private static readonly int rectSize = sizeof(Rect);
 
-        public static void* Malloc(long size)
+        public static void* Malloc(int size)
         {
-            IntPtr ptr = Marshal.AllocHGlobal((int)size);
+            IntPtr ptr = Marshal.AllocHGlobal(size);
             return ptr.ToPointer();
         }
 

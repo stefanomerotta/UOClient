@@ -1,12 +1,8 @@
 ﻿using DefaultEcs;
 using DefaultEcs.System;
-using DefaultEcs.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Linq;
-using System.Runtime.Intrinsics;
 using UOClient.Data;
 using UOClient.ECS.Systems;
 using UOClient.Maps.Components;
@@ -71,8 +67,8 @@ namespace UOClient
 
             renderSystem = new SequentialSystem<GameTime>
             (
-                new TerrainRenderSystem(world, device, Content, camera)
-                //new StaticsRenderSystem(world, device, Content, camera)
+                new TerrainRenderSystem(world, device, Content, camera),
+                new StaticsRenderSystem(world, device, Content, camera)
             );
 
             postRenderSystem = new SequentialSystem<GameTime>
@@ -91,6 +87,8 @@ namespace UOClient
 
             //Texture2D t = new(device, w, h, false, SurfaceFormat.Dxt5, 10);
             //t.SetData(0, 0, new Rectangle(0, 0, w, h), v2, 0, v2.Length);
+
+            wireframeEffect = new(device);
         }
 
         protected override void Update(GameTime gameTime)
@@ -108,10 +106,6 @@ namespace UOClient
             device.Clear(Color.DarkSlateBlue);
             //device.Clear(Color.Black);
 
-            //wireframeEffect.View = camera.ViewMatrix;
-            //wireframeEffect.Projection = camera.ProjectionMatrix;
-            //wireframeEffect.World = camera.WorldMatrix;
-
             RasterizerState rs = new()
             {
                 CullMode = CullMode.CullCounterClockwiseFace,
@@ -124,19 +118,23 @@ namespace UOClient
             renderSystem.Update(gameTime);
             postRenderSystem.Update(gameTime);
 
-            //RasterizerState rs2 = new()
-            //{
-            //    CullMode = CullMode.None,
-            //    FillMode = FillMode.WireFrame
-            //};
+            wireframeEffect.View = camera.ViewMatrix;
+            wireframeEffect.Projection = camera.ProjectionMatrix;
+            wireframeEffect.World = camera.WorldMatrix;
 
-            //device.RasterizerState = rs2;
+            RasterizerState rs2 = new()
+            {
+                CullMode = CullMode.None,
+                FillMode = FillMode.WireFrame
+            };
 
-            //foreach (EffectPass pass in wireframeEffect.CurrentTechnique.Passes)
-            //{
-            //    pass.Apply();
-            //    camera.Test(device);
-            //}
+            device.RasterizerState = rs2;
+
+            foreach (EffectPass pass in wireframeEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                camera.Test(device);
+            }
 
             //Vector3 position = device.Viewport.Project(Vector3.Subtract(camera.Target, new Vector3(5, 5, 0)), camera.ProjectionMatrix, camera.ViewMatrix, Matrix.Identity);
 

@@ -33,7 +33,7 @@ namespace UOClient
         {
             Zoom = 1;
 
-            target = new(300, 0, 364); //new(185, 0, 300);
+            target = new(82, 0, 147); //new(300, 0, 364); //new(185, 0, 300);
             scaleMatrix = Matrix.CreateScale(Zoom, Zoom, 1);
 
             worldMatrix = Matrix.CreateScale(1, .1f, 1);

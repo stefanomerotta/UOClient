@@ -15,7 +15,20 @@ namespace UOClient.Data
             reader = new(stream);
         }
 
-        public byte[] ReadTexture(int index, out int width, out int height)
+        public void GetTextureSize(int index, out ushort width, out ushort height)
+        {
+            ref readonly TextureMetadata metadata = ref reader.GetMetadata(index);
+
+            width = metadata.Width;
+            height = metadata.Height;
+        }
+
+        public byte[] ReadTexture(int index)
+        {
+            return reader.ReadArray(index);
+        }
+
+        public byte[] ReadTexture(int index, out ushort width, out ushort height)
         {
             byte[] data = reader.ReadArray(index, out TextureMetadata metadata);
 
@@ -25,15 +38,17 @@ namespace UOClient.Data
             return data;
         }
 
-        public void FillTexture(int index, Span<byte> data, out int width, out int height)
+        public int FillTexture(int index, Span<byte> data)
         {
-             reader.ReadSpan(index, data);
+            return reader.ReadSpan(index, data);
+        }
 
-            if (BitConverter.ToInt32(data) != 0x20534444)
-                throw new Exception();
+        public void FillTexture(int index, Span<byte> data, out ushort width, out ushort height)
+        {
+            reader.ReadSpan(index, data, out TextureMetadata metadata);
 
-            width = BitConverter.ToInt32(data[9..]);
-            height = BitConverter.ToInt32(data[11..]);
+            width = metadata.Width;
+            height = metadata.Height;
         }
     }
 }

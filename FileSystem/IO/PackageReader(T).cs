@@ -52,12 +52,15 @@ namespace FileSystem.IO
             }
         }
 
+        public ref readonly TMetadata GetMetadata(int index)
+            => ref headers[index].Metadata;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ReadSpan<T>(int index, Span<T> span) where T : struct
+        public int ReadSpan<T>(int index, Span<T> span) where T : struct
             => ReadSpan(index, span, out _);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ReadSpan(int index, Span<byte> span)
+        public int ReadSpan(int index, Span<byte> span)
             => ReadSpan(index, span, out _);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -65,31 +68,31 @@ namespace FileSystem.IO
             => ReadSpan<T>(index, out _);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte[] ReadArray(int index) 
+        public byte[] ReadArray(int index)
             => ReadArray(index, out _);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Read<T>(int index) where T : struct
             => Read<T>(index, out _);
 
-        public void ReadSpan<T>(int index, Span<T> span, out TMetadata metadata)
+        public int ReadSpan<T>(int index, Span<T> span, out TMetadata metadata)
             where T : struct
         {
-            ReadSpan(index, MemoryMarshal.AsBytes(span), out metadata);
+            return ReadSpan(index, MemoryMarshal.AsBytes(span), out metadata);
         }
 
-        public void ReadSpan(int index, Span<byte> span, out TMetadata metadata)
+        public int ReadSpan(int index, Span<byte> span, out TMetadata metadata)
         {
             Header header = headers[index];
             metadata = header.Metadata;
 
             if (header.ContentAddress == 0)
-                return;
+                return 0;
 
             if (header.CompressionAlgorithm == CompressionAlgorithm.None)
             {
                 handle.ReadSpan((ulong)header.ContentAddress, span[..header.UncompressedSize]);
-                return;
+                return header.UncompressedSize;
             }
 
             if (header.CompressionAlgorithm == CompressionAlgorithm.Zstd)
@@ -98,7 +101,7 @@ namespace FileSystem.IO
                 ReadOnlySpan<byte> compressed = new(pointer.ToPointer(), header.CompressedSize);
 
                 zstdDecompressor.Unwrap(compressed, span, false);
-                return;
+                return header.UncompressedSize;
             }
 
             throw new NotSupportedException("Compression algorithm not supported");

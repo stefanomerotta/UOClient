@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UOClient.Data;
 using UOClient.ECS.Components;
+using UOClient.Maps.Statics;
 using UOClient.Maps.Terrain;
 using UOClient.Utilities;
 using UOClient.Utilities.SingleThreaded;
@@ -40,8 +41,7 @@ namespace UOClient.ECS.Systems
             blocksToLoad = new(poolSize, LoadBlock, source.Token);
             blocksToSync = new(poolSize);
 
-            blocks = world.GetEntities()
-                .AsMap<Block>();
+            blocks = world.GetEntities().AsMap<Block>();
 
             blocks.EntityAdded += OnBlockAdded;
             blocks.EntityRemoved += OnBlockRemoved;
@@ -77,6 +77,9 @@ namespace UOClient.ECS.Systems
 
         private void OnBlockRemoved(in Entity e)
         {
+            if (!e.Has<TerrainBlock>())
+                return;
+
             TerrainBlock block = e.Get<TerrainBlock>();
 
             block.ClearVRAM();

@@ -1,6 +1,5 @@
 ﻿using FileConverter.IO;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using NewStaticTile = FileConverter.Structures.StaticTile;
 
 namespace FileConverter.CC
@@ -8,6 +7,7 @@ namespace FileConverter.CC
     internal class StaticsConverter
     {
         private const int oldSizeShift = 3;
+        private const int oldSize = 8;
         private const int newSize = 64;
         private const int newSizeShift = 6;
         private const int deltaSizeShift = newSizeShift - oldSizeShift;
@@ -31,7 +31,7 @@ namespace FileConverter.CC
             staticsReader = new(Path.Combine(path, $"statics{id}.mul"));
         }
 
-        public unsafe int ConvertChunk(int startX, int startY, Span<List<NewStaticTile>> tiles)
+        public int ConvertChunk(int startX, int startY, Span<List<NewStaticTile>> tiles)
         {
             Debug.Assert(tiles.Length == newSize * newSize);
 
@@ -59,8 +59,8 @@ namespace FileConverter.CC
             if (oldX >= oldChunkWidth || oldY >= oldChunkHeight)
                 return 0;
 
-            int startX = oldX >> deltaSizeShift;
-            int startY = oldY >> deltaSizeShift;
+            int startX = oldX % deltaSize * oldSize;
+            int startY = oldY % deltaSize * oldSize;
 
             idxReader.Seek((oldX * oldChunkHeight + oldY) * 12);
 
@@ -79,7 +79,7 @@ namespace FileConverter.CC
             for (int i = 0; i < oldChunk.Length; i++)
             {
                 ref StaticTile oldTile = ref oldChunk[i];
-                ref List<NewStaticTile> list = ref tiles[startX + oldTile.X + (startY + oldTile.Y) * newChunkWidth];
+                ref List<NewStaticTile> list = ref tiles[startX + oldTile.X + (startY + oldTile.Y) * newSize];
 
                 list ??= new(4);
 

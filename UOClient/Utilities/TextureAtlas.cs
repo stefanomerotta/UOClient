@@ -16,7 +16,7 @@ namespace UOClient.Utilities
 
         public Rectangle Add(byte[] texture, int width, int height)
         {
-            PackedRectangle bounds = packer.PackRect(width, height);
+            PackedRectangle bounds = packer.Pack(width, height);
 
             Rectangle rect = new()
             {

@@ -43,7 +43,8 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
 {
     float4 color = Texture0.SampleLevel(TextureSampler, input.TexCoord.xy, 0);
     clip(color.a - 1);
-    //color.rgb *= color.a;
+    color.rgb *= color.a;
+    //color.r = 1;
     //color.a = 0.5;
     //color.a = 1;
     

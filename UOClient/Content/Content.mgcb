@@ -525,6 +525,18 @@
 /processorParam:DebugMode=Auto
 /build:shaders/statics.fx
 
+#begin statics/00000144.dds
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:statics/00000144.dds
+
 #begin statics/00003369.dds
 /importer:TextureImporter
 /processor:TextureProcessor

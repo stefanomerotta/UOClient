@@ -69,7 +69,7 @@ namespace UOClient.Maps.Terrain
             device.SetVertexBuffer(vBuffer);
             device.Indices = iBuffers[id];
 
-            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indices.Length);
+            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indices.Length / 3);
         }
 
         public void Dispose()
