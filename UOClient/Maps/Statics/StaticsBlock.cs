@@ -17,6 +17,9 @@ namespace UOClient.Maps.Statics
         private const int vertexSize = StaticsFile.BlockSize;
         private const int vertexLength = StaticsFile.BlockLength;
 
+        private static readonly float ecRateo = (float)(1 / Math.Sqrt(64 * 64 / 2));
+        private static readonly float ccRateo = (float)(1 / Math.Sqrt(44 * 44 / 2));
+
         public readonly StaticTile[][] Tiles;
         private readonly TextureFile textureFile;
         private readonly Packer packer;
@@ -63,6 +66,7 @@ namespace UOClient.Maps.Statics
             int iIndex = 0;
 
             Dictionary<ushort, Rectangle> addedTextures = new();
+            int validTextures = 0;
             int maxTextureWidth = 0;
             int maxTextureHeight = 0;
 
@@ -102,6 +106,10 @@ namespace UOClient.Maps.Statics
                         if (data.TextureId is >= ushort.MaxValue || data.Type != StaticTileType.Static)
                             continue;
 
+                        // TEMP
+                        //if (data.TextureId != 969)
+                        //    continue;
+
                         ref Rectangle rect = ref CollectionsMarshal.GetValueRefOrAddDefault
                         (
                             addedTextures,
@@ -115,10 +123,16 @@ namespace UOClient.Maps.Statics
                             PackedRectangle packed = packer.Pack(width, height);
 
                             rect = Unsafe.As<PackedRectangle, Rectangle>(ref packed);
+                            if (rect == default)
+                                continue;
 
                             maxTextureWidth = Math.Max(maxTextureWidth, rect.Right);
                             maxTextureHeight = Math.Max(maxTextureHeight, rect.Bottom);
+
+                            validTextures++;
                         }
+                        else if (rect == default)
+                            continue;
 
                         BuildBillboard(startX + x, startY + y, tile.Z, in data, vIndex, iIndex, in rect);
 
@@ -128,7 +142,7 @@ namespace UOClient.Maps.Statics
                 }
             }
 
-            if (addedTextures.Count == 0)
+            if (validTextures == 0)
             {
                 TotalStaticsCount = 0;
                 return;
@@ -136,12 +150,15 @@ namespace UOClient.Maps.Statics
 
             TextureWidth = maxTextureWidth;
             TextureHeight = maxTextureHeight;
-            textureBounds = new TextureBounds[addedTextures.Count];
+            textureBounds = new TextureBounds[validTextures];
 
             int i = 0;
             foreach (ushort textureId in addedTextures.Keys)
             {
                 ref Rectangle rect = ref CollectionsMarshal.GetValueRefOrNullRef(addedTextures, textureId);
+                if (rect == default)
+                    continue;
+
                 textureBounds[i++] = new(textureId, in rect);
             }
         }
@@ -200,19 +217,20 @@ namespace UOClient.Maps.Statics
 
         private void BuildBillboard(int x, int y, int z, in StaticData data, int vIndex, int iIndex, in Rectangle rect)
         {
-            float rateo = (float)(1 / Math.Sqrt(64 * 64 / 2));
+            float rateo = data.Enhanced ? ecRateo : ccRateo;
+
             Vector3 position = new(x + 0.5f, z, y + 1.5f);
             short index = (short)vIndex;
 
-            float startX = data.OffsetX * rateo;
+            float startX = -data.OffsetX * rateo;
             float startY = -data.OffsetY * 10 * rateo;
             float endX = (data.EndX - data.StartX) * rateo;
             float endY = (data.EndY - data.StartY) * 10 * rateo;
 
-            float textureStartX = data.StartX + rect.X;
-            float textureStartY = data.EndY + rect.Y;
-            float textureEndX = data.EndX + rect.X;
-            float textureEndY = data.StartY + rect.Y;
+            float textureStartX = rect.X + data.StartX;
+            float textureStartY = rect.Y + data.EndY;
+            float textureEndX = rect.X + data.EndX;
+            float textureEndY = rect.Y + data.StartY;
 
             Vector4 lowerLeft = new(startX, startY, textureStartX, textureStartY);
             Vector4 lowerRight = new(endX, startY, textureEndX, textureStartY);

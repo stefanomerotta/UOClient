@@ -54,6 +54,8 @@ namespace FileConverter
                         
                         chunk[index++] = (byte)list.Count;
 
+                        list.Sort(default(ZComparer));
+
                         MemoryMarshal.AsBytes(CollectionsMarshal.AsSpan(list)).CopyTo(chunk[index..]);
                         index += list.Count * sizeof(StaticTile);
 
@@ -62,6 +64,20 @@ namespace FileConverter
 
                     writer.WriteSpan(x + y * newChunkWidth, chunk[..index], CompressionAlgorithm.Zstd);
                 }
+            }
+        }
+
+        private struct ZComparer : IComparer<StaticTile>
+        {
+            public int Compare(StaticTile x, StaticTile y)
+            {
+                if (x.Z < y.Z)
+                    return -1;
+
+                if (x.Z == y.Z)
+                    return 0;
+
+                return 1;
             }
         }
     }

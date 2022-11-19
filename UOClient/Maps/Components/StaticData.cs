@@ -14,8 +14,10 @@ namespace UOClient.Maps.Components
         public readonly short OffsetX;
         public readonly short OffsetY;
         public readonly StaticTileType Type;
+        public readonly bool Enhanced;
 
-        public StaticData(int textureId, short startX, short startY, short endX, short endY, short offsetX, short offsetY, StaticTileType type)
+        public StaticData(int textureId, short startX, short startY, short endX, short endY, 
+            short offsetX, short offsetY, StaticTileType type, bool enhanced)
         {
             TextureId = textureId;
             StartX = startX;
@@ -25,6 +27,7 @@ namespace UOClient.Maps.Components
             OffsetX = offsetX;
             OffsetY = offsetY;
             Type = type;
+            Enhanced = enhanced;
         }
     }
 }

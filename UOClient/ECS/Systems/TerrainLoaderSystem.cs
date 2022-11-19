@@ -21,7 +21,6 @@ namespace UOClient.ECS.Systems
 
         private readonly GraphicsDevice device;
         private readonly TerrainFile terrainFile;
-        private readonly World world;
         private readonly EntityMap<Block> blocks;
 
         private readonly AsyncCommandProcessor<TerrainBlock> blocksToLoad;
@@ -34,7 +33,6 @@ namespace UOClient.ECS.Systems
         {
             source = new();
 
-            this.world = world;
             this.device = device;
             this.terrainFile = terrainFile;
 

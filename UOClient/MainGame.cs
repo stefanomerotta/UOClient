@@ -40,7 +40,7 @@ namespace UOClient
             camera = new();
             world = new World();
 
-            staticsData = new StaticsDataFile().Load(false);
+            staticsData = new StaticsDataFile().Load(!Settings.UseEnhancedTextures);
         }
 
         protected override void Initialize()
@@ -58,11 +58,13 @@ namespace UOClient
         {
             device = graphics.GraphicsDevice;
 
+            TextureFile textureFile = new(Settings.UseEnhancedTextures ? "ecTextures.bin" : "ccTextures.bin");
+
             updateSystem = new SequentialSystem<GameTime>
             (
                 new CameraSystem(world, camera),
                 new TerrainLoaderSystem(world, device, new TerrainFile(1448, 1448)),
-                new StaticsLoaderSystem(world, device, new StaticsFile(1448, 1448), new TextureFile("ecTextures.bin"), staticsData)
+                new StaticsLoaderSystem(world, device, new StaticsFile(1448, 1448), textureFile, staticsData)
             );
 
             renderSystem = new SequentialSystem<GameTime>

@@ -4,16 +4,17 @@
     {
         public static unsafe void Main(string[] args)
         {
-            string uoPath = "C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic";
+            string uoCCPath = "C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic";
+            string uoECPath = "C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Enhanced";
 
-            //TerrainConverter p = new(uoPath, 4, 1448, 1448);
+            //TerrainConverter p = new(uoCCPath, 4, 1448, 1448);
             //p.Convert("terrain.bin");
 
-            //StaticsConverter s = new(uoPath, 4, 1448, 1448);
-            //s.Convert("statics.bin");
+            StaticsConverter s = new(uoCCPath, 4, 1448, 1448);
+            s.Convert("statics.bin");
 
-            StaticsDataConverter t = new(".\\");
-            t.Convert("tiledata.bin", "ecTextures.bin", "ccTextures.bin");
+            //StaticsDataConverter t = new(uoECPath);
+            //t.Convert("tiledata.bin", "ecTextures.bin", "ccTextures.bin");
         }
     }
 }

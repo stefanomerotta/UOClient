@@ -25,13 +25,21 @@ namespace UOClient.Data
             for (int i = 0; i < buffer.Length; i++)
             {
                 ref FileStaticData data = ref buffer[i];
-                ref FileStaticTextureInfo texture = ref legacy ? ref data.CCTexture : ref data.ECTexture;
+                ref FileStaticTextureInfo texture = ref data.ECTexture;
+
+                bool usedLegacyTexture = false;
+
+                if (legacy || texture.Id < 0)
+                {
+                    texture = ref data.CCTexture;
+                    usedLegacyTexture = true;
+                }
 
                 if (data.Id >= ushort.MaxValue)
                     continue;
 
-                toRet[data.Id] = new(texture.Id, texture.StartX, texture.StartY, 
-                    texture.EndX, texture.EndY, texture.OffsetX, texture.OffsetY, data.Type);
+                toRet[data.Id] = new(texture.Id, texture.StartX, texture.StartY, texture.EndX, texture.EndY,
+                    texture.OffsetX, texture.OffsetY, data.Type, !usedLegacyTexture);
             }
 
             return toRet;

@@ -35,19 +35,34 @@ namespace UOClient.ECS.Systems
 
         public void Update(GameTime state)
         {
-            EffectPass pass = statics.CurrentTechnique.Passes[0];
+            BlendState prevBlendState = device.BlendState;
+            DepthStencilState prevDepthStencilState = device.DepthStencilState;
 
             statics.SetWorldViewProjection(in camera.WorldViewProjection);
 
+            EffectPass firstPass = statics.CurrentTechnique.Passes[0];
+            EffectPass secondPass = statics.CurrentTechnique.Passes[1];
+
             foreach (StaticsBlock block in activeBlocks.Keys)
             {
+                device.BlendState = BlendState.Opaque;
+                device.DepthStencilState = DepthStencilState.Default;
+                
                 statics.Texture0 = block.Texture;
                 statics.TextureSize = new(block.TextureWidth, block.TextureHeight);
 
-                pass.Apply();
-
+                firstPass.Apply();
                 block.Draw(device);
+
+                //device.BlendState = BlendState.NonPremultiplied;
+                //device.DepthStencilState = DepthStencilState.Default;
+
+                //secondPass.Apply();
+                //block.Draw(device);
             }
+
+            device.DepthStencilState = prevDepthStencilState;
+            device.BlendState = prevBlendState;
         }
 
         public void Dispose()
