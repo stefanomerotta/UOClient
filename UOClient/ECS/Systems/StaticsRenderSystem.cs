@@ -3,7 +3,6 @@ using DefaultEcs.System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using UOClient.Data;
 using UOClient.Effects;
 using UOClient.Maps.Statics;
 
@@ -55,7 +54,7 @@ namespace UOClient.ECS.Systems
                 block.Draw(device);
 
                 //device.BlendState = BlendState.NonPremultiplied;
-                //device.DepthStencilState = DepthStencilState.Default;
+                //device.DepthStencilState = DepthStencilState.DepthRead;
 
                 //secondPass.Apply();
                 //block.Draw(device);

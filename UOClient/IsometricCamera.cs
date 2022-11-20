@@ -33,13 +33,13 @@ namespace UOClient
         {
             Zoom = 1;
 
-            target = new(710, 0, 1293); //new(835, 0, 904);
+            target = new(718, 0, 1321); //new(835, 0, 904);
             scaleMatrix = Matrix.CreateScale(Zoom, Zoom, 1);
 
             worldMatrix = Matrix.CreateScale(1, .1f, 1);
 
             projectionMatrix = Matrix.CreateTranslation(-0.5f, -0.5f, 0)
-                * Matrix.CreateOrthographic(20, 20, 0, 3000.0f)
+                * Matrix.CreateOrthographic(20, 20, 0, 512)
                 * Matrix.CreateScale(1, (float)Math.Sqrt(2), 1);
 
             UpdateMatrices();
@@ -62,7 +62,7 @@ namespace UOClient
                 UpdateScale();
                 modified = true;
             }
-            else if (keyboard.IsKeyDown(Keys.OemMinus))
+            else if (keyboard.IsKeyDown(Keys.OemMinus) && Zoom > 0)
             {
                 Zoom -= .01f;
                 UpdateScale();

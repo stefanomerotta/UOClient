@@ -12,5 +12,6 @@ namespace FileConverter.Structures
         public RadarColor RadarColor;
         public StaticTileType Type;
         public StaticFlags Flags;
+        public StaticProperties Properties;
     }
 }

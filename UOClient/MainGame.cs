@@ -47,6 +47,7 @@ namespace UOClient
         {
             graphics.PreferredBackBufferWidth = 1200;
             graphics.PreferredBackBufferHeight = 1200;
+            //graphics.PreferredDepthStencilFormat = DepthFormat.Depth24;
             graphics.IsFullScreen = false;
             graphics.ApplyChanges();
             Window.Title = "UO Client";
@@ -57,7 +58,7 @@ namespace UOClient
         protected override void LoadContent()
         {
             device = graphics.GraphicsDevice;
-
+            
             TextureFile textureFile = new(Settings.UseEnhancedTextures ? "ecTextures.bin" : "ccTextures.bin");
 
             updateSystem = new SequentialSystem<GameTime>

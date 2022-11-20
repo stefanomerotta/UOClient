@@ -10,11 +10,11 @@
             //TerrainConverter p = new(uoCCPath, 4, 1448, 1448);
             //p.Convert("terrain.bin");
 
-            StaticsConverter s = new(uoCCPath, 4, 1448, 1448);
-            s.Convert("statics.bin");
+            //StaticsConverter s = new(uoCCPath, 4, 1448, 1448);
+            //s.Convert("statics.bin");
 
-            //StaticsDataConverter t = new(uoECPath);
-            //t.Convert("tiledata.bin", "ecTextures.bin", "ccTextures.bin");
+            StaticsDataConverter t = new(uoECPath);
+            t.Convert("tiledata.bin", "ecTextures.bin", "ccTextures.bin");
         }
     }
 }

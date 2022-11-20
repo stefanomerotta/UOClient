@@ -1,11 +1,9 @@
 ﻿
 Texture2D Texture0 : register(t0);
 
-sampler TextureSampler : register(s0) = sampler_state
-{
-    MinFilter = POINT;
-    MagFilter = POINT;
-};
+static const float3 TileTranslation = float3(0.5f, 0, 1.5f);
+
+sampler TextureSampler : register(s0);
 
 cbuffer Parameters : register(b0)
 {
@@ -18,12 +16,19 @@ struct VertexShaderInput
 {
     float4 Position : POSITION0;
     float4 Bounds : TEXCOORD0;
+    uint TileHeight : TEXCOORD1;
 };
 
 struct VertexShaderOutput
 {
     float4 Position : SV_POSITION;
-    float2 TexCoord : TEXCOORD0;
+    float3 TexCoord : TEXCOORD0;
+};
+
+struct PixelShaderOutput
+{
+    float4 Color : SV_TARGET;
+    float Depth : SV_DEPTH;
 };
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
@@ -31,35 +36,39 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
     VertexShaderOutput output = (VertexShaderOutput) 0;
 
     float3 billboard = mul(float3(input.Bounds.xy, 0), Rotation);
-    float4 translatedPosition = float4(input.Position.xyz + billboard, input.Position.w);
+    float4 translatedPosition = float4(input.Position.xyz + TileTranslation + billboard, input.Position.w);
     
     output.Position = mul(translatedPosition, WorldViewProjection);
-    output.TexCoord = input.Bounds.zw / TextureSize;
+    output.TexCoord = float3(input.Bounds.zw / TextureSize, input.Position.y + input.TileHeight);
 
     return output;
 }
 
-float4 MainPS(VertexShaderOutput input) : SV_TARGET
+PixelShaderOutput MainPS(VertexShaderOutput input)
 {
+    PixelShaderOutput output = (PixelShaderOutput) 0;
+    
     float4 color = Texture0.SampleLevel(TextureSampler, input.TexCoord.xy, 0);
-    clip(color.a - 0.5);
     color.rgb *= color.a;
-        
-    return color;
+    clip(color.a - 0.1);
+    
+    output.Color = color;
+    output.Depth = input.Position.z;
+    output.Color.rgb = input.Position.z; //input.TexCoord.z * 0.01;
+    
+    return output;
 }
 
-float4 MainPS_Transparent(VertexShaderOutput input) : SV_TARGET
+PixelShaderOutput MainPS_Transparent(VertexShaderOutput input)
 {
-    float4 color = Texture0.SampleLevel(TextureSampler, input.TexCoord.xy, 0);
-    //clip(1.5 - color.a);
-    //color.rgb *= color.a;
-    //color.r = 1;
-    //color.a = 0.5;
-    //color.a = 1;
-    clip(0.5 - color.a);
-    color.r = 1;
+    PixelShaderOutput output = (PixelShaderOutput) 0;
     
-    return color;
+    float4 color = Texture0.SampleLevel(TextureSampler, input.TexCoord.xy, 0);
+    clip(0.5 - color.a);
+    
+    output.Color = color;
+    
+    return output;
 }
 
 technique Statics

@@ -2,15 +2,16 @@
 using FileConverter.Structures;
 using GameData.Enums;
 using Mythic.Package;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using TileDataExporter.Components;
 using RadarColor = TileDataExporter.Components.RadarColor;
 
 namespace FileConverter.EC
 {
-    internal class TileDataConverter
+    internal partial class TileDataConverter
     {
-        private static readonly Regex idRegex = new(@"(?<filename>\d+)(_.+)*\.tga", RegexOptions.Compiled);
+        private static readonly Regex idRegex = CreateIdRegex();
 
         private readonly MythicPackage package;
         private readonly StringDictionary dictionary;
@@ -27,9 +28,7 @@ namespace FileConverter.EC
             List<StaticData> converted = new(files.Length);
 
             for (int i = 0; i < files.Length; i++)
-            {
                 converted.Add(LoadFile(files[i]));
-            }
 
             return converted;
         }
@@ -50,8 +49,14 @@ namespace FileConverter.EC
             TextureOffset ecOffsets = reader.Read<TextureOffset>();
             TextureOffset ccOffsets = reader.Read<TextureOffset>();
 
+            scoped Span<Property> properties = Span<Property>.Empty;
             int propertiesCount1 = reader.ReadByte();
-            reader.Skip(propertiesCount1 * 5);
+
+            if(propertiesCount1 > 0)
+            {
+                properties = stackalloc Property[propertiesCount1];
+                reader.Read(MemoryMarshal.AsBytes(properties));
+            }
 
             int propertiesCount2 = reader.ReadByte();
             reader.Skip(propertiesCount2 * 5);
@@ -83,6 +88,10 @@ namespace FileConverter.EC
                     G = radarColors.G,
                     B = radarColors.B,
                     A = radarColors.A,
+                },
+                Properties = new()
+                {
+                     Height = (byte)GetProperty(properties, PropertyKey.Height).Value
                 }
             };
 
@@ -178,9 +187,7 @@ namespace FileConverter.EC
                 entry.Textures = new TextureEntry[textureCount];
 
                 for (int i = 0; i < textureCount; i++)
-                {
                     entry.Textures[i] = ReadTexture(reader);
-                }
 
                 int count1 = reader.ReadInt32();
                 reader.Skip(count1 * 4);
@@ -231,5 +238,17 @@ namespace FileConverter.EC
                 _ => throw new Exception()
             };
         }
+
+        private static Property GetProperty(Span<Property> properties, PropertyKey key)
+        {
+            for(int i = 0; i< properties.Length; i++)
+                if (properties[i].Key == key)
+                    return properties[i];
+
+            return default;
+        }
+
+        [GeneratedRegex("(?<filename>\\d+)(_.+)*\\.tga", RegexOptions.Compiled)]
+        private static partial Regex CreateIdRegex();
     }
 }

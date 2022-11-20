@@ -39,7 +39,7 @@ namespace UOClient.Data
                     continue;
 
                 toRet[data.Id] = new(texture.Id, texture.StartX, texture.StartY, texture.EndX, texture.EndY,
-                    texture.OffsetX, texture.OffsetY, data.Type, !usedLegacyTexture);
+                    texture.OffsetX, texture.OffsetY, data.Type, !usedLegacyTexture, data.Properties.Height);
             }
 
             return toRet;
@@ -59,6 +59,7 @@ namespace UOClient.Data
             public FileRadarColor RadarColor;
             public StaticTileType Type;
             public StaticFlags Flags;
+            public FileProperties Properties;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -80,6 +81,12 @@ namespace UOClient.Data
             public byte G;
             public byte B;
             public byte A;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        private struct FileProperties
+        {
+            public byte Height;
         }
     }
 }

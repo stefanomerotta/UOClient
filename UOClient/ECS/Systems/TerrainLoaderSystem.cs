@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using UOClient.Data;
 using UOClient.ECS.Components;
-using UOClient.Maps.Statics;
 using UOClient.Maps.Terrain;
 using UOClient.Utilities;
 using UOClient.Utilities.SingleThreaded;

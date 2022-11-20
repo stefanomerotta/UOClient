@@ -49,12 +49,11 @@ namespace UOClient.Maps.Statics
 
         public void Initialize(StaticData[] staticsData, int totalStaticsCount)
         {
-            if (totalStaticsCount == 0)
-                return;
-
-            //totalStaticsCount = 1;
+            //totalStaticsCount = 3;
 
             TotalStaticsCount = totalStaticsCount;
+            if (totalStaticsCount == 0)
+                return;
 
             vertices = new StaticsVertex[totalStaticsCount * 4];
             indices = new short[totalStaticsCount * 6];
@@ -70,23 +69,7 @@ namespace UOClient.Maps.Statics
             int maxTextureWidth = 0;
             int maxTextureHeight = 0;
 
-            //ref StaticData data = ref staticsData[144];
-
-            //ref Rectangle rect1 = ref CollectionsMarshal.GetValueRefOrAddDefault
-            //(
-            //    addedTextures,
-            //    (ushort)data.TextureId,
-            //    out bool exists
-            //);
-
-            //textureFile.GetTextureSize(data.TextureId, out ushort width, out ushort height);
-            //PackedRectangle packed = packer.Pack(width, height);
-            //rect1 = Unsafe.As<PackedRectangle, Rectangle>(ref packed);
-
-            //maxTextureWidth = Math.Max(maxTextureWidth, rect1.Right);
-            //maxTextureHeight = Math.Max(maxTextureHeight, rect1.Bottom);
-
-            //BuildBillboard(startX + 31, startY + 31, 20, in data, vIndex, iIndex, in rect1);
+            //Test(staticsData, addedTextures);
 
             for (int y = 0; y < vertexSize; y++)
             {
@@ -106,8 +89,8 @@ namespace UOClient.Maps.Statics
                         if (data.TextureId is >= ushort.MaxValue || data.Type != StaticTileType.Static)
                             continue;
 
-                        // TEMP
-                        //if (data.TextureId != 969)
+                        //// TEMP
+                        //if (data.TextureId != 9355)
                         //    continue;
 
                         ref Rectangle rect = ref CollectionsMarshal.GetValueRefOrAddDefault
@@ -219,13 +202,13 @@ namespace UOClient.Maps.Statics
         {
             float rateo = data.Enhanced ? ecRateo : ccRateo;
 
-            Vector3 position = new(x + 0.5f, z, y + 1.5f);
+            Vector3 position = new(x, z, y);
             short index = (short)vIndex;
 
-            float startX = -data.OffsetX * rateo;
+            float startX = data.OffsetX * rateo;
             float startY = -data.OffsetY * 10 * rateo;
-            float endX = (data.EndX - data.StartX) * rateo;
-            float endY = (data.EndY - data.StartY) * 10 * rateo;
+            float endX = startX + (data.EndX - data.StartX) * rateo;
+            float endY = startY + (data.EndY - data.StartY) * 10 * rateo;
 
             float textureStartX = rect.X + data.StartX;
             float textureStartY = rect.Y + data.EndY;
@@ -237,10 +220,10 @@ namespace UOClient.Maps.Statics
             Vector4 upperLeft = new(startX, endY, textureStartX, textureEndY);
             Vector4 upperRight = new(endX, endY, textureEndX, textureEndY);
 
-            vertices[vIndex++] = new(position, lowerLeft);
-            vertices[vIndex++] = new(position, upperLeft);
-            vertices[vIndex++] = new(position, upperRight);
-            vertices[vIndex] = new(position, lowerRight);
+            vertices[vIndex++] = new(position, lowerLeft, data.Height);
+            vertices[vIndex++] = new(position, upperLeft, data.Height);
+            vertices[vIndex++] = new(position, upperRight, data.Height);
+            vertices[vIndex] = new(position, lowerRight, data.Height);
 
             indices[iIndex++] = index;
             indices[iIndex++] = (short)(index + 1);
@@ -248,6 +231,27 @@ namespace UOClient.Maps.Statics
             indices[iIndex++] = (short)(index + 2);
             indices[iIndex++] = (short)(index + 3);
             indices[iIndex] = index;
+        }
+
+        private void Test(StaticData[] staticsData, Dictionary<ushort, Rectangle> addedTextures)
+        {
+            //ref StaticData data = ref staticsData[9373];
+
+            //ref Rectangle rect1 = ref CollectionsMarshal.GetValueRefOrAddDefault
+            //(
+            //    addedTextures,
+            //    (ushort)data.TextureId,
+            //    out bool exists
+            //);
+
+            //textureFile.GetTextureSize(data.TextureId, out ushort width, out ushort height);
+            //PackedRectangle packed = packer.Pack(width, height);
+            //rect1 = Unsafe.As<PackedRectangle, Rectangle>(ref packed);
+
+            //maxTextureWidth = Math.Max(maxTextureWidth, rect1.Right);
+            //maxTextureHeight = Math.Max(maxTextureHeight, rect1.Bottom);
+
+            //BuildBillboard(startX + 31, startY + 31, 20, in data, vIndex, iIndex, in rect1);
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
