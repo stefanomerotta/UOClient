@@ -31,7 +31,7 @@ namespace UOClient.ECS.Systems
             SolidTerrainInfo.Load(contentManager);
             LiquidTerrainInfo.Load(contentManager);
 
-            ref readonly Matrix worldViewProjection = ref camera.WorldViewProjection;
+            ref readonly Matrix worldViewProjection = ref camera.WorldViewProjectionMatrix;
 
             solid = new(contentManager, in worldViewProjection);
             liquid = new(contentManager, in worldViewProjection);
@@ -39,8 +39,8 @@ namespace UOClient.ECS.Systems
 
         public void Update(GameTime state)
         {
-            solid.SetWorldViewProjection(in camera.WorldViewProjection);
-            liquid.SetWorldViewProjection(in camera.WorldViewProjection);
+            solid.SetWorldViewProjection(in camera.WorldViewProjectionMatrix);
+            liquid.SetWorldViewProjection(in camera.WorldViewProjectionMatrix);
 
             DrawSolid();
             DrawLiquid(state);

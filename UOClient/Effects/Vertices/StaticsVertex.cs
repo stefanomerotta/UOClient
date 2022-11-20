@@ -15,20 +15,20 @@ namespace UOClient.Effects.Vertices
 
         public Vector3 Position;
         public Vector4 Bounds;
-        public uint TileHeight;
+        public float DepthOffset;
 
         VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
 
-        public StaticsVertex(Vector3 position, Vector4 bounds, uint tileHeight)
+        public StaticsVertex(Vector3 position, Vector4 bounds, float depthOffset)
         {
             Position = position;
             Bounds = bounds;
-            TileHeight = tileHeight;
+            DepthOffset = depthOffset;
         }
 
         public bool Equals(StaticsVertex other)
         {
-            return Position == other.Position && Bounds == other.Bounds && TileHeight == other.TileHeight;
+            return Position == other.Position && Bounds == other.Bounds && DepthOffset == other.DepthOffset;
         }
 
         public override bool Equals(object? obj)
@@ -52,7 +52,7 @@ namespace UOClient.Effects.Vertices
             (
                 Position.GetHashCode(),
                 Bounds.GetHashCode(),
-                TileHeight.GetHashCode()
+                DepthOffset.GetHashCode()
             );
         }
     }

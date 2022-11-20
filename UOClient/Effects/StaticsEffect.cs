@@ -10,6 +10,7 @@ namespace UOClient.Effects
 
         private readonly EffectParameter texture0;
         private readonly EffectParameter textureSize;
+        private readonly EffectParameter worldView;
         private readonly EffectParameter worldViewProjection;
         private readonly EffectParameter rotation;
 
@@ -24,15 +25,17 @@ namespace UOClient.Effects
 
             texture0 = effect.Parameters["Texture0"];
             textureSize = effect.Parameters["TextureSize"];
+            worldView = effect.Parameters["WorldView"];
             worldViewProjection = effect.Parameters["WorldViewProjection"];
             rotation = effect.Parameters["Rotation"];
 
             worldViewProjection.SetValue(worldViewProj);
         }
 
-        public void SetWorldViewProjection(in Matrix matrix)
+        public void SetMatrices(in Matrix worldView, in Matrix worldViewProjection)
         {
-            worldViewProjection.SetValue(matrix);
+            this.worldView.SetValue(worldView);
+            this.worldViewProjection.SetValue(worldViewProjection);
         }
     }
 }

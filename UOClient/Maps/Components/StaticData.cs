@@ -14,11 +14,12 @@ namespace UOClient.Maps.Components
         public readonly short OffsetX;
         public readonly short OffsetY;
         public readonly StaticTileType Type;
+        public readonly StaticFlags Flags;
         public readonly bool Enhanced;
         public readonly byte Height;
 
         public StaticData(int textureId, short startX, short startY, short endX, short endY, 
-            short offsetX, short offsetY, StaticTileType type, bool enhanced, byte height)
+            short offsetX, short offsetY, StaticTileType type, StaticFlags flags, bool enhanced, byte height)
         {
             TextureId = textureId;
             StartX = startX;
@@ -28,6 +29,7 @@ namespace UOClient.Maps.Components
             OffsetX = offsetX;
             OffsetY = offsetY;
             Type = type;
+            Flags = flags;
             Enhanced = enhanced;
             Height = height;
         }

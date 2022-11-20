@@ -24,7 +24,7 @@ namespace UOClient.ECS.Systems
 
             activeBlocks = world.GetEntities().AsMap<StaticsBlock>();
 
-            ref readonly Matrix worldViewProjection = ref camera.WorldViewProjection;
+            ref readonly Matrix worldViewProjection = ref camera.WorldViewProjectionMatrix;
 
             statics = new(contentManager, in worldViewProjection)
             {
@@ -37,14 +37,14 @@ namespace UOClient.ECS.Systems
             BlendState prevBlendState = device.BlendState;
             DepthStencilState prevDepthStencilState = device.DepthStencilState;
 
-            statics.SetWorldViewProjection(in camera.WorldViewProjection);
+            statics.SetMatrices(in camera.WorldViewMatrix, in camera.WorldViewProjectionMatrix);
 
             EffectPass firstPass = statics.CurrentTechnique.Passes[0];
             EffectPass secondPass = statics.CurrentTechnique.Passes[1];
 
             foreach (StaticsBlock block in activeBlocks.Keys)
             {
-                device.BlendState = BlendState.Opaque;
+                device.BlendState = BlendState.NonPremultiplied;
                 device.DepthStencilState = DepthStencilState.Default;
                 
                 statics.Texture0 = block.Texture;

@@ -10,21 +10,30 @@ namespace UOClient
 {
     public sealed class IsometricCamera
     {
-        public static readonly Vector3 positionFromOrigin = new Vector3(1, (float)Math.Sqrt(2), 1) * 127;
+        private const int maxHeight = 128;
+
+        private static readonly Vector3 positionFromOrigin = new Vector3(1, (float)Math.Sqrt(2), 1) * maxHeight;
+        
+        private static readonly Vector3 left = new(-1, 0, 1);
+        private static readonly Vector3 right = new(1, 0, -1);
+        private static readonly Vector3 up = new(-1, 0, -1);
+        private static readonly Vector3 down = new(1, 0, 1);
 
         private Vector3 target;
         private readonly Matrix worldMatrix;
         private readonly Matrix projectionMatrix;
         private Matrix viewMatrix;
         private Matrix scaleMatrix;
-        private Matrix worldViewProjection;
+        private Matrix worldViewMatrix;
+        private Matrix worldViewProjectionMatrix;
         private Matrix invertedProjectionMatrix;
 
         public ref readonly Matrix WorldMatrix => ref worldMatrix;
         public ref readonly Matrix ViewMatrix => ref viewMatrix;
         public ref readonly Matrix ProjectionMatrix => ref projectionMatrix;
         public ref readonly Matrix ScaleMatrix => ref scaleMatrix;
-        public ref readonly Matrix WorldViewProjection => ref worldViewProjection;
+        public ref readonly Matrix WorldViewMatrix => ref worldViewMatrix;
+        public ref readonly Matrix WorldViewProjectionMatrix => ref worldViewProjectionMatrix;
 
         public Vector3 Target => target;
         public float Zoom { get; private set; }
@@ -33,13 +42,13 @@ namespace UOClient
         {
             Zoom = 1;
 
-            target = new(718, 0, 1321); //new(835, 0, 904);
+            target = new(712, 0, 1367); //new(835, 0, 904);
             scaleMatrix = Matrix.CreateScale(Zoom, Zoom, 1);
 
             worldMatrix = Matrix.CreateScale(1, .1f, 1);
 
             projectionMatrix = Matrix.CreateTranslation(-0.5f, -0.5f, 0)
-                * Matrix.CreateOrthographic(20, 20, 0, 512)
+                * Matrix.CreateOrthographic(20, 20, maxHeight, maxHeight * 3)
                 * Matrix.CreateScale(1, (float)Math.Sqrt(2), 1);
 
             UpdateMatrices();
@@ -56,57 +65,43 @@ namespace UOClient
             bool right = keyboard.IsKeyDown(Keys.Right);
             bool down = keyboard.IsKeyDown(Keys.Down);
 
-            if (keyboard.IsKeyDown(Keys.OemPlus))
-            {
-                Zoom += .01f;
-                UpdateScale();
-                modified = true;
-            }
-            else if (keyboard.IsKeyDown(Keys.OemMinus) && Zoom > 0)
-            {
-                Zoom -= .01f;
-                UpdateScale();
-                modified = true;
-            }
+            if (keyboard.IsKeyDown(Keys.OemPlus) && Zoom < 1)
+                UpdateScale(.01f);
+
+            else if (keyboard.IsKeyDown(Keys.OemMinus) && Zoom > 0.1f)
+                UpdateScale(-.01f);
 
             if (up)
-            {
-                target.X -= 1;
-                target.Z -= 1;
-                modified = true;
-            }
+                UpdatePosition(IsometricCamera.up);
 
             if (right)
-            {
-                target.X += 1;
-                target.Z -= 1;
-                modified = true;
-            }
+                UpdatePosition(IsometricCamera.right);
 
             if (left)
-            {
-                target.X -= 1;
-                target.Z += 1;
-                modified = true;
-            }
+                UpdatePosition(IsometricCamera.left);
 
             if (down)
-            {
-                target.X += 1;
-                target.Z += 1;
-                modified = true;
-            }
+                UpdatePosition(IsometricCamera.down);
 
             if (modified)
                 UpdateMatrices();
 
             return modified;
-        }
 
-        private void UpdateScale()
-        {
-            scaleMatrix.M11 = Zoom;
-            scaleMatrix.M22 = Zoom;
+            void UpdatePosition(Vector3 vector)
+            {
+                target += vector;
+                modified = true;
+            }
+
+            void UpdateScale(float increment)
+            {
+                Zoom += increment;
+                scaleMatrix.M11 = Zoom;
+                scaleMatrix.M22 = Zoom;
+
+                modified = true;
+            }
         }
 
         private void UpdateMatrices()
@@ -114,10 +109,10 @@ namespace UOClient
             viewMatrix = Matrix.CreateLookAt(target + positionFromOrigin, target, Vector3.Up);
             MatrixUtilities.Multiply(in viewMatrix, in scaleMatrix, out viewMatrix);
 
-            Matrix worldView = MatrixUtilities.Multiply(in worldMatrix, in viewMatrix);
-            MatrixUtilities.Multiply(in worldView, in projectionMatrix, out worldViewProjection);
+            MatrixUtilities.Multiply(in worldMatrix, in viewMatrix, out worldViewMatrix);
+            MatrixUtilities.Multiply(in worldViewMatrix, in projectionMatrix, out worldViewProjectionMatrix);
 
-            MatrixUtilities.Invert(in worldViewProjection, out invertedProjectionMatrix);
+            MatrixUtilities.Invert(in worldViewProjectionMatrix, out invertedProjectionMatrix);
         }
 
         public void Test(GraphicsDevice device)

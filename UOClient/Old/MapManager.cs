@@ -67,7 +67,7 @@ namespace UOClient.Old
             SolidTerrainInfo.Load(contentManager);
             LiquidTerrainInfo.Load(contentManager);
 
-            ref readonly Matrix worldViewProjection = ref camera.WorldViewProjection;
+            ref readonly Matrix worldViewProjection = ref camera.WorldViewProjectionMatrix;
 
             solid = new(contentManager, in worldViewProjection);
             liquid = new(contentManager, in worldViewProjection);
@@ -76,11 +76,11 @@ namespace UOClient.Old
 
         public void OnLocationChanged()
         {
-            ref readonly Matrix worldViewProjection = ref camera.WorldViewProjection;
+            ref readonly Matrix worldViewProjection = ref camera.WorldViewProjectionMatrix;
 
             solid.SetWorldViewProjection(in worldViewProjection);
             liquid.SetWorldViewProjection(in worldViewProjection);
-            statics.SetWorldViewProjection(in worldViewProjection);
+            statics.SetMatrices(in camera.WorldViewMatrix, in worldViewProjection);
         }
 
         public void OnSectorChanged(int newBlockX, int newBlockY)

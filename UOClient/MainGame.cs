@@ -47,7 +47,7 @@ namespace UOClient
         {
             graphics.PreferredBackBufferWidth = 1200;
             graphics.PreferredBackBufferHeight = 1200;
-            //graphics.PreferredDepthStencilFormat = DepthFormat.Depth24;
+            graphics.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
             graphics.IsFullScreen = false;
             graphics.ApplyChanges();
             Window.Title = "UO Client";

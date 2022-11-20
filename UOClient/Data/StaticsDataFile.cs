@@ -39,7 +39,7 @@ namespace UOClient.Data
                     continue;
 
                 toRet[data.Id] = new(texture.Id, texture.StartX, texture.StartY, texture.EndX, texture.EndY,
-                    texture.OffsetX, texture.OffsetY, data.Type, !usedLegacyTexture, data.Properties.Height);
+                    texture.OffsetX, texture.OffsetY, data.Type, data.Flags, !usedLegacyTexture, data.Properties.Height);
             }
 
             return toRet;

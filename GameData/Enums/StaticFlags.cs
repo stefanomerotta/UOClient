@@ -1,4 +1,6 @@
-﻿namespace GameData.Enums
+﻿using System.Runtime.CompilerServices;
+
+namespace GameData.Enums
 {
     public enum StaticFlags : long
     {
@@ -43,5 +45,14 @@
         PixelBleed = 0x2000000000,
         PlayAnimOnce = 0x4000000000,
         MultiMovable = 0x10000000000,
+    }
+
+    public static class StaticFlagsExtensions
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Has(this StaticFlags flags, StaticFlags flag)
+        {
+            return (flags & flag) != 0;
+        }
     }
 }

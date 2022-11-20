@@ -90,7 +90,7 @@ namespace UOClient.Maps.Statics
                             continue;
 
                         //// TEMP
-                        //if (data.TextureId != 9355)
+                        //if (data.TextureId != 9165)
                         //    continue;
 
                         ref Rectangle rect = ref CollectionsMarshal.GetValueRefOrAddDefault
@@ -206,24 +206,35 @@ namespace UOClient.Maps.Statics
             short index = (short)vIndex;
 
             float startX = data.OffsetX * rateo;
-            float startY = -data.OffsetY * 10 * rateo;
-            float endX = startX + (data.EndX - data.StartX) * rateo;
-            float endY = startY + (data.EndY - data.StartY) * 10 * rateo;
+            float startY = data.OffsetY * 10 * rateo;
+            float endX = (data.OffsetX + data.EndX - data.StartX) * rateo;
+            float endY = (data.OffsetY + data.EndY - data.StartY) * 10 * rateo;
 
             float textureStartX = rect.X + data.StartX;
             float textureStartY = rect.Y + data.EndY;
             float textureEndX = rect.X + data.EndX;
             float textureEndY = rect.Y + data.StartY;
 
+            float depthOffset = 0;
+
+            if (data.Flags.Has(StaticFlags.Background))
+                depthOffset = -0.001f;
+
+            else if (data.Flags.Has(StaticFlags.Roof))
+                depthOffset = 0.002f;
+
+            else if (data.Flags.Has(StaticFlags.Foliage))
+                depthOffset = 10;
+
             Vector4 lowerLeft = new(startX, startY, textureStartX, textureStartY);
             Vector4 lowerRight = new(endX, startY, textureEndX, textureStartY);
             Vector4 upperLeft = new(startX, endY, textureStartX, textureEndY);
             Vector4 upperRight = new(endX, endY, textureEndX, textureEndY);
 
-            vertices[vIndex++] = new(position, lowerLeft, data.Height);
-            vertices[vIndex++] = new(position, upperLeft, data.Height);
-            vertices[vIndex++] = new(position, upperRight, data.Height);
-            vertices[vIndex] = new(position, lowerRight, data.Height);
+            vertices[vIndex++] = new(position, lowerLeft, depthOffset);
+            vertices[vIndex++] = new(position, upperLeft, depthOffset);
+            vertices[vIndex++] = new(position, upperRight, depthOffset);
+            vertices[vIndex] = new(position, lowerRight, depthOffset);
 
             indices[iIndex++] = index;
             indices[iIndex++] = (short)(index + 1);
@@ -231,27 +242,6 @@ namespace UOClient.Maps.Statics
             indices[iIndex++] = (short)(index + 2);
             indices[iIndex++] = (short)(index + 3);
             indices[iIndex] = index;
-        }
-
-        private void Test(StaticData[] staticsData, Dictionary<ushort, Rectangle> addedTextures)
-        {
-            //ref StaticData data = ref staticsData[9373];
-
-            //ref Rectangle rect1 = ref CollectionsMarshal.GetValueRefOrAddDefault
-            //(
-            //    addedTextures,
-            //    (ushort)data.TextureId,
-            //    out bool exists
-            //);
-
-            //textureFile.GetTextureSize(data.TextureId, out ushort width, out ushort height);
-            //PackedRectangle packed = packer.Pack(width, height);
-            //rect1 = Unsafe.As<PackedRectangle, Rectangle>(ref packed);
-
-            //maxTextureWidth = Math.Max(maxTextureWidth, rect1.Right);
-            //maxTextureHeight = Math.Max(maxTextureHeight, rect1.Bottom);
-
-            //BuildBillboard(startX + 31, startY + 31, 20, in data, vIndex, iIndex, in rect1);
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]

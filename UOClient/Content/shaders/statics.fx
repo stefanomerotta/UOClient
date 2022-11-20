@@ -10,13 +10,14 @@ cbuffer Parameters : register(b0)
     float2 TextureSize;
     float3x3 Rotation;
     float4x4 WorldViewProjection;
+    float4x4 WorldView;
 };
 
 struct VertexShaderInput
 {
     float4 Position : POSITION0;
     float4 Bounds : TEXCOORD0;
-    uint TileHeight : TEXCOORD1;
+    float DepthOffset : TEXCOORD1;
 };
 
 struct VertexShaderOutput
@@ -38,8 +39,11 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
     float3 billboard = mul(float3(input.Bounds.xy, 0), Rotation);
     float4 translatedPosition = float4(input.Position.xyz + TileTranslation + billboard, input.Position.w);
     
+    float distance = mul(input.Position + float4(0, input.DepthOffset, 0, 0), WorldView).z;
+    float depth = (-distance - 128) / (512 - 128);
+    
     output.Position = mul(translatedPosition, WorldViewProjection);
-    output.TexCoord = float3(input.Bounds.zw / TextureSize, input.Position.y + input.TileHeight);
+    output.TexCoord = float3(input.Bounds.zw / TextureSize, depth);
 
     return output;
 }
@@ -49,12 +53,9 @@ PixelShaderOutput MainPS(VertexShaderOutput input)
     PixelShaderOutput output = (PixelShaderOutput) 0;
     
     float4 color = Texture0.SampleLevel(TextureSampler, input.TexCoord.xy, 0);
-    color.rgb *= color.a;
-    clip(color.a - 0.1);
     
     output.Color = color;
-    output.Depth = input.Position.z;
-    output.Color.rgb = input.Position.z; //input.TexCoord.z * 0.01;
+    output.Depth = input.TexCoord.z;
     
     return output;
 }
@@ -66,6 +67,7 @@ PixelShaderOutput MainPS_Transparent(VertexShaderOutput input)
     float4 color = Texture0.SampleLevel(TextureSampler, input.TexCoord.xy, 0);
     clip(0.5 - color.a);
     
+    //color.r = 1;
     output.Color = color;
     
     return output;
