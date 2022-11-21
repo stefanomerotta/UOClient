@@ -90,7 +90,7 @@ namespace UOClient.Maps.Statics
                             continue;
 
                         //// TEMP
-                        //if (data.TextureId != 9165)
+                        //if (data.TextureId is not 6549 and not 6553 and not 6554)
                         //    continue;
 
                         ref Rectangle rect = ref CollectionsMarshal.GetValueRefOrAddDefault
@@ -206,9 +206,9 @@ namespace UOClient.Maps.Statics
             short index = (short)vIndex;
 
             float startX = data.OffsetX * rateo;
-            float startY = data.OffsetY * 10 * rateo;
+            float startY = data.OffsetY * IsometricCamera.HeightRateo * rateo;
             float endX = (data.OffsetX + data.EndX - data.StartX) * rateo;
-            float endY = (data.OffsetY + data.EndY - data.StartY) * 10 * rateo;
+            float endY = (data.OffsetY + data.EndY - data.StartY) * IsometricCamera.HeightRateo * rateo;
 
             float textureStartX = rect.X + data.StartX;
             float textureStartY = rect.Y + data.EndY;

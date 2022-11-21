@@ -65,7 +65,7 @@ namespace FileConverter
                 int ccId = @static.CCTexture.Id;
 
                 bool hasECTexture = ecTextureLoader.TryLoad(ecId, out Span<byte> ecTexture, out int ecWidth, out int ecHeight);
-                bool hasCCTexture = ccTextureLoader.TryLoad(ecId, out Span<byte> ccTexture, out int ccWidth, out int ccHeight);
+                bool hasCCTexture = ccTextureLoader.TryLoad(ccId, out Span<byte> ccTexture, out int ccWidth, out int ccHeight);
 
                 if(hasCCTexture)
                     hasCCTexture = !unusedCCTextureData.AsSpan().SequenceEqual(ccTexture!);

@@ -3,7 +3,11 @@ Texture2D Texture0 : register(t0);
 
 static const float3 TileTranslation = float3(0.5f, 0, 1.5f);
 
-sampler TextureSampler : register(s0);
+sampler TextureSampler : register(s0) = sampler_state
+{
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
 
 cbuffer Parameters : register(b0)
 {
@@ -53,6 +57,7 @@ PixelShaderOutput MainPS(VertexShaderOutput input)
     PixelShaderOutput output = (PixelShaderOutput) 0;
     
     float4 color = Texture0.SampleLevel(TextureSampler, input.TexCoord.xy, 0);
+    clip(color.a - 0.0001);
     
     output.Color = color;
     output.Depth = input.TexCoord.z;
@@ -67,7 +72,7 @@ PixelShaderOutput MainPS_Transparent(VertexShaderOutput input)
     float4 color = Texture0.SampleLevel(TextureSampler, input.TexCoord.xy, 0);
     clip(0.5 - color.a);
     
-    //color.r = 1;
+    color.rgb *= color.a * 2;
     output.Color = color;
     
     return output;
