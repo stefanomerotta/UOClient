@@ -29,6 +29,7 @@ namespace UOClient.ECS.Systems
             statics = new(contentManager, in worldViewProjection)
             {
                 Rotation = Matrix.CreateRotationY(MathHelper.ToRadians(45)),
+                Planes = new(camera.NearPlane, camera.FarPlane)
             };
         }
 
@@ -37,7 +38,7 @@ namespace UOClient.ECS.Systems
             BlendState prevBlendState = device.BlendState;
             DepthStencilState prevDepthStencilState = device.DepthStencilState;
 
-            statics.SetMatrices(in camera.WorldViewMatrix, in camera.WorldViewProjectionMatrix);
+            statics.SetWorldViewProjection(in camera.WorldViewProjectionMatrix);
 
             EffectPass firstPass = statics.CurrentTechnique.Passes[0];
             EffectPass secondPass = statics.CurrentTechnique.Passes[1];

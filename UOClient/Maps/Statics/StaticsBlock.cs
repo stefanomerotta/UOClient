@@ -224,7 +224,7 @@ namespace UOClient.Maps.Statics
                 depthOffset = 0.002f;
 
             else if (data.Flags.Has(StaticFlags.Foliage))
-                depthOffset = 10;
+                depthOffset = 20;
 
             Vector4 lowerLeft = new(startX, startY, textureStartX, textureStartY);
             Vector4 lowerRight = new(endX, startY, textureEndX, textureStartY);

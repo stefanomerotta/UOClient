@@ -11,6 +11,9 @@ namespace UOClient
     public sealed class IsometricCamera
     {
         private const int maxHeight = 128;
+        private const int nearPlane = maxHeight;
+        private const int farPlane = maxHeight * 3;
+
         public const float HeightRateo = 7.5f;
 
         private static readonly Vector3 positionFromOrigin = new Vector3(1, (float)Math.Sqrt(2), 1) * maxHeight;
@@ -37,6 +40,8 @@ namespace UOClient
         public ref readonly Matrix WorldViewProjectionMatrix => ref worldViewProjectionMatrix;
 
         public Vector3 Target => target;
+        public int NearPlane => nearPlane;
+        public int FarPlane => farPlane;
         public float Zoom { get; private set; }
 
         public IsometricCamera()
@@ -49,7 +54,7 @@ namespace UOClient
             worldMatrix = Matrix.CreateScale(1, 1 / HeightRateo, 1);
 
             projectionMatrix = Matrix.CreateTranslation(-0.5f, -0.5f, 0)
-                * Matrix.CreateOrthographic(20, 20, maxHeight, maxHeight * 3)
+                * Matrix.CreateOrthographic(20, 20, nearPlane, farPlane)
                 * Matrix.CreateScale(1, (float)Math.Sqrt(2), 1);
 
             UpdateMatrices();

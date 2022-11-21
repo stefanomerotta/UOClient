@@ -12,9 +12,9 @@ sampler TextureSampler : register(s0) = sampler_state
 cbuffer Parameters : register(b0)
 {
     float2 TextureSize;
+    float2 Planes;
     float3x3 Rotation;
     float4x4 WorldViewProjection;
-    float4x4 WorldView;
 };
 
 struct VertexShaderInput
@@ -43,8 +43,7 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
     float3 billboard = mul(float3(input.Bounds.xy, 0), Rotation);
     float4 translatedPosition = float4(input.Position.xyz + TileTranslation + billboard, input.Position.w);
     
-    float distance = mul(input.Position + float4(0, input.DepthOffset, 0, 0), WorldView).z;
-    float depth = (-distance - 128) / (512 - 128);
+    float depth = mul(float4(input.Position.xyz + TileTranslation + float3(0, input.DepthOffset, 0), input.Position.w), WorldViewProjection).z;
     
     output.Position = mul(translatedPosition, WorldViewProjection);
     output.TexCoord = float3(input.Bounds.zw / TextureSize, depth);

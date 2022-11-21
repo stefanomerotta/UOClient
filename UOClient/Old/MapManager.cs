@@ -80,7 +80,7 @@ namespace UOClient.Old
 
             solid.SetWorldViewProjection(in worldViewProjection);
             liquid.SetWorldViewProjection(in worldViewProjection);
-            statics.SetMatrices(in camera.WorldViewMatrix, in worldViewProjection);
+            statics.SetWorldViewProjection(in worldViewProjection);
         }
 
         public void OnSectorChanged(int newBlockX, int newBlockY)
