@@ -206,9 +206,9 @@ namespace UOClient.Maps.Statics
             short index = (short)vIndex;
 
             float startX = data.OffsetX * rateo;
-            float startY = data.OffsetY * IsometricCamera.HeightRateo * rateo;
+            float startY = -data.OffsetY * IsometricCamera.HeightRateo * rateo;
             float endX = (data.OffsetX + data.EndX - data.StartX) * rateo;
-            float endY = (data.OffsetY + data.EndY - data.StartY) * IsometricCamera.HeightRateo * rateo;
+            float endY = (-data.OffsetY + data.EndY - data.StartY) * IsometricCamera.HeightRateo * rateo;
 
             float textureStartX = rect.X + data.StartX;
             float textureStartY = rect.Y + data.EndY;

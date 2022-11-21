@@ -8,6 +8,6 @@
         public static string FilePath = ".\\";
 #endif
 
-        public const bool UseEnhancedTextures = false;
+        public const bool UseEnhancedTextures = true;
     }
 }
