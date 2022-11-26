@@ -1,4 +1,6 @@
-﻿namespace FileConverter
+﻿using FileConverter.CC;
+
+namespace FileConverter
 {
     public class Program
     {
@@ -13,8 +15,13 @@
             //StaticsConverter s = new(uoCCPath, 4, 1448, 1448);
             //s.Convert("statics.bin");
 
-            StaticsDataConverter t = new(uoECPath);
-            t.Convert("tiledata.bin", "ecTextures.bin", "ccTextures.bin");
+            //StaticsDataConverter t = new(uoECPath);
+            //t.Convert("tiledata.bin", "ecTextures.bin", "ccTextures.bin");
+
+            AnimationSequence animSequence = new(uoCCPath);
+            AnimationsLoader loader = new(uoCCPath, 1, animSequence);
+
+            loader.LoadAnimation(197);
         }
     }
 }

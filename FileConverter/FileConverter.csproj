@@ -9,6 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCnEncoder.Net" Version="2.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\FileSystem\FileSystem.csproj" />
     <ProjectReference Include="..\GameData\GameData.csproj" />
     <ProjectReference Include="..\Mythic.Package.Core\Mythic.Package.Core.csproj" />

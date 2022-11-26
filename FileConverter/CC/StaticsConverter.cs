@@ -1,4 +1,5 @@
-﻿using FileConverter.IO;
+﻿using FileConverter.CC.Structures;
+using FileConverter.IO;
 using System.Diagnostics;
 using NewStaticTile = FileConverter.Structures.StaticTile;
 

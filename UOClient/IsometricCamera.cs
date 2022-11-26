@@ -17,7 +17,7 @@ namespace UOClient
         public const float HeightRateo = 7.5f;
 
         private static readonly Vector3 positionFromOrigin = new Vector3(1, (float)Math.Sqrt(2), 1) * maxHeight;
-        
+
         private static readonly Vector3 left = new(-1, 0, 1);
         private static readonly Vector3 right = new(1, 0, -1);
         private static readonly Vector3 up = new(-1, 0, -1);

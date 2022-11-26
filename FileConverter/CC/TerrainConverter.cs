@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
+using FileConverter.CC.Structures;
 using NewMapTile = FileConverter.Structures.TerrainTile;
 
 namespace FileConverter.CC

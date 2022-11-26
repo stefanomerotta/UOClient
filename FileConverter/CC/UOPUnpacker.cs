@@ -131,7 +131,7 @@ namespace FileConverter.CC
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct FileEntry
+    internal struct FileEntry
     {
         public long Address;
         public int HeaderLength;
@@ -139,17 +139,17 @@ namespace FileConverter.CC
         public int DecompressedSize;
         public ulong Hash;
         public uint ContentHash;
-        public Flags Flags;
+        public Compression Compression;
     }
 
-    public enum Flags : short
+    internal enum Compression : short
     {
         Uncompressed = 0,
         Compressed = 1
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public readonly struct UOPFileContent
+    internal readonly struct UOPFileContent
     {
         public readonly long Address;
         public readonly int Length;
