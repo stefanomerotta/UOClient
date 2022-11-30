@@ -1,7 +1,8 @@
-﻿using FileConverter.EC.Structures;
+﻿using Common.Buffers;
+using FileConverter.EC.Structures;
 using FileConverter.Structures;
 using GameData.Enums;
-using Mythic.Package;
+using MYPReader;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using TileDataExporter.Components;
@@ -9,7 +10,7 @@ using RadarColor = TileDataExporter.Components.RadarColor;
 
 namespace FileConverter.EC
 {
-    internal partial class TileDataConverter
+    internal sealed partial class TileDataConverter : IDisposable
     {
         private static readonly Regex idRegex = CreateIdRegex();
 
@@ -24,22 +25,19 @@ namespace FileConverter.EC
 
         public List<StaticData> ConvertTileData()
         {
-            MythicPackageFile[] files = package.Blocks.SelectMany(block => block.Files).ToArray();
-            List<StaticData> converted = new(files.Length);
+            List<StaticData> converted = new(package.FileCount);
 
-            for (int i = 0; i < files.Length; i++)
-                converted.Add(LoadFile(files[i]));
+            foreach(ref readonly MythicPackageFile file in package)
+                converted.Add(LoadFile(package.UnpackFile(in file)));
 
             return converted;
         }
 
-        private StaticData LoadFile(MythicPackageFile file)
+        private StaticData LoadFile(byte[] bytes)
         {
-            byte[] bytes = file.Unpack();
+            ByteSpanReader reader = new(bytes);
 
-            BinaryReader reader = new(new MemoryStream(bytes));
-
-            reader.Skip(2);
+            reader.Advance(2);
 
             TileDataHeader header = reader.Read<TileDataHeader>();
 
@@ -59,24 +57,24 @@ namespace FileConverter.EC
             }
 
             int propertiesCount2 = reader.ReadByte();
-            reader.Skip(propertiesCount2 * 5);
+            reader.Advance(propertiesCount2 * 5);
 
             int stackAliasCount = reader.ReadInt32();
-            reader.Skip(stackAliasCount * 8);
+            reader.Advance(stackAliasCount * 8);
 
-            ReadAppearance(reader);
+            ReadAppearance(ref reader);
 
             bool hasSitting = reader.ReadBoolean();
             if (hasSitting)
-                reader.Skip(24);
+                reader.Advance(24);
 
             RadarColor radarColors = reader.Read<RadarColor>();
 
             bool hasTexture = reader.ReadBoolean();
             if (hasTexture)
-                reader.BaseStream.Seek(-1, SeekOrigin.Current);
+                reader.Rewind(1);
 
-            List<ShaderEntry> shaders = ReadTextures(reader, hasTexture ? 4 : 2);
+            List<ShaderEntry> shaders = ReadTextures(ref reader, hasTexture ? 4 : 2);
 
             StaticData data = new()
             {
@@ -148,7 +146,7 @@ namespace FileConverter.EC
             return data;
         }
 
-        private static void ReadAppearance(BinaryReader reader)
+        private static void ReadAppearance(ref ByteSpanReader reader)
         {
             int appearanceCount = reader.ReadInt32();
 
@@ -158,25 +156,25 @@ namespace FileConverter.EC
 
                 if (subType == 1)
                 {
-                    reader.Skip(5);
+                    reader.Advance(5);
                     continue;
                 }
 
                 int count = reader.ReadInt32();
-                reader.Skip(count * 8);
+                reader.Advance(count * 8);
             }
         }
 
-        private static List<ShaderEntry> ReadTextures(BinaryReader reader, int count)
+        private static List<ShaderEntry> ReadTextures(ref ByteSpanReader reader, int count)
         {
             List<ShaderEntry> shaders = new();
 
-            while (reader.BaseStream.Position < reader.BaseStream.Length - 2 && shaders.Count < count)
+            while (reader.RemainingCount > 2 && shaders.Count < count)
             {
                 if (reader.ReadByte() != 1)
                     break;
 
-                reader.Skip(1);
+                reader.Advance(1);
 
                 ShaderEntry entry = new()
                 {
@@ -187,13 +185,13 @@ namespace FileConverter.EC
                 entry.Textures = new TextureEntry[textureCount];
 
                 for (int i = 0; i < textureCount; i++)
-                    entry.Textures[i] = ReadTexture(reader);
+                    entry.Textures[i] = ReadTexture(ref reader);
 
                 int count1 = reader.ReadInt32();
-                reader.Skip(count1 * 4);
+                reader.Advance(count1 * 4);
 
                 int count2 = reader.ReadInt32();
-                reader.Skip(count2 * 4);
+                reader.Advance(count2 * 4);
 
                 shaders.Add(entry);
             }
@@ -201,16 +199,16 @@ namespace FileConverter.EC
             return shaders;
         }
 
-        private static TextureEntry ReadTexture(BinaryReader reader)
+        private static TextureEntry ReadTexture(ref ByteSpanReader reader)
         {
             TextureEntry entry = new()
             {
                 DictionaryIndex = reader.ReadInt32()
             };
 
-            reader.Skip(1);
+            reader.Advance(1);
             entry.TextureStretch = reader.ReadSingle();
-            reader.Skip(8);
+            reader.Advance(8);
 
             return entry;
         }
@@ -250,5 +248,10 @@ namespace FileConverter.EC
 
         [GeneratedRegex("(?<filename>\\d+)(_.+)*\\.tga", RegexOptions.Compiled)]
         private static partial Regex CreateIdRegex();
+
+        public void Dispose()
+        {
+            package.Dispose();
+        }
     }
 }

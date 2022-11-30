@@ -1,6 +1,4 @@
-﻿using FileConverter.CC;
-
-namespace FileConverter
+﻿namespace FileConverter
 {
     public class Program
     {
@@ -9,19 +7,17 @@ namespace FileConverter
             string uoCCPath = "C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic";
             string uoECPath = "C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Enhanced";
 
-            //TerrainConverter p = new(uoCCPath, 4, 1448, 1448);
-            //p.Convert("terrain.bin");
+            TerrainConverter p = new(uoCCPath, 4, 1448, 1448);
+            p.Convert("terrain.bin");
 
-            //StaticsConverter s = new(uoCCPath, 4, 1448, 1448);
-            //s.Convert("statics.bin");
+            StaticsConverter s = new(uoCCPath, 4, 1448, 1448);
+            s.Convert("statics.bin");
 
-            //StaticsDataConverter t = new(uoECPath);
-            //t.Convert("tiledata.bin", "ecTextures.bin", "ccTextures.bin");
+            StaticsDataConverter t = new(uoECPath);
+            t.Convert("tiledata.bin", "ecTextures.bin", "ccTextures.bin");
 
-            AnimationSequence animSequence = new(uoCCPath);
-            AnimationsLoader loader = new(uoCCPath, 1, animSequence);
-
-            loader.LoadAnimation(197);
+            //AnimationsConverter c = new(uoCCPath);
+            //c.Convert(uoCCPath, "animations.bin");
         }
     }
 }

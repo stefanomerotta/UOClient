@@ -168,7 +168,7 @@ namespace Common.Buffers
         /// </summary>
         /// <param name="result">The obtained element.</param>
         /// <returns><see langword="true"/> if element is obtained successfully; otherwise, <see langword="false"/>.</returns>
-        public bool TryRead([MaybeNullWhen(false)] out byte result)
+        public bool TryReadByte([MaybeNullWhen(false)] out byte result)
         {
             var newLength = position + 1;
 
@@ -219,9 +219,9 @@ namespace Common.Buffers
         /// </summary>
         /// <returns>The element obtained from the span.</returns>
         /// <exception cref="InternalBufferOverflowException">The end of memory block is reached.</exception>
-        public byte Read()
+        public byte ReadByte()
         {
-            if (!TryRead(out var result))
+            if (!TryReadByte(out var result))
                 ThrowInternalBufferOverflowException();
 
             return result;
@@ -262,52 +262,6 @@ namespace Common.Buffers
         [DoesNotReturn]
         [StackTraceHidden]
         private static void ThrowCountOutOfRangeException() => throw new ArgumentOutOfRangeException("count");
-
-        /// <summary>
-        /// Decodes the value from the block of memory.
-        /// </summary>
-        /// <param name="reader">The decoder.</param>
-        /// <param name="count">The numbers of elements to read.</param>
-        /// <typeparam name="TResult">The type of the result.</typeparam>
-        /// <returns>The decoded value.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="reader"/> is zero.</exception>
-        /// <exception cref="InternalBufferOverflowException"><paramref name="count"/> is greater than <see cref="RemainingCount"/>.</exception>
-        [CLSCompliant(false)]
-        public unsafe TResult Read<TResult>(delegate*<ReadOnlySpan<byte>, TResult> reader, int count)
-        {
-            if (reader is null)
-                throw new ArgumentNullException(nameof(reader));
-
-            if (!TryRead(count, out var buffer))
-                ThrowInternalBufferOverflowException();
-
-            return reader(buffer);
-        }
-
-        /// <summary>
-        /// Attempts to decode the value from the block of memory.
-        /// </summary>
-        /// <param name="reader">The decoder.</param>
-        /// <param name="count">The numbers of elements to read.</param>
-        /// <param name="result">The decoded value.</param>
-        /// <typeparam name="TResult">The type of the value to be decoded.</typeparam>
-        /// <returns><see langword="true"/> if the value is decoded successfully; otherwise, <see langword="false"/>.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="reader"/> is zero.</exception>
-        [CLSCompliant(false)]
-        public unsafe bool TryRead<TResult>(delegate*<ReadOnlySpan<byte>, TResult> reader, int count, [MaybeNullWhen(false)] out TResult result)
-        {
-            if (reader is null)
-                throw new ArgumentNullException(nameof(reader));
-
-            if (TryRead(count, out var buffer))
-            {
-                result = reader(buffer);
-                return true;
-            }
-
-            result = default;
-            return false;
-        }
 
         /// <summary>
         /// Reads the rest of the memory block.
@@ -454,6 +408,15 @@ namespace Common.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Half ReadHalf(bool isLittleEndian = true)
             => BitConverter.Int16BitsToHalf(ReadInt16(isLittleEndian));
+
+        /// <summary>
+        /// Decodes boolean.
+        /// </summary>
+        /// <returns>The decoded value.</returns>
+        /// <exception cref="InternalBufferOverflowException">The end of memory block is reached.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool ReadBoolean()
+            => ReadByte() != 0;
 
         /// <summary>
         /// Gets the textual representation of the written content.

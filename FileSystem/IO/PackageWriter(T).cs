@@ -22,22 +22,22 @@ namespace FileSystem.IO
             packageHeader.FirstHeaderAddress = PackageHeader.Size;
             nextHeaderPointer = PackageHeader.HeaderAddressOffset;
 
-            Write(ref packageHeader);
+            Write(in packageHeader);
         }
 
-        public void Write<T>(int index, ref T content, CompressionAlgorithm compression, TMetadata metadata = default)
+        public void Write<T>(int index, in T content, CompressionAlgorithm compression, in TMetadata metadata = default)
             where T : struct
         {
-            WriteSpan(index, MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref content, 1)), compression, metadata);
+            WriteSpan(index, MemoryMarshal.AsBytes(new ReadOnlySpan<T>(in content)), compression, metadata);
         }
 
-        public void WriteSpan<T>(int index, Span<T> span, CompressionAlgorithm compression, TMetadata metadata = default)
+        public void WriteSpan<T>(int index, ReadOnlySpan<T> span, CompressionAlgorithm compression, in TMetadata metadata = default)
             where T : struct
         {
             WriteSpan(index, MemoryMarshal.AsBytes(span), compression, metadata);
         }
 
-        public void WriteSpan(int index, Span<byte> span, CompressionAlgorithm compression, TMetadata metadata = default)
+        public void WriteSpan(int index, ReadOnlySpan<byte> span, CompressionAlgorithm compression, in TMetadata metadata = default)
         {
             if (span.Length == 0)
                 return;
@@ -59,7 +59,7 @@ namespace FileSystem.IO
             if (header.CompressionAlgorithm == CompressionAlgorithm.None)
             {
                 header.CompressedSize = span.Length;
-                Write(ref header);
+                Write(in header);
                 fileStream.Write(span);
 
                 return;
@@ -70,7 +70,7 @@ namespace FileSystem.IO
                 byte[] compressedFile = zstdCompressor.Wrap(span);
 
                 header.CompressedSize = compressedFile.Length;
-                Write(ref header);
+                Write(in header);
                 fileStream.Write(compressedFile);
 
                 return;
@@ -79,9 +79,9 @@ namespace FileSystem.IO
             throw new NotSupportedException("Compression algorithm not supported");
         }
 
-        private void Write<T>(ref T value) where T : struct
+        private void Write<T>(in T value) where T : struct
         {
-            fileStream.Write(MemoryMarshal.AsBytes(MemoryMarshal.CreateReadOnlySpan(ref value, 1)));
+            fileStream.Write(MemoryMarshal.AsBytes(new ReadOnlySpan<T>(in value)));
         }
 
         private void UpdateLastHeader()
@@ -97,7 +97,7 @@ namespace FileSystem.IO
                 packageHeader.FirstHeaderAddress = 0;
 
             fileStream.Seek(0, SeekOrigin.Begin);
-            Write(ref packageHeader);
+            Write(in packageHeader);
 
             GC.SuppressFinalize(this);
         }

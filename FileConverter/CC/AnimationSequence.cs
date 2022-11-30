@@ -1,5 +1,5 @@
 ﻿using Common.Buffers;
-using Mythic.Package;
+using MYPReader;
 using System.Collections;
 
 namespace FileConverter.CC
@@ -16,11 +16,11 @@ namespace FileConverter.CC
             animations = new(animMaxCount);
             mappings = new();
 
-            MythicPackage package = new(Path.Combine(filePath, "animationSequence.uop"));
+            using MythicPackage package = new(Path.Combine(filePath, "animationSequence.uop"));
 
-            foreach (MythicPackageFile file in package.Blocks.SelectMany(block => block.Files))
+            foreach (ref readonly MythicPackageFile file in package)
             {
-                byte[] bytes = file.Unpack();
+                byte[] bytes = package.UnpackFile(in file);
                 ByteSpanReader reader = new(bytes);
 
                 int animId = reader.ReadInt32();

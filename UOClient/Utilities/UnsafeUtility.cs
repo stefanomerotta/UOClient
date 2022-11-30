@@ -4,7 +4,7 @@ namespace UOClient.Utilities
 {
     internal static class UnsafeUtility
     {
-        public static ref TTo As<TFrom, TTo>(in TFrom @from) 
+        public static ref readonly TTo As<TFrom, TTo>(in TFrom @from) 
         {
             ref TFrom m = ref Unsafe.AsRef(in @from);
             return ref Unsafe.As<TFrom, TTo>(ref m);

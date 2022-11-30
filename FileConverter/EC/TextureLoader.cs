@@ -1,10 +1,10 @@
 ﻿using FileConverter.Utilities;
-using Mythic.Package;
+using MYPReader;
 using System.Diagnostics.CodeAnalysis;
 
 namespace FileConverter.EC
 {
-    internal class TextureLoader
+    internal sealed class TextureLoader : IDisposable
     {
         private readonly MythicPackage package;
         private readonly string dictionaryPrefix;
@@ -21,14 +21,18 @@ namespace FileConverter.EC
             width = 0;
             height = 0;
 
-            SearchResult result = package.SearchExactFileName($"{dictionaryPrefix}{textureId:D8}.dds");
-            if (!result.Found)
+            byte[] bytes = package.UnpackFile($"{dictionaryPrefix}{textureId:D8}.dds");
+            if (bytes.Length == 0)
                 return false;
 
-            byte[] unpacked = result.File.Unpack();
-            data = DDSReader.GetContent(unpacked, out width, out height);
+            data = DDSReader.GetContent(bytes, out width, out height);
 
             return true;
+        }
+
+        public void Dispose()
+        {
+            package.Dispose();
         }
     }
 }

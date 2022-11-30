@@ -1,4 +1,5 @@
-﻿using FileConverter.Structures;
+﻿using Common.Utilities;
+using FileConverter.Structures;
 using FileSystem.Enums;
 using FileSystem.IO;
 using GameData.Structures.Headers;
@@ -41,7 +42,7 @@ namespace FileConverter
             using FileStream stream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", fileName));
             using PackageWriter writer = new(stream);
 
-            writer.WriteSpan(0, data.Where(d => d.Id >= 0).ToArray().AsSpan(), CompressionAlgorithm.Zstd);
+            writer.WriteSpan(0, data.Where(d => d.Id >= 0).ToArray().AsReadOnlySpan(), CompressionAlgorithm.Zstd);
         }
 
         private HashSet<MissingIdData> ConvertTextures(List<StaticData> data, string ecFileName, string ccFileName)

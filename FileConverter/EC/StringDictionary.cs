@@ -1,4 +1,4 @@
-﻿using Mythic.Package;
+﻿using MYPReader;
 using System.Text;
 
 namespace FileConverter.EC
@@ -9,8 +9,12 @@ namespace FileConverter.EC
 
         public StringDictionary(string filepath)
         {
-            MythicPackage package = new(filepath);
-            byte[] bytes = package.Blocks[0].Files[0].Unpack();
+            using MythicPackage package = new(filepath);
+
+            MythicPackage.MythicPackageEnumerator enumerator = package.GetEnumerator();
+            enumerator.MoveNext();
+
+            byte[] bytes = package.UnpackFile(in enumerator.Current);
 
             Span<byte> s = bytes.AsSpan(16);
             List<string> entries = new() { "INVALID" };
