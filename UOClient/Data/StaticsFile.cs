@@ -9,8 +9,8 @@ namespace UOClient.Data
 {
     internal sealed class StaticsFile : IDisposable
     {
-        public const int BlockSize = 64;
-        public const int BlockSizeShift = 6; // number of byteshift for converting between block and tile coordinates
+        public const int BlockSize = TerrainFile.BlockSize;
+        public const int BlockSizeShift = TerrainFile.BlockSizeShift; // number of byteshift for converting between block and tile coordinates
         public const int BlockLength = BlockSize * BlockSize;
 
         private readonly PackageReader reader;

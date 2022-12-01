@@ -7,19 +7,22 @@ namespace FileConverter
 {
     internal sealed class StaticsConverter : IDisposable
     {
-        private const int newSize = 64;
-        private const int newChunkLength = newSize * newSize;
+        private readonly int newSize;
+        private readonly int newChunkLength;
 
         private readonly int newChunkWidth;
         private readonly int newChunkHeight;
         private readonly CC.StaticsConverter staticsConverter;
 
-        public StaticsConverter(string path, int id, int width, int height)
+        public StaticsConverter(string path, int id, int width, int height, int newChunkSize)
         {
+            newSize = newChunkSize;
+            newChunkLength = newSize * newSize;
+
             newChunkWidth = (int)Math.Ceiling(width / (double)newSize);
             newChunkHeight = (int)Math.Ceiling(height / (double)newSize);
 
-            staticsConverter = new(path, id, width, height);
+            staticsConverter = new(path, id, width, height, newSize);
         }
 
         public unsafe void Convert(string fileName)

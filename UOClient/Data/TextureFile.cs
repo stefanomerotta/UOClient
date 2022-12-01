@@ -5,7 +5,7 @@ using System.IO;
 
 namespace UOClient.Data
 {
-    internal sealed class TextureFile
+    internal sealed class TextureFile : IDisposable
     {
         private readonly PackageReader<TextureMetadata> reader;
 
@@ -49,6 +49,11 @@ namespace UOClient.Data
 
             width = metadata.Width;
             height = metadata.Height;
+        }
+
+        public void Dispose()
+        {
+            reader.Dispose();
         }
     }
 }

@@ -8,8 +8,8 @@ namespace UOClient.Data
 {
     internal sealed class TerrainFile : IDisposable
     {
-        public const int BlockSize = 64;
-        public const int BlockSizeShift = 6; // number of byteshift for converting between block and tile coordinates
+        public const int BlockSize = 32;
+        public const int BlockSizeShift = 5; // number of byteshift for converting between block and tile coordinates
         public const int BlockLength = (BlockSize + 1) * (BlockSize + 1);
 
         private readonly PackageReader reader;

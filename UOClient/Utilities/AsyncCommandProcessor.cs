@@ -5,17 +5,16 @@ using System.Threading.Tasks;
 
 namespace UOClient.Utilities
 {
-    internal sealed class AsyncCommandProcessor<T> : IAsyncDisposable
+    internal sealed class AsyncCommandProcessor<T> : IDisposable
     {
         private readonly CommandQueue<T> queue;
         private readonly Func<T, ValueTask> asyncWorker;
-        private readonly Task asyncWorkerTask;
 
-        public AsyncCommandProcessor(int capacity, Func<T, ValueTask> worker, CancellationToken token = default)
+        public AsyncCommandProcessor(int capacity, Func<T, ValueTask> worker, CancellationTokenSource source)
         {
             queue = new(capacity);
             asyncWorker = worker;
-            asyncWorkerTask = DoAsyncWork(token);
+            _ = DoAsyncWork(source.Token);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,15 +35,14 @@ namespace UOClient.Utilities
 
             while (!token.IsCancellationRequested)
             {
-                T command = await queue.DequeueAsync();
+                T command = await queue.DequeueAsync(token);
                 await asyncWorker.Invoke(command);
             }
         }
 
-        public async ValueTask DisposeAsync()
+        public void Dispose()
         {
             queue.Dispose();
-            await asyncWorkerTask;
         }
     }
 }

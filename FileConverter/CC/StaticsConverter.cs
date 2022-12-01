@@ -9,10 +9,11 @@ namespace FileConverter.CC
     {
         private const int oldSizeShift = 3;
         private const int oldSize = 8;
-        private const int newSize = 64;
-        private const int newSizeShift = 6;
-        private const int deltaSizeShift = newSizeShift - oldSizeShift;
-        private const int deltaSize = newSize >> deltaSizeShift;
+
+        private readonly int newSize;
+        private readonly int newSizeShift;
+        private readonly int deltaSizeShift;
+        private readonly int deltaSize;
 
         private readonly FileReader idxReader;
         private readonly FileReader staticsReader;
@@ -21,10 +22,15 @@ namespace FileConverter.CC
         private readonly int oldChunkHeight;
         private readonly int newChunkWidth;
 
-        public StaticsConverter(string path, int id, int width, int height)
+        public StaticsConverter(string path, int id, int width, int height, int newChunkSize)
         {
             oldChunkWidth = width >> oldSizeShift;
             oldChunkHeight = height >> oldSizeShift;
+
+            newSize = newChunkSize;
+            newSizeShift = (int)Math.Log2(newSize);
+            deltaSize = newSize / oldSize;
+            deltaSizeShift = (int)Math.Log2(deltaSize);
 
             newChunkWidth = (int)Math.Ceiling(width / (double)newSize);
 

@@ -9,10 +9,11 @@ namespace FileConverter.CC
     {
         private const int oldSize = 8;
         private const int oldSizeShift = 3;
-        private const int newSize = 64;
-        private const int newSizeShift = 6;
-        private const int deltaSizeShift = newSizeShift - oldSizeShift;
-        private const int deltaSize = newSize >> deltaSizeShift;
+        
+        private readonly int newSize;
+        private readonly int newSizeShift;
+        private readonly int deltaSizeShift;
+        private readonly int deltaSize;
 
         private readonly int width;
         private readonly int height;
@@ -23,11 +24,16 @@ namespace FileConverter.CC
         private readonly string path;
         private readonly UOPMap map;
 
-        public TerrainConverter(string path, int id, int width, int height)
+        public TerrainConverter(string path, int id, int width, int height, int newChunkSize)
         {
             this.path = path;
             this.width = width;
             this.height = height;
+
+            newSize = newChunkSize;
+            newSizeShift = (int)Math.Log2(newChunkSize);
+            deltaSize = newSize / oldSize;
+            deltaSizeShift = (int)Math.Log2(deltaSize);
 
             oldChunkWidth = width >> oldSizeShift;
             oldChunkHeight = height >> oldSizeShift;
@@ -62,12 +68,12 @@ namespace FileConverter.CC
             for (int x = 0; x < deltaSize; x++)
             {
                 int oldX = startX + x;
-                int tileX = x << deltaSizeShift;
+                int tileX = x << oldSizeShift;
 
                 for (int y = 0; y < deltaSize; y++)
                 {
                     int oldY = startY + y;
-                    int tileY = y << deltaSizeShift;
+                    int tileY = y << oldSizeShift;
 
                     LoadOldChunk(oldX, oldY, oldChunk);
 
@@ -87,14 +93,14 @@ namespace FileConverter.CC
                 return;
 
             int oldX = startX + deltaSize;
-            const int tileX = newSize;
+            int tileX = newSize;
 
             Span<MapTile> oldChunk = stackalloc MapTile[oldSize * oldSize];
 
             for (int y = 0; y < deltaSize; y++)
             {
                 int oldY = startY + y;
-                int tileY = y << deltaSizeShift;
+                int tileY = y << oldSizeShift;
 
                 LoadOldChunk(oldX, oldY, oldChunk);
 
@@ -113,14 +119,14 @@ namespace FileConverter.CC
                 return;
 
             int oldY = startY + deltaSize;
-            const int tileY = newSize;
+            int tileY = newSize;
 
             Span<MapTile> oldChunk = stackalloc MapTile[oldSize * oldSize];
 
             for (int x = 0; x < deltaSize; x++)
             {
                 int oldX = startX + x;
-                int tileX = x << deltaSizeShift;
+                int tileX = x << oldSizeShift;
 
                 LoadOldChunk(oldX, oldY, oldChunk);
 
@@ -141,8 +147,8 @@ namespace FileConverter.CC
             int oldX = startX + deltaSize;
             int oldY = startY + deltaSize;
 
-            const int tileX = newSize;
-            const int tileY = newSize;
+            int tileX = newSize;
+            int tileY = newSize;
 
             Span<MapTile> oldChunk = stackalloc MapTile[oldSize * oldSize];
 

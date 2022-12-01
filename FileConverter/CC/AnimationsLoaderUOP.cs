@@ -11,14 +11,16 @@ using System.Runtime.InteropServices;
 
 namespace FileConverter.CC
 {
-    internal sealed class AnimationsLoader : IDisposable
+    internal sealed class AnimationsLoaderUOP : IDisposable
     {
         private const int maxAnimationsCount = 2048;
         public const int MaxActionsPerAnimation = 80;
+        public static readonly AnimationsLoaderUOP Empty = new();
+
 
         private static readonly BcEncoder ddsEncoder;
 
-        static AnimationsLoader()
+        static AnimationsLoaderUOP()
         {
             ddsEncoder = new();
 
@@ -34,7 +36,14 @@ namespace FileConverter.CC
 
         public int MaxAnimId => animations.Length - 1;
 
-        public AnimationsLoader(string filePath, int id)
+        private AnimationsLoaderUOP()
+        {
+            package = null!;
+            animations = Array.Empty<AnimEntry>();
+            buffer = Array.Empty<byte>();
+        }
+
+        public AnimationsLoaderUOP(string filePath, int id)
         {
             package = new(Path.Combine(filePath, $"AnimationFrame{id}.uop"));
             buffer = Array.Empty<byte>();

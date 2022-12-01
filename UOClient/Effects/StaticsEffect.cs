@@ -1,10 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace UOClient.Effects
 {
-    internal class StaticsEffect
+    internal sealed class StaticsEffect : IDisposable
     {
         private readonly Effect effect;
 
@@ -36,6 +37,11 @@ namespace UOClient.Effects
         public void SetWorldViewProjection(in Matrix worldViewProjection)
         {
             this.worldViewProjection.SetValue(worldViewProjection);
+        }
+
+        public void Dispose()
+        {
+            effect.Dispose();
         }
     }
 }

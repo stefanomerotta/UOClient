@@ -48,7 +48,7 @@ namespace UOClient
         {
             Zoom = 1;
 
-            target = new(712, 0, 1367); //new(835, 0, 904);
+            target = Vector3.Zero; //new(712, 0, 1367); //new(835, 0, 904);
             scaleMatrix = Matrix.CreateScale(Zoom, Zoom, 1);
 
             worldMatrix = Matrix.CreateScale(1, 1 / HeightRateo, 1);

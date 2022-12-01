@@ -1,5 +1,8 @@
-﻿namespace GameData.Structures.Headers
+﻿using System.Runtime.InteropServices;
+
+namespace GameData.Structures.Headers
 {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public readonly struct TextureMetadata
     {
         public readonly ushort Width;

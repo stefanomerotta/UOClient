@@ -49,8 +49,6 @@ namespace UOClient.Maps.Statics
 
         public void Initialize(StaticData[] staticsData, int totalStaticsCount)
         {
-            //totalStaticsCount = 3;
-
             TotalStaticsCount = totalStaticsCount;
             if (totalStaticsCount == 0)
                 return;
@@ -69,8 +67,6 @@ namespace UOClient.Maps.Statics
             int maxTextureWidth = 0;
             int maxTextureHeight = 0;
 
-            //Test(staticsData, addedTextures);
-
             for (int y = 0; y < vertexSize; y++)
             {
                 for (int x = 0; x < vertexSize; x++)
@@ -88,10 +84,6 @@ namespace UOClient.Maps.Statics
 
                         if (data.TextureId is >= ushort.MaxValue || data.Type != StaticTileType.Static)
                             continue;
-
-                        //// TEMP
-                        //if (data.TextureId is not 6549 and not 6553 and not 6554)
-                        //    continue;
 
                         ref Rectangle rect = ref CollectionsMarshal.GetValueRefOrAddDefault
                         (
@@ -188,9 +180,9 @@ namespace UOClient.Maps.Statics
             vBuffer.Dispose();
             iBuffer.Dispose();
             Texture.Dispose();
-            vBuffer = null;
-            iBuffer = null;
-            Texture = null;
+            vBuffer = null!;
+            iBuffer = null!;
+            Texture = null!;
         }
 
         public void Dispose()

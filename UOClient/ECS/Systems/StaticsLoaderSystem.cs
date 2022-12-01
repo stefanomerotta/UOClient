@@ -14,7 +14,7 @@ using UOClient.Utilities.SingleThreaded;
 
 namespace UOClient.ECS.Systems
 {
-    internal class StaticsLoaderSystem : ISystem<GameTime>
+    internal sealed class StaticsLoaderSystem : ISystem<GameTime>
     {
         private const int poolSize = 25;
 
@@ -42,7 +42,7 @@ namespace UOClient.ECS.Systems
 
             source = new();
 
-            staticsToLoad = new(poolSize, LoadBlock, source.Token);
+            staticsToLoad = new(poolSize, LoadBlock, source);
             staticsToSync = new(poolSize);
 
             blocks = world.GetEntities().AsMap<Block>();
@@ -63,30 +63,6 @@ namespace UOClient.ECS.Systems
 
                 e.Set(block);
                 block.SendToVRAM(device);
-
-                //StaticTile[][] tiles = block.Tiles;
-
-                //for (int i = 0; i < tiles.Length; i++)
-                //{
-                //    StaticTile[] tileStatics = tiles[i];
-
-                //    if (tileStatics.Length == 0)
-                //        continue;
-
-                //    int x = i % TerrainFile.BlockSize;
-                //    int y = i / TerrainFile.BlockSize;
-
-                //    for (int j = 0; j < tileStatics.Length; j++)
-                //    {
-                //        ref StaticTile tile = ref tileStatics[j];
-
-                //        Entity @static = world.CreateEntity();
-
-                //        @static.Set(new Position(x, y, tile.Z));
-                //        @static.Set(new Sector(block.X, block.Y));
-                //        @static.Set(new StaticTexture(tile.Id));
-                //    }
-                //}
             }
         }
 
@@ -125,20 +101,19 @@ namespace UOClient.ECS.Systems
             }
             catch(Exception e)
             {
-                throw;
+
             }
+
+            return ValueTask.CompletedTask;
         }
 
         public void Dispose()
         {
             source.Cancel();
 
-#pragma warning disable CA2012
-
-            if (staticsToLoad.DisposeAsync() is { IsCompleted: false } task)
-                task.GetAwaiter().GetResult();
-
-#pragma warning restore CA2012
+            staticsToSync.Dispose();
+            blocks.Dispose();
+            staticsToLoad.Dispose();
         }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using UOClient.Data;
+using UOClient.ECS.Events;
 using UOClient.ECS.Systems;
 using UOClient.Maps.Components;
 using CullMode = Microsoft.Xna.Framework.Graphics.CullMode;
@@ -12,7 +13,7 @@ using RasterizerState = Microsoft.Xna.Framework.Graphics.RasterizerState;
 
 namespace UOClient
 {
-    public class MainGame : Game
+    public sealed class MainGame : Game
     {
         private readonly GraphicsDeviceManager graphics;
         private readonly IsometricCamera camera;
@@ -20,6 +21,7 @@ namespace UOClient
 
         private GraphicsDevice device;
         private BasicEffect wireframeEffect;
+        private TextureFile textureFile;
 
         private SequentialSystem<GameTime> updateSystem;
         private SequentialSystem<GameTime> renderSystem;
@@ -58,8 +60,7 @@ namespace UOClient
         protected override void LoadContent()
         {
             device = graphics.GraphicsDevice;
-            
-            TextureFile textureFile = new(Settings.UseEnhancedTextures ? "ecTextures.bin" : "ccTextures.bin");
+            textureFile = new(Settings.UseEnhancedTextures ? "ecTextures.bin" : "ccTextures.bin");
 
             updateSystem = new SequentialSystem<GameTime>
             (
@@ -107,7 +108,6 @@ namespace UOClient
         protected override void Draw(GameTime gameTime)
         {
             device.Clear(Color.DarkSlateBlue);
-            //device.Clear(Color.Black);
 
             RasterizerState rs = new()
             {
@@ -147,6 +147,25 @@ namespace UOClient
             //spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            
+            if (!disposing)
+                return;
+
+            updateSystem.Dispose();
+            renderSystem.Dispose();
+            postRenderSystem.Dispose();
+
+            device.Dispose();
+            wireframeEffect.Dispose();
+            textureFile.Dispose();
+            graphics.Dispose();
+
+            world.Dispose();
         }
     }
 }

@@ -14,12 +14,15 @@ namespace FileConverter
         private readonly EC.TextureLoader ecTextureLoader;
         private readonly EC.TextureLoader ccTextureLoader;
         private readonly byte[] unusedCCTextureData;
+        private readonly string ccPath;
 
-        public StaticsDataConverter(string path)
+        public StaticsDataConverter(string ccPath, string ecPath)
         {
-            converter = new(path);
-            ecTextureLoader = new(Path.Combine(path, "Texture.uop"), "build/worldart/");
-            ccTextureLoader = new(Path.Combine(path, "LegacyTexture.uop"), "build/tileartlegacy/");
+            this.ccPath = ccPath;
+
+            converter = new(ecPath);
+            ecTextureLoader = new(Path.Combine(ecPath, "Texture.uop"), "build/worldart/");
+            ccTextureLoader = new(Path.Combine(ecPath, "LegacyTexture.uop"), "build/tileartlegacy/");
 
             if (!ccTextureLoader.TryLoad(506, out ReadOnlySpan<byte> unused, out _, out _))
                 throw new Exception("Failed to load unused texture for compare");
@@ -37,9 +40,9 @@ namespace FileConverter
             WriteMissingIds(missings);
         }
 
-        private static void ConvertStaticsData(List<StaticData> data, string fileName)
+        private void ConvertStaticsData(List<StaticData> data, string fileName)
         {
-            using FileStream stream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", fileName));
+            using FileStream stream = File.Create(Path.Combine(ccPath, fileName));
             using PackageWriter writer = new(stream);
 
             writer.WriteSpan(0, data.Where(d => d.Id >= 0).ToArray().AsReadOnlySpan(), CompressionAlgorithm.Zstd);
@@ -47,10 +50,10 @@ namespace FileConverter
 
         private HashSet<MissingIdData> ConvertTextures(List<StaticData> data, string ecFileName, string ccFileName)
         {
-            using FileStream ecStream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", ecFileName));
+            using FileStream ecStream = File.Create(Path.Combine(ccPath, ecFileName));
             using PackageWriter<TextureMetadata> ecWriter = new(ecStream);
 
-            using FileStream ccStream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", ccFileName));
+            using FileStream ccStream = File.Create(Path.Combine(ccPath, ccFileName));
             using PackageWriter<TextureMetadata> ccWriter = new(ccStream);
 
             HashSet<int> ecIds = new();
@@ -65,10 +68,15 @@ namespace FileConverter
                 int ecId = @static.ECTexture.Id;
                 int ccId = @static.CCTexture.Id;
 
-                bool hasECTexture = ecTextureLoader.TryLoad(ecId, out ReadOnlySpan<byte> ecTexture, out int ecWidth, out int ecHeight);
+                ReadOnlySpan<byte> ecTexture = Span<byte>.Empty;
+                int ecWidth = 0;
+                int ecHeight = 0;
+
+                bool hasECTexture = ecId < ushort.MaxValue && ecTextureLoader.TryLoad(ecId, out ecTexture, out ecWidth, out ecHeight);
+
                 bool hasCCTexture = ccTextureLoader.TryLoad(ccId, out ReadOnlySpan<byte> ccTexture, out int ccWidth, out int ccHeight);
 
-                if(hasCCTexture)
+                if (hasCCTexture)
                     hasCCTexture = !unusedCCTextureData.AsSpan().SequenceEqual(ccTexture!);
 
                 if (!hasECTexture || !hasCCTexture)
@@ -99,9 +107,9 @@ namespace FileConverter
             return missings;
         }
 
-        private static void WriteMissingIds(HashSet<MissingIdData> data)
+        private void WriteMissingIds(HashSet<MissingIdData> data)
         {
-            using FileStream stream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", "missings.txt"));
+            using FileStream stream = File.Create(Path.Combine(ccPath, "missings.txt"));
             using StreamWriter writer = new(stream);
 
             MissingIdData[] missings = data.OrderBy(x => x.Id).ToArray();

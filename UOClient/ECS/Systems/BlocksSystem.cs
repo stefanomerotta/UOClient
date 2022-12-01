@@ -25,8 +25,7 @@ namespace UOClient.ECS.Systems
             blocksWidth = (int)Math.Ceiling(mapWidth / (double)TerrainFile.BlockSize);
             blocksHeight = (int)Math.Ceiling(mapHeight / (double)TerrainFile.BlockSize);
 
-            activeBlocks = world.GetEntities()
-                .AsMap<Block>();
+            activeBlocks = world.GetEntities().AsMap<Block>();
 
             blockSubscription = world.Subscribe<CurrentSectorChanged>(OnCurrentSectorChanged);
         }
@@ -75,6 +74,7 @@ namespace UOClient.ECS.Systems
 
         public void Dispose()
         {
+            activeBlocks.Dispose();
             blockSubscription.Dispose();
         }
     }

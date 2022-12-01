@@ -67,6 +67,9 @@ namespace UOClient.ECS.Systems
 
         public void Dispose()
         {
+            statics.Dispose();
+            activeBlocks.Dispose();
+
             foreach (StaticsBlock block in activeBlocks.Keys)
             {
                 block.Dispose();

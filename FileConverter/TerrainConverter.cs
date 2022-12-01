@@ -7,19 +7,22 @@ namespace FileConverter
 {
     internal sealed class TerrainConverter: IDisposable
     {
-        private const int newSize = 64;
-        private const int newChunkLength = (newSize + 1) * (newSize + 1);
+        private readonly int newSize;
+        private readonly int newChunkLength;
 
         private readonly int newChunkWidth;
         private readonly int newChunkHeight;
         private readonly CC.TerrainConverter terrainConverter;
 
-        public TerrainConverter(string path, int id, int width, int height)
+        public TerrainConverter(string path, int id, int width, int height, int newChunkSize)
         {
+            newSize = newChunkSize;
+            newChunkLength = (newSize + 1) * (newSize + 1);
+
             newChunkWidth = (int)Math.Ceiling(width / (double)newSize);
             newChunkHeight = (int)Math.Ceiling(height / (double)newSize);
 
-            terrainConverter = new(path, id, width, height);
+            terrainConverter = new(path, id, width, height, newSize);
         }
 
         public void Convert(string fileName)

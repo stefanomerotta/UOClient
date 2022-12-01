@@ -23,8 +23,8 @@ namespace UOClient.ECS.Systems
             this.world = world;
             this.camera = camera;
 
-            sectorX = (int)camera.Target.X / sectorSize;
-            sectorY = (int)camera.Target.Y / sectorSize;
+            sectorX = -1;
+            sectorY = -1;
         }
 
         public void Update(GameTime state)

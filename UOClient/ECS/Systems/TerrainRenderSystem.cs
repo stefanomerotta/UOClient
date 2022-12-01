@@ -120,6 +120,10 @@ namespace UOClient.ECS.Systems
 
         public void Dispose()
         {
+            solid.Dispose();
+            liquid.Dispose();
+            activeBlocks.Dispose();
+
             foreach (TerrainBlock block in activeBlocks.Keys)
             {
                 block.Dispose();

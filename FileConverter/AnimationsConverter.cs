@@ -11,35 +11,50 @@ namespace FileConverter
 {
     internal sealed class AnimationsConverter : IDisposable
     {
-        private readonly AnimationSequence animationSequence;
-        private readonly AnimationsLoader[] animationsLoaders;
+        private readonly AnimationsLoaderUOP[] animationsLoadersUOP;
+        private readonly AnimationsLoaderMUL[] animationsLoadersMUL;
 
         public AnimationsConverter(string filePath)
         {
-            animationSequence = new(filePath);
+            animationsLoadersUOP = new AnimationsLoaderUOP[5];
+            animationsLoadersUOP[4] = AnimationsLoaderUOP.Empty;
 
-            animationsLoaders = Enumerable.Range(1, 4)
+            Enumerable.Range(1, 4)
                 .AsParallel()
-                .Select(id => new AnimationsLoader(filePath, id))
-                .ToArray();
+                .Select(id => new AnimationsLoaderUOP(filePath, id))
+                .ToArray()
+                .CopyTo(animationsLoadersUOP, 0);
+
+            animationsLoadersMUL = new AnimationsLoaderMUL[]
+            {
+                new(filePath, 1),
+                new(filePath, 2),
+                new(filePath, 3),
+                new(filePath, 4),
+                new(filePath, 5)
+            };
         }
 
         public void Convert(string filePath, string fileName)
         {
-            Enumerable.Range(0, animationsLoaders.Length)
+            Enumerable.Range(0, animationsLoadersUOP.Length)
                 .AsParallel()
+                .WithExecutionMode(ParallelExecutionMode.ForceParallelism)
                 .ForAll(i => ConvertWithLoader(filePath, fileName, i));
         }
 
         private void ConvertWithLoader(string filePath, string fileName, int loaderIndex)
         {
             int fileId = loaderIndex + 1;
-            List<ushort> loadedAnims = new();
+            List<MappingEntry> loadedAnims = new();
 
             using FileStream fileStream = File.Create(Path.Combine(filePath, string.Format(fileName, fileId)));
             using PackageWriter<AnimContentMetadata> writer = new(fileStream);
 
-            int maxAnimId = animationsLoaders.Select(loader => loader.MaxAnimId).Max();
+            AnimationsLoaderMUL loaderMUL = animationsLoadersMUL[loaderIndex];
+            AnimationsLoaderUOP loaderUOP = animationsLoadersUOP[loaderIndex];
+
+            int maxAnimId = Math.Max(loaderMUL.MaxAnimId, loaderUOP.MaxAnimId);
             byte[] dataBuffer = Array.Empty<byte>();
 
             int index = 0;
@@ -47,32 +62,27 @@ namespace FileConverter
 
             for (ushort animId = 0; animId <= maxAnimId; animId++)
             {
-                AnimationsLoader loader = animationsLoaders[loaderIndex];
+                bool mulValid;
+                bool uopValid;
 
-                for (byte actionId = 0; actionId < AnimationsLoader.MaxActionsPerAnimation; actionId++)
+                for (byte actionId = 0; actionId < AnimationsLoaderUOP.MaxActionsPerAnimation; actionId++)
                 {
-                    Span<AnimFrame[]> frames = loader.LoadAnimation(animId, actionId);
-                    if (frames.Length != 5)
-                        continue;
+                    Span<AnimFrame[]> mulFrames = loaderMUL.LoadAnimation(animId, actionId);
+                    mulValid = ValidateActionFrames(mulFrames);
 
-                    bool validAction = true;
-                    for (byte direction = 0; direction < 5; direction++)
-                    {
-                        if (frames[direction] is not { Length: > 0 })
-                        {
-                            validAction = false;
-                            break;
-                        }
-                    }
+                    Span<AnimFrame[]> uopFrames = loaderUOP.LoadAnimation(animId, actionId);
+                    uopValid = ValidateActionFrames(uopFrames);
 
-                    if (!validAction)
+                    if (!mulValid && !uopValid)
                         continue;
 
                     if (lastLoadedAnim != animId)
                     {
                         lastLoadedAnim = animId;
-                        loadedAnims.Add(animId);
+                        loadedAnims.Add(new(animId, uopValid, mulValid));
                     }
+
+                    Span<AnimFrame[]> frames = uopValid ? uopFrames: mulFrames;
 
                     for (byte direction = 0; direction < 5; direction++)
                     {
@@ -107,42 +117,38 @@ namespace FileConverter
             using FileStream mappingStream = File.Create(Path.Combine(filePath, $"mappings{fileId}.txt"));
             using StreamWriter mappingWriter = new(mappingStream);
 
-            Span<ushort> span = CollectionsMarshal.AsSpan(loadedAnims);
+            Span<MappingEntry> span = CollectionsMarshal.AsSpan(loadedAnims);
 
             for (int i = 0; i < loadedAnims.Count; i++)
             {
-                mappingWriter.WriteLine(span[i]);
+                MappingEntry entry = span[i];
+
+                mappingWriter.WriteLine($"{entry.AnimId} - {(entry.MUL ? "MUL" : "   ")} {(entry.UOP ? "UOP" : "   ")}");
+            }
+
+            static bool ValidateActionFrames(Span<AnimFrame[]> frames)
+            {
+                if (frames.Length != 5)
+                    return false;
+
+                for (byte direction = 0; direction < 5; direction++)
+                {
+                    if (frames[direction] is not { Length: > 0 })
+                        return false;
+                }
+
+                return true;
             }
         }
 
         public void Dispose()
         {
-            for (int i = 0; i < animationsLoaders.Length; i++)
+            for (int i = 0; i < animationsLoadersUOP.Length; i++)
             {
-                animationsLoaders[i].Dispose();
+                animationsLoadersUOP[i].Dispose();
             }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        private struct MappingEntry
-        {
-            public ushort AnimId;
-            public Loaders Loaders;
-
-            public MappingEntry(ushort animId)
-            {
-                AnimId = animId;
-            }
-        }
-
-        [Flags]
-        private enum Loaders : byte
-        {
-            None = 0,
-            Loader1 = 0x1,
-            Loader2 = 0x2,
-            Loader3 = 0x4,
-            Loader4 = 0x8
-        }
+        private record struct MappingEntry(ushort AnimId, bool UOP, bool MUL);
     }
 }

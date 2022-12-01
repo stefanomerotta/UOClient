@@ -35,7 +35,7 @@ namespace UOClient.ECS.Systems
             this.device = device;
             this.terrainFile = terrainFile;
 
-            blocksToLoad = new(poolSize, LoadBlock, source.Token);
+            blocksToLoad = new(poolSize, LoadBlock, source);
             blocksToSync = new(poolSize);
 
             blocks = world.GetEntities().AsMap<Block>();
@@ -95,14 +95,9 @@ namespace UOClient.ECS.Systems
         {
             source.Cancel();
 
+            blocks.Dispose();
             blocksToSync.Dispose();
-
-#pragma warning disable CA2012
-
-            if (blocksToLoad.DisposeAsync() is { IsCompleted: false } task)
-                task.GetAwaiter().GetResult();
-
-#pragma warning restore CA2012
+            blocksToLoad.Dispose();
         }
     }
 }

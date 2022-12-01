@@ -1,10 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace UOClient.Effects
 {
-    public class LiquidTerrainEffect
+    public sealed class LiquidTerrainEffect : IDisposable
     {
         private readonly Effect effect;
 
@@ -70,6 +71,11 @@ namespace UOClient.Effects
         public void SetWorldViewProjection(in Matrix matrix)
         {
             worldViewProjection.SetValue(matrix);
+        }
+
+        public void Dispose()
+        {
+            effect.Dispose();
         }
 
         private enum ShaderIndex
