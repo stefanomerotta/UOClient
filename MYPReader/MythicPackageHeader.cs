@@ -1,8 +1,11 @@
-﻿namespace MYPReader
+﻿using System.Runtime.InteropServices;
+
+namespace MYPReader
 {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public readonly struct MythicPackageHeader
     {
-        public const int SupportedVersion = 5;
+        private const uint magicNumber = 0x50594D; // MYP0
 
         public readonly int Version;
         public readonly uint Misc;
@@ -12,16 +15,12 @@
 
         public MythicPackageHeader(BinaryReader reader)
         {
-            byte[] id = reader.ReadBytes(4);
+            int id = reader.ReadInt32();
 
-            if (id[0] != 'M' || id[1] != 'Y' || id[2] != 'P' || id[3] != 0)
+            if (id != magicNumber)
                 throw new FormatException("This is not a Mythic Package file!");
 
             Version = reader.ReadInt32();
-
-            if (Version > SupportedVersion)
-                throw new FormatException("Unsupported version!");
-
             Misc = reader.ReadUInt32();
             StartAddress = reader.ReadUInt64();
             BlockSize = reader.ReadInt32();

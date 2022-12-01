@@ -5,8 +5,10 @@ namespace MYPReader
 {
     public sealed class MythicPackage : IDisposable
     {
+        private static readonly MythicPackageFile empty = new();
+
         private readonly Dictionary<ulong, MythicPackageFile> filesByHash;
-        private readonly ulong[] keys;
+        private readonly ulong[] hashes;
         private readonly BinaryReader reader;
 
         public readonly MythicPackageHeader Header;
@@ -28,7 +30,7 @@ namespace MYPReader
             Header = new MythicPackageHeader(reader);
             stream.Seek((long)Header.StartAddress, SeekOrigin.Begin);
 
-            long nextBlock = 0;
+            long nextBlock;
 
             do
             {
@@ -37,7 +39,7 @@ namespace MYPReader
             }
             while (nextBlock != 0);
 
-            keys = filesByHash.Keys.ToArray();
+            hashes = filesByHash.Keys.ToArray();
         }
 
         private long ReadBlock(BinaryReader reader)
@@ -48,7 +50,7 @@ namespace MYPReader
             for (int index = 0; index < fileCount; index++)
             {
                 MythicPackageFile file = new(reader);
-                if (file.DataBlockAddress == 0)
+                if (file is not { DataBlockAddress: > 0, UncompressedSize: > 0 })
                     continue;
 
                 filesByHash.Add(file.FileHash, file);
@@ -58,30 +60,47 @@ namespace MYPReader
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref readonly MythicPackageFile SearchFileName(string fileName)
+        public ref readonly MythicPackageFile SearchFile(string fileName)
         {
             ulong hash = HashFunctions.HashFileName(fileName);
-            return ref CollectionsMarshal.GetValueRefOrNullRef(filesByHash, hash);
+            return ref SearchFile(hash);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref readonly MythicPackageFile SearchFileNameHash(ulong fileNameHash)
+        public ref readonly MythicPackageFile SearchFile(ulong fileNameHash)
         {
-            return ref CollectionsMarshal.GetValueRefOrNullRef(filesByHash, fileNameHash);
+            ref readonly MythicPackageFile file = ref CollectionsMarshal.GetValueRefOrNullRef(filesByHash, fileNameHash);
+
+            if (Unsafe.IsNullRef(ref Unsafe.AsRef(in file)))
+                return ref empty;
+
+            return ref file;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] UnpackFile(string fileName)
         {
-            ref readonly MythicPackageFile file = ref SearchFileName(fileName);
-            return UnpackFile(in file);
+            ulong hash = HashFunctions.HashFileName(fileName);
+            return UnpackFile(in CollectionsMarshal.GetValueRefOrNullRef(filesByHash, hash));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int UnpackFile(string fileName, ref byte[] buffer)
+        {
+            ulong hash = HashFunctions.HashFileName(fileName);
+            return UnpackFile(in CollectionsMarshal.GetValueRefOrNullRef(filesByHash, hash), ref buffer);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] UnpackFile(ulong fileNameHash)
         {
-            ref readonly MythicPackageFile file = ref SearchFileNameHash(fileNameHash);
-            return UnpackFile(in file);
+            return UnpackFile(in CollectionsMarshal.GetValueRefOrNullRef(filesByHash, fileNameHash));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int UnpackFile(ulong fileNameHash, ref byte[] buffer)
+        {
+            return UnpackFile(in CollectionsMarshal.GetValueRefOrNullRef(filesByHash, fileNameHash), ref buffer);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -90,7 +109,19 @@ namespace MYPReader
             if (Unsafe.IsNullRef(ref Unsafe.AsRef(in file)))
                 return Array.Empty<byte>();
 
-            return file.Unpack(reader);
+            byte[] toRet = new byte[file.UncompressedSize];
+            file.Unpack(reader, ref toRet);
+
+            return toRet;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int UnpackFile(in MythicPackageFile file, ref byte[] buffer)
+        {
+            if (Unsafe.IsNullRef(ref Unsafe.AsRef(in file)))
+                return 0;
+
+            return file.Unpack(reader, ref buffer);
         }
 
         public void Dispose()
@@ -100,7 +131,7 @@ namespace MYPReader
 
         public MythicPackageEnumerator GetEnumerator()
         {
-            return new(filesByHash, keys);
+            return new(filesByHash, hashes);
         }
 
         public ref struct MythicPackageEnumerator
@@ -108,26 +139,26 @@ namespace MYPReader
             private static readonly MythicPackageFile empty = new();
 
             private readonly Dictionary<ulong, MythicPackageFile> files;
-            private readonly ulong[] keys;
+            private readonly ulong[] hashes;
             private int index;
             private ref readonly MythicPackageFile current;
 
             public ref readonly MythicPackageFile Current => ref current;
 
-            public MythicPackageEnumerator(Dictionary<ulong, MythicPackageFile> files, ulong[] keys)
+            public MythicPackageEnumerator(Dictionary<ulong, MythicPackageFile> files, ulong[] hashes)
             {
                 this.files = files;
-                this.keys = keys;
+                this.hashes = hashes;
                 index = -1;
                 current = ref empty;
             }
 
             public bool MoveNext()
             {
-                if (++index >= keys.Length)
+                if (++index >= hashes.Length)
                     return false;
 
-                current = ref CollectionsMarshal.GetValueRefOrNullRef(files, keys[index]);
+                current = ref CollectionsMarshal.GetValueRefOrNullRef(files, hashes[index]);
                 return true;
             }
 

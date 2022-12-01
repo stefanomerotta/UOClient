@@ -1,11 +1,11 @@
-﻿using System.Diagnostics;
+﻿using FileConverter.CC.Structures;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
-using FileConverter.CC.Structures;
 using NewMapTile = FileConverter.Structures.TerrainTile;
 
 namespace FileConverter.CC
 {
-    internal class TerrainConverter
+    internal sealed class TerrainConverter : IDisposable
     {
         private const int oldSize = 8;
         private const int oldSizeShift = 3;
@@ -165,6 +165,11 @@ namespace FileConverter.CC
                 ref MapTile tile = ref tiles[i];
                 tile.Id = TerrainTileTranscoder.GetNewId(tile.Id);
             }
+        }
+
+        public void Dispose()
+        {
+            map.Dispose();
         }
     }
 }

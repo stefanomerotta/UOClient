@@ -30,12 +30,14 @@ namespace FileConverter.CC
 
         private readonly MythicPackage package;
         private readonly AnimEntry[] animations;
+        private byte[] buffer;
 
         public int MaxAnimId => animations.Length - 1;
 
         public AnimationsLoader(string filePath, int id)
         {
             package = new(Path.Combine(filePath, $"AnimationFrame{id}.uop"));
+            buffer = Array.Empty<byte>();
 
             List<FileEntry> list = new(package.FileCount);
 
@@ -44,8 +46,8 @@ namespace FileConverter.CC
             {
                 for (int actionId = 0; actionId < MaxActionsPerAnimation; actionId++)
                 {
-                    ref readonly MythicPackageFile file = ref package.SearchFileName($"build/animationlegacyframe/{animId:D6}/{actionId:D2}.bin");
-                    if (file.DecompressedSize <= 0)
+                    ref readonly MythicPackageFile file = ref package.SearchFile($"build/animationlegacyframe/{animId:D6}/{actionId:D2}.bin");
+                    if (file.UncompressedSize <= 0)
                         continue;
 
                     list.Add(new(animId, actionId, file.FileHash));
@@ -86,9 +88,9 @@ namespace FileConverter.CC
             if (actionHash == 0)
                 return Span<AnimFrame[]>.Empty;
 
-            byte[] bytes = package.UnpackFile(actionHash);
+            int byteRead = package.UnpackFile(actionHash, ref buffer);
 
-            ByteSpanReader reader = new(bytes);
+            ByteSpanReader reader = new(buffer.AsSpan(0, byteRead));
             reader.Advance(32);
 
             int frameCount = reader.ReadInt32();

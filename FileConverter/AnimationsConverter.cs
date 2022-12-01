@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 
 namespace FileConverter
 {
-    internal sealed class AnimationsConverter
+    internal sealed class AnimationsConverter : IDisposable
     {
         private readonly AnimationSequence animationSequence;
         private readonly AnimationsLoader[] animationsLoaders;
@@ -18,111 +18,108 @@ namespace FileConverter
         {
             animationSequence = new(filePath);
 
-            animationsLoaders = new AnimationsLoader[]
-            {
-                new(filePath, 1),
-                new(filePath, 2),
-                new(filePath, 3),
-                new(filePath, 4),
-            };
+            animationsLoaders = Enumerable.Range(1, 4)
+                .AsParallel()
+                .Select(id => new AnimationsLoader(filePath, id))
+                .ToArray();
         }
 
         public void Convert(string filePath, string fileName)
         {
-            List<MappingEntry> mappings = new();
+            Enumerable.Range(0, animationsLoaders.Length)
+                .AsParallel()
+                .ForAll(i => ConvertWithLoader(filePath, fileName, i));
+        }
 
-            using FileStream fileStream = File.Create(Path.Combine(filePath, fileName));
+        private void ConvertWithLoader(string filePath, string fileName, int loaderIndex)
+        {
+            int fileId = loaderIndex + 1;
+            List<ushort> loadedAnims = new();
+
+            using FileStream fileStream = File.Create(Path.Combine(filePath, string.Format(fileName, fileId)));
             using PackageWriter<AnimContentMetadata> writer = new(fileStream);
 
             int maxAnimId = animationsLoaders.Select(loader => loader.MaxAnimId).Max();
             byte[] dataBuffer = Array.Empty<byte>();
 
             int index = 0;
+            ushort lastLoadedAnim = ushort.MaxValue;
+
             for (ushort animId = 0; animId <= maxAnimId; animId++)
             {
-                MappingEntry entry = new(animId);
+                AnimationsLoader loader = animationsLoaders[loaderIndex];
 
-                for (int loaderId = 0; loaderId < animationsLoaders.Length; loaderId++)
+                for (byte actionId = 0; actionId < AnimationsLoader.MaxActionsPerAnimation; actionId++)
                 {
-                    AnimationsLoader loader = animationsLoaders[loaderId];
+                    Span<AnimFrame[]> frames = loader.LoadAnimation(animId, actionId);
+                    if (frames.Length != 5)
+                        continue;
 
-                    for (byte actionId = 0; actionId < AnimationsLoader.MaxActionsPerAnimation; actionId++)
+                    bool validAction = true;
+                    for (byte direction = 0; direction < 5; direction++)
                     {
-                        Span<AnimFrame[]> frames = loader.LoadAnimation(animId, actionId);
-                        if (frames.Length != 5)
-                            continue;
-
-                        bool validAction = true;
-                        for (byte direction = 0; direction < 5; direction++)
+                        if (frames[direction] is not { Length: > 0 })
                         {
-                            if (frames[direction] is not { Length: > 0 })
-                            {
-                                validAction = false;
-                                break;
-                            }
-                        }
-
-                        if (!validAction)
-                            continue;
-
-                        Loaders l = (Loaders)(loaderId + 1);
-                        entry.Loaders |= l;
-
-                        if (entry.Loaders != l)
-                            continue;
-
-                        for (byte direction = 0; direction < 5; direction++)
-                        {
-                            AnimFrame[] directionFrames = frames[direction];
-                            AnimContentMetadata metadata = new(animId, actionId, direction, (byte)directionFrames.Length);
-
-                            int totalLength = 0;
-                            for (int i = 0; i < directionFrames.Length; i++)
-                            {
-                                totalLength += Unsafe.SizeOf<AnimFrameHeader>();
-                                totalLength += directionFrames[i].Data.Length;
-                            }
-
-                            if (dataBuffer.Length < totalLength)
-                                dataBuffer = new byte[totalLength];
-
-                            ByteSpanWriter bufferWriter = new(dataBuffer);
-
-                            for (int i = 0; i < directionFrames.Length; i++)
-                            {
-                                ref AnimFrame frame = ref directionFrames[i];
-
-                                bufferWriter.Write(in frame.Header);
-                                bufferWriter.Write(frame.Data);
-                            }
-
-                            writer.WriteSpan(index++, bufferWriter.WrittenSpan, CompressionAlgorithm.Zstd, in metadata);
+                            validAction = false;
+                            break;
                         }
                     }
-                }
 
-                mappings.Add(entry);
+                    if (!validAction)
+                        continue;
+
+                    if (lastLoadedAnim != animId)
+                    {
+                        lastLoadedAnim = animId;
+                        loadedAnims.Add(animId);
+                    }
+
+                    for (byte direction = 0; direction < 5; direction++)
+                    {
+                        AnimFrame[] directionFrames = frames[direction];
+                        AnimContentMetadata metadata = new(animId, actionId, direction, (byte)directionFrames.Length);
+
+                        int totalLength = 0;
+                        for (int i = 0; i < directionFrames.Length; i++)
+                        {
+                            totalLength += Unsafe.SizeOf<AnimFrameHeader>();
+                            totalLength += directionFrames[i].Data.Length;
+                        }
+
+                        if (dataBuffer.Length < totalLength)
+                            dataBuffer = new byte[totalLength];
+
+                        ByteSpanWriter bufferWriter = new(dataBuffer);
+
+                        for (int i = 0; i < directionFrames.Length; i++)
+                        {
+                            ref AnimFrame frame = ref directionFrames[i];
+
+                            bufferWriter.Write(in frame.Header);
+                            bufferWriter.Write(frame.Data);
+                        }
+
+                        writer.WriteSpan(index++, bufferWriter.WrittenSpan, CompressionAlgorithm.Zstd, in metadata);
+                    }
+                }
             }
 
-            using FileStream mappingStream = File.Create(Path.Combine(filePath, "mappings.txt"));
+            using FileStream mappingStream = File.Create(Path.Combine(filePath, $"mappings{fileId}.txt"));
             using StreamWriter mappingWriter = new(mappingStream);
 
-            Span<MappingEntry> span = CollectionsMarshal.AsSpan(mappings);
+            Span<ushort> span = CollectionsMarshal.AsSpan(loadedAnims);
 
-            for (int i = 0; i < mappings.Count; i++)
+            for (int i = 0; i < loadedAnims.Count; i++)
             {
-                ref MappingEntry entry = ref span[i];
-
-                mappingWriter.WriteLine($"{entry.AnimId:D4} - " +
-                    $"{ConvertFlags(entry.Loaders, Loaders.Loader1, 1)} " +
-                    $"{ConvertFlags(entry.Loaders, Loaders.Loader2, 2)} " +
-                    $"{ConvertFlags(entry.Loaders, Loaders.Loader3, 3)} " +
-                    $"{ConvertFlags(entry.Loaders, Loaders.Loader4, 4)}");
+                mappingWriter.WriteLine(span[i]);
             }
+        }
 
-            static string ConvertFlags(Loaders loaders, Loaders loader, int id)
+        public void Dispose()
+        {
+            for (int i = 0; i < animationsLoaders.Length; i++)
             {
-                return loaders.HasFlag(loader) ? $"{id}" : " ";
+                animationsLoaders[i].Dispose();
             }
         }
 

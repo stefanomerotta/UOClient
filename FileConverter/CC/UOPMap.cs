@@ -3,7 +3,7 @@ using FileConverter.IO;
 
 namespace FileConverter.CC
 {
-    internal class UOPMap
+    internal sealed class UOPMap : IDisposable
     {
         private const int chunkSize = 196;
 
@@ -44,6 +44,11 @@ namespace FileConverter.CC
 
             reader.Skip(4);
             reader.ReadSpan(chunk);
+        }
+
+        public void Dispose()
+        {
+            reader.Dispose();
         }
     }
 }

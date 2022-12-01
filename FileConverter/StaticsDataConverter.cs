@@ -6,7 +6,7 @@ using GameData.Structures.Headers;
 
 namespace FileConverter
 {
-    internal class StaticsDataConverter
+    internal sealed class StaticsDataConverter : IDisposable
     {
         private static readonly TileDataComparer tileDataComparer = new();
 
@@ -21,7 +21,7 @@ namespace FileConverter
             ecTextureLoader = new(Path.Combine(path, "Texture.uop"), "build/worldart/");
             ccTextureLoader = new(Path.Combine(path, "LegacyTexture.uop"), "build/tileartlegacy/");
 
-            if (!ccTextureLoader.TryLoad(506, out Span<byte> unused, out _, out _))
+            if (!ccTextureLoader.TryLoad(506, out ReadOnlySpan<byte> unused, out _, out _))
                 throw new Exception("Failed to load unused texture for compare");
 
             unusedCCTextureData = unused.ToArray();
@@ -65,8 +65,8 @@ namespace FileConverter
                 int ecId = @static.ECTexture.Id;
                 int ccId = @static.CCTexture.Id;
 
-                bool hasECTexture = ecTextureLoader.TryLoad(ecId, out Span<byte> ecTexture, out int ecWidth, out int ecHeight);
-                bool hasCCTexture = ccTextureLoader.TryLoad(ccId, out Span<byte> ccTexture, out int ccWidth, out int ccHeight);
+                bool hasECTexture = ecTextureLoader.TryLoad(ecId, out ReadOnlySpan<byte> ecTexture, out int ecWidth, out int ecHeight);
+                bool hasCCTexture = ccTextureLoader.TryLoad(ccId, out ReadOnlySpan<byte> ccTexture, out int ccWidth, out int ccHeight);
 
                 if(hasCCTexture)
                     hasCCTexture = !unusedCCTextureData.AsSpan().SequenceEqual(ccTexture!);
@@ -112,6 +112,13 @@ namespace FileConverter
 
                 writer.WriteLine($"{entry.Id};{entry.ECTextureId};{entry.CCTextureId};{entry.MissingEC};{entry.MissingCC}");
             }
+        }
+
+        public void Dispose()
+        {
+            converter.Dispose();
+            ccTextureLoader.Dispose();
+            ecTextureLoader.Dispose();
         }
 
         private class TileDataComparer : IComparer<StaticData>

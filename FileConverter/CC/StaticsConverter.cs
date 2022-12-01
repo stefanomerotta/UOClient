@@ -5,7 +5,7 @@ using NewStaticTile = FileConverter.Structures.StaticTile;
 
 namespace FileConverter.CC
 {
-    internal class StaticsConverter
+    internal sealed class StaticsConverter : IDisposable
     {
         private const int oldSizeShift = 3;
         private const int oldSize = 8;
@@ -53,6 +53,12 @@ namespace FileConverter.CC
             }
 
             return totalCount;
+        }
+
+        public void Dispose()
+        {
+            idxReader.Dispose();
+            staticsReader.Dispose();
         }
 
         private unsafe int LoadOldChunk(int oldX, int oldY, Span<List<NewStaticTile>> tiles)

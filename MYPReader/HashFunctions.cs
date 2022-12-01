@@ -1,13 +1,16 @@
-﻿namespace MYPReader
+﻿using System.Runtime.CompilerServices;
+
+namespace MYPReader
 {
     public static class HashFunctions
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong HashFileName(string s)
         {
-            return HashFileName(s.ToCharArray());
+            return HashFileName(s.AsSpan());
         }
 
-        public static ulong HashFileName(char[] s)
+        public static ulong HashFileName(ReadOnlySpan<char> s)
         {
             uint eax, ecx, edx, ebx, esi, edi;
 

@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace FileConverter.Utilities
 {
@@ -8,12 +7,12 @@ namespace FileConverter.Utilities
         private const int magicNumber = 0x20534444;
         private const int DX10 = 'D' << 3 + 'X' << 2 + '1' << 1 + '0';
 
-        public static unsafe Span<byte> GetContent(Span<byte> data, out int width, out int height)
+        public static unsafe ReadOnlySpan<byte> GetContent(ReadOnlySpan<byte> data, out int width, out int height)
         {
             if (BitConverter.ToInt32(data) != magicNumber)
                 throw new Exception();
 
-            ref DDS_HEADER header = ref MemoryMarshal.AsRef<DDS_HEADER>(data[4..]);
+            ref readonly DDS_HEADER header = ref MemoryMarshal.AsRef<DDS_HEADER>(data[4..]);
 
             int toSkip = 4 + sizeof(DDS_HEADER);
 

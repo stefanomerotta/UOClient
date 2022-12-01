@@ -5,7 +5,7 @@ using FileSystem.IO;
 
 namespace FileConverter
 {
-    internal class TerrainConverter
+    internal sealed class TerrainConverter: IDisposable
     {
         private const int newSize = 64;
         private const int newChunkLength = (newSize + 1) * (newSize + 1);
@@ -37,6 +37,11 @@ namespace FileConverter
                     writer.WriteSpan(x + y * newChunkWidth, chunk.AsReadOnlySpan(), CompressionAlgorithm.Zstd);
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            terrainConverter.Dispose();
         }
     }
 }

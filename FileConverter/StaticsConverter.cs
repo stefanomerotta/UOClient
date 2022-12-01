@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace FileConverter
 {
-    internal class StaticsConverter
+    internal sealed class StaticsConverter : IDisposable
     {
         private const int newSize = 64;
         private const int newChunkLength = newSize * newSize;
@@ -65,6 +65,11 @@ namespace FileConverter
                     writer.WriteSpan(x + y * newChunkWidth, chunk[..index], CompressionAlgorithm.Zstd);
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            staticsConverter.Dispose();
         }
 
         private struct ZComparer : IComparer<StaticTile>

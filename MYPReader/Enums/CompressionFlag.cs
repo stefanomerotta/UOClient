@@ -3,7 +3,7 @@
     /// <summary>
     /// Type of compression.
     /// </summary>
-    public enum CompressionFlag : short
+    public enum CompressionFlag : byte
     {
         /// <summary>
         /// None.

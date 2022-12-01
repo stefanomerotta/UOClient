@@ -16,24 +16,29 @@ namespace FileConverter.EC
 
         private readonly MythicPackage package;
         private readonly StringDictionary dictionary;
+        private byte[] buffer;
 
         public TileDataConverter(string path)
         {
             package = new(Path.Combine(path, "tileart.uop"));
             dictionary = new(Path.Combine(path, "string_dictionary.uop"));
+            buffer = Array.Empty<byte>();
         }
 
         public List<StaticData> ConvertTileData()
         {
             List<StaticData> converted = new(package.FileCount);
 
-            foreach(ref readonly MythicPackageFile file in package)
-                converted.Add(LoadFile(package.UnpackFile(in file)));
+            foreach (ref readonly MythicPackageFile file in package)
+            {
+                int byteRead = package.UnpackFile(in file, ref buffer);
+                converted.Add(LoadFile(buffer.AsSpan(0, byteRead)));
+            }
 
             return converted;
         }
 
-        private StaticData LoadFile(byte[] bytes)
+        private StaticData LoadFile(ReadOnlySpan<byte> bytes)
         {
             ByteSpanReader reader = new(bytes);
 

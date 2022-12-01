@@ -16,12 +16,13 @@ namespace FileConverter.CC
             animations = new(animMaxCount);
             mappings = new();
 
+            byte[] buffer = Array.Empty<byte>();
             using MythicPackage package = new(Path.Combine(filePath, "animationSequence.uop"));
 
             foreach (ref readonly MythicPackageFile file in package)
             {
-                byte[] bytes = package.UnpackFile(in file);
-                ByteSpanReader reader = new(bytes);
+                int byteRead = package.UnpackFile(in file, ref buffer);
+                ByteSpanReader reader = new(buffer.AsSpan(0, byteRead));
 
                 int animId = reader.ReadInt32();
                 reader.Advance(48);

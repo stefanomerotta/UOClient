@@ -1,45 +1,57 @@
 ﻿using MYPReader.Enums;
+using System.Buffers;
+using System.Runtime.InteropServices;
 
 namespace MYPReader
 {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public readonly record struct MythicPackageFile
     {
         public readonly long DataBlockAddress;
-        public readonly int DataBlockLength;
-        public readonly uint DataBlockHash;
-        public readonly CompressionFlag Compression;
-        public readonly uint CompressedSize;
-        public readonly uint DecompressedSize;
         public readonly ulong FileHash;
+        public readonly uint CompressedSize;
+        public readonly int UncompressedSize;
+        public readonly CompressionFlag Compression;
 
         public MythicPackageFile(BinaryReader reader)
         {
             DataBlockAddress = reader.ReadInt64();
-            DataBlockLength = reader.ReadInt32();
+            DataBlockAddress += reader.ReadInt32(); // HeaderLength
             CompressedSize = reader.ReadUInt32();
-            DecompressedSize = reader.ReadUInt32();
+            UncompressedSize = (int)reader.ReadUInt32();
             FileHash = reader.ReadUInt64();
-
-            DataBlockHash = reader.ReadUInt32();
+            reader.ReadUInt32(); // DataBlockHash
             Compression = (CompressionFlag)reader.ReadInt16();
 
-            if (Compression is not CompressionFlag.None and not CompressionFlag.Zlib)
+            if (!Enum.IsDefined(Compression))
                 throw new InvalidCompressionException(Compression);
         }
 
-        internal byte[] Unpack(BinaryReader reader)
+        internal int Unpack(BinaryReader reader, ref byte[] buffer)
         {
-            reader.BaseStream.Seek(DataBlockAddress + DataBlockLength, SeekOrigin.Begin);
-            byte[] sourceData = new byte[CompressedSize];
-            reader.Read(sourceData, 0, (int)CompressedSize);
+            reader.BaseStream.Seek(DataBlockAddress, SeekOrigin.Begin);
+
+            if (buffer.Length < UncompressedSize)
+                buffer = new byte[UncompressedSize];
 
             if (Compression is CompressionFlag.None)
-                return sourceData;
+            {
+                reader.Read(buffer, 0, UncompressedSize);
+            }
+            else
+            {
+                byte[] sourceData = ArrayPool<byte>.Shared.Rent((int)CompressedSize);
+                reader.Read(sourceData, 0, (int)CompressedSize);
 
-            byte[] destData = new byte[DecompressedSize];
-            ZLibError error = Zlib.Unzip(destData, sourceData);
+                ZLibError error = Zlib.Unzip(buffer, sourceData);
 
-            return error != ZLibError.Okay ? throw new CompressionException(error) : destData;
+                ArrayPool<byte>.Shared.Return(sourceData);
+
+                if (error != ZLibError.Okay)
+                    throw new CompressionException(error);
+            }
+
+            return UncompressedSize;
         }
     }
 }
