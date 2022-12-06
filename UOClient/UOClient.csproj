@@ -35,6 +35,7 @@
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\FileSystem\FileSystem.csproj" />
     <ProjectReference Include="..\GameData\GameData.csproj" />
     <ProjectReference Include="..\TexturePacker\TexturePacker.csproj" />

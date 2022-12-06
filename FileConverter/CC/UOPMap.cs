@@ -37,7 +37,7 @@ namespace FileConverter.CC
             }
         }
 
-        public void FillChunk(int x, int y, Span<MapTile> chunk)
+        public void FillChunk(int x, int y, Span<TerrainTile> chunk)
         {
             long address = chunks[x * chunksHeight + y];
             reader.Seek(address);

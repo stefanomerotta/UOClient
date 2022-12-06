@@ -1,6 +1,7 @@
 ﻿using FileConverter.Structures;
 using FileSystem.Enums;
 using FileSystem.IO;
+using GameData.Structures.Headers;
 using System.Runtime.InteropServices;
 
 namespace FileConverter
@@ -28,7 +29,7 @@ namespace FileConverter
         public unsafe void Convert(string fileName)
         {
             using FileStream stream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", fileName));
-            using PackageWriter writer = new(stream);
+            using PackageWriter<StaticsMetadata> writer = new(stream);
 
             Span<List<StaticTile>> staticsChunk = new List<StaticTile>[newChunkLength];
             Span<byte> chunk = Span<byte>.Empty;
@@ -65,7 +66,7 @@ namespace FileConverter
                         list.Clear();
                     }
 
-                    writer.WriteSpan(x + y * newChunkWidth, chunk[..index], CompressionAlgorithm.Zstd);
+                    writer.WriteSpan(x + y * newChunkWidth, chunk[..index], CompressionAlgorithm.Zstd, new(count));
                 }
             }
         }

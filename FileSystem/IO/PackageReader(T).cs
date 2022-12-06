@@ -72,6 +72,10 @@ namespace FileSystem.IO
             => ReadArray(index, out _);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T[] ReadArray<T>(int index) where T : struct
+            => ReadArray<T>(index, out _);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Read<T>(int index) where T : struct
             => Read<T>(index, out _);
 
@@ -138,6 +142,37 @@ namespace FileSystem.IO
                 byte[] uncompressed = new byte[header.UncompressedSize];
 
                 zstdDecompressor.Unwrap(compressed, uncompressed, false);
+                return uncompressed;
+            }
+
+            throw new NotSupportedException("Compression algorithm not supported");
+        }
+
+        public T[] ReadArray<T>(int index, out TMetadata metadata)
+            where T : struct
+        {
+            Header header = headers[index];
+            metadata = header.Metadata;
+
+            if (header.ContentAddress == 0)
+                return Array.Empty<T>();
+
+            if (header.CompressionAlgorithm == CompressionAlgorithm.None)
+            {
+                T[] buffer = new T[header.CompressedSize];
+                handle.ReadSpan((ulong)header.ContentAddress, buffer.AsSpan());
+
+                return buffer;
+            }
+
+            if (header.CompressionAlgorithm == CompressionAlgorithm.Zstd)
+            {
+                IntPtr pointer = IntPtr.Add(handle.DangerousGetHandle(), header.ContentAddress);
+                ReadOnlySpan<byte> compressed = new(pointer.ToPointer(), header.CompressedSize);
+
+                T[] uncompressed = new T[header.UncompressedSize];
+
+                zstdDecompressor.Unwrap(compressed, MemoryMarshal.AsBytes(uncompressed.AsSpan()), false);
                 return uncompressed;
             }
 

@@ -3,7 +3,7 @@
 namespace FileConverter.CC.Structures
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct MapTile
+    internal struct TerrainTile
     {
         public ushort Id;
         public sbyte Z;
