@@ -4,28 +4,6 @@ namespace TexturePacker
 {
     internal static unsafe class PackerMethods
     {
-        public const int HeuristicSkylineDefault = 0;
-        public const int HeuristicSkylineBLSortHeight = HeuristicSkylineDefault;
-        public const int HeuristicSkylineBFSortHeight = 2;
-        public const int InitSkyline = 1;
-
-        public static void SetupHeuristic(Context* context, int heuristic)
-        {
-            context->Heuristic = context->InitMode switch
-            {
-                InitSkyline => heuristic,
-                _ => throw new Exception("Mode " + context->InitMode + " is not supported."),
-            };
-        }
-
-        public static void ConfigOutOfMem(Context* context, bool allowOutOfMem)
-        {
-            if (allowOutOfMem)
-                context->Align = 1;
-            else
-                context->Align = (context->Width + context->NumNodes - 1) / context->NumNodes;
-        }
-
         public static void InitTarget(Context* context, int width, int height, Node* nodes, int numNodes)
         {
             int i;
@@ -35,8 +13,7 @@ namespace TexturePacker
             }
 
             nodes[i].Next = null;
-            context->InitMode = InitSkyline;
-            context->Heuristic = HeuristicSkylineDefault;
+            context->Heuristic = Enums.HeuristicSkylineType.BLSortHeight;
             context->FreeHead = &nodes[0];
             context->ActiveHead = &context->Extra[0];
             context->Width = width;
@@ -53,7 +30,66 @@ namespace TexturePacker
             context->Extra[1].Next = null;
         }
 
-        public static int FindSkylineMinY(Context* c, Node* first, int x0, int width, int* pwaste)
+        public static int PackRects(Context* context, Rect* rects, int numRects)
+        {
+            int i = 0;
+            int allRectsPacked = 1;
+
+            for (i = 0; i < numRects; ++i)
+            {
+                rects[i].WasPacked = i;
+            }
+
+            CRuntime.QSort(rects, numRects, &CompareRectHeight);
+
+            for (i = 0; i < numRects; ++i)
+            {
+                ref Rect rect = ref rects[i];
+
+                if (rect.W == 0 || rect.H == 0)
+                {
+                    rect.X = rect.Y = 0;
+                }
+                else
+                {
+                    FindResult fr = PackSkylineRectangle(context, rect.W, rect.H);
+
+                    if (fr.PrevLink != null)
+                    {
+                        rect.X = fr.X;
+                        rect.Y = fr.Y;
+                    }
+                    else
+                    {
+                        rect.X = rect.Y = 0xffff;
+                    }
+                }
+            }
+
+            CRuntime.QSort(rects, numRects, &GetRectOriginalOrder);
+
+            for (i = 0; i < numRects; ++i)
+            {
+                ref Rect rect = ref rects[i];
+
+                rect.WasPacked = rect.X == 0xffff && rect.Y == 0xffff ? 0 : 1;
+
+                if (rect.WasPacked == 0)
+                    allRectsPacked = 0;
+            }
+
+            return allRectsPacked;
+        }
+
+        private static void ConfigOutOfMem(Context* context, bool allowOutOfMem)
+        {
+            if (allowOutOfMem)
+                context->Align = 1;
+            else
+                context->Align = (context->Width + context->NumNodes - 1) / context->NumNodes;
+        }
+
+        private static int FindSkylineMinY(Context* c, Node* first, int x0, int width, int* pwaste)
         {
             Node* node = first;
             int x1 = x0 + width;
@@ -90,7 +126,7 @@ namespace TexturePacker
             return minY;
         }
 
-        public static FindResult FindSkylineBestPos(Context* c, int width, int height)
+        private static FindResult FindSkylineBestPos(Context* c, int width, int height)
         {
             int bestWaste = 1 << 30;
             int bestX = 0;
@@ -120,7 +156,7 @@ namespace TexturePacker
                 int waste = 0;
                 y = FindSkylineMinY(c, node, node->X, width, &waste);
 
-                if (c->Heuristic == HeuristicSkylineBLSortHeight)
+                if (c->Heuristic == Enums.HeuristicSkylineType.BLSortHeight)
                 {
                     if (y < bestY)
                     {
@@ -144,7 +180,7 @@ namespace TexturePacker
 
             bestX = best == null ? 0 : (*best)->X;
 
-            if (c->Heuristic == HeuristicSkylineBFSortHeight)
+            if (c->Heuristic == Enums.HeuristicSkylineType.BFSortHeight)
             {
                 tail = c->ActiveHead;
                 node = c->ActiveHead;
@@ -187,7 +223,7 @@ namespace TexturePacker
             return fr;
         }
 
-        public static FindResult PackSkylineRectangle(Context* context, int width, int height)
+        private static FindResult PackSkylineRectangle(Context* context, int width, int height)
         {
             FindResult res = FindSkylineBestPos(context, width, height);
             Node* node;
@@ -232,7 +268,7 @@ namespace TexturePacker
             return res;
         }
 
-        public static int CompareRectHeight(Rect* a, Rect* b)
+        private static int CompareRectHeight(Rect* a, Rect* b)
         {
             if (a->H > b->H)
                 return -1;
@@ -243,58 +279,9 @@ namespace TexturePacker
             return a->W > b->W ? -1 : a->W < b->W ? 1 : 0;
         }
 
-        public static int GetRectOriginalOrder(Rect* a, Rect* b)
+        private static int GetRectOriginalOrder(Rect* a, Rect* b)
         {
             return a->WasPacked < b->WasPacked ? -1 : a->WasPacked > b->WasPacked ? 1 : 0;
         }
-
-        public static int PackRects(Context* context, Rect* rects, int numRects)
-        {
-            int i = 0;
-            int allRectsPacked = 1;
-
-            for (i = 0; i < numRects; ++i)
-            {
-                rects[i].WasPacked = i;
-            }
-
-            CRuntime.QSort(rects, numRects, &CompareRectHeight);
-
-            for (i = 0; i < numRects; ++i)
-            {
-                if (rects[i].W == 0 || rects[i].H == 0)
-                {
-                    rects[i].X = rects[i].Y = 0;
-                }
-                else
-                {
-                    FindResult fr = PackSkylineRectangle(context, rects[i].W, rects[i].H);
-
-                    if (fr.PrevLink != null)
-                    {
-                        rects[i].X = fr.X;
-                        rects[i].Y = fr.Y;
-                    }
-                    else
-                    {
-                        rects[i].X = rects[i].Y = 0xffff;
-                    }
-                }
-            }
-
-            CRuntime.QSort(rects, numRects, &GetRectOriginalOrder);
-
-            for (i = 0; i < numRects; ++i)
-            {
-                rects[i].WasPacked = rects[i].X == 0xffff && rects[i].Y == 0xffff ? 0 : 1;
-
-                if (rects[i].WasPacked == 0)
-                    allRectsPacked = 0;
-            }
-
-            return allRectsPacked;
-        }
-
-
     }
 }

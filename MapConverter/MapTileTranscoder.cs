@@ -1,7 +1,7 @@
 ﻿using GameData.Enums;
 using System.Diagnostics;
 
-namespace MapConverter
+namespace FileConverter
 {
     internal class MapTileTranscoder
     {

@@ -7,5 +7,7 @@
 #else
         public static string FilePath = ".\\";
 #endif
+
+        public const bool UseEnhancedTextures = true;
     }
 }

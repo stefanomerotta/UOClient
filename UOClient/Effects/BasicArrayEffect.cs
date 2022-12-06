@@ -37,6 +37,7 @@ namespace UOClient.Effects
         private bool fogEnabled;
         private bool textureEnabled;
         private bool vertexColorEnabled;
+        private bool gridEnabled;
 
         private Matrix world = Matrix.Identity;
         private Matrix view = Matrix.Identity;
@@ -318,6 +319,19 @@ namespace UOClient.Effects
             set => textureIndex.SetValue(value);
         }
 
+        public bool GridEnabled
+        {
+            get => gridEnabled;
+            set
+            {
+                if (gridEnabled != value)
+                {
+                    gridEnabled = value;
+                    dirtyFlags |= EffectDirtyFlags.ShaderIndex;
+                }
+            }
+        }
+
         /// <summary>
         /// Creates a new BasicEffect with default parameter settings.
         /// </summary>
@@ -431,6 +445,9 @@ namespace UOClient.Effects
                         shaderIndex |= ShaderIndex.Lights;
                 }
 
+                if (gridEnabled)
+                    shaderIndex |= ShaderIndex.Grid;
+
                 dirtyFlags &= ~EffectDirtyFlags.ShaderIndex;
 
                 if (_shaderIndex != shaderIndex)
@@ -451,6 +468,7 @@ namespace UOClient.Effects
             Lights = 0x8,
             OneLight = 0x10,
             LightPerPixel = 0x12,
+            Grid = 0x20
         }
     }
 }
