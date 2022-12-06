@@ -20,7 +20,7 @@ namespace UOClient.Maps.Statics
         private static readonly float ecRateo = (float)(1 / Math.Sqrt(64 * 64 / 2));
         private static readonly float ccRateo = (float)(1 / Math.Sqrt(44 * 44 / 2));
 
-        public readonly StaticTile[][] Tiles;
+        private readonly StaticTileList tiles;
         private readonly TextureFile textureFile;
         private readonly Packer packer;
 
@@ -43,18 +43,19 @@ namespace UOClient.Maps.Statics
         {
             this.textureFile = textureFile;
 
-            Tiles = new StaticTile[vertexLength][];
             packer = new(4096, 4096);
         }
 
-        public void Initialize(StaticData[] staticsData, int totalStaticsCount)
+        public void Initialize(StaticData[] staticsData, StaticTileList statics)
         {
-            TotalStaticsCount = totalStaticsCount;
-            if (totalStaticsCount == 0)
+            if (statics.TotalStaticsCount == 0)
+            {
+                TotalStaticsCount = 0;
                 return;
+            }
 
-            vertices = new StaticsVertex[totalStaticsCount * 4];
-            indices = new short[totalStaticsCount * 6];
+            vertices = new StaticsVertex[TotalStaticsCount * 4];
+            indices = new short[TotalStaticsCount * 6];
 
             int startX = X << TerrainFile.BlockSizeShift;
             int startY = Y << TerrainFile.BlockSizeShift;
@@ -67,54 +68,57 @@ namespace UOClient.Maps.Statics
             int maxTextureWidth = 0;
             int maxTextureHeight = 0;
 
-            for (int y = 0; y < vertexSize; y++)
+            int index = 0;
+            foreach (ReadOnlySpan<StaticTile> tiles in statics)
             {
-                for (int x = 0; x < vertexSize; x++)
+                if (tiles.IsEmpty)
                 {
-                    int index = x + y * vertexSize;
+                    index++;
+                    continue;
+                }
 
-                    StaticTile[] tiles = Tiles[index];
-                    if (tiles.Length == 0)
+                for (int k = 0; k < tiles.Length; k++)
+                {
+                    StaticTile tile = tiles[k];
+                    ref StaticData data = ref staticsData[tile.Id];
+
+                    if (data.TextureId is >= ushort.MaxValue || data.Type != StaticTileType.Static)
                         continue;
 
-                    for (int k = 0; k < tiles.Length; k++)
+                    ref Rectangle rect = ref CollectionsMarshal.GetValueRefOrAddDefault
+                    (
+                        addedTextures,
+                        (ushort)data.TextureId,
+                        out bool exists
+                    );
+
+                    if (!exists)
                     {
-                        StaticTile tile = tiles[k];
-                        ref StaticData data = ref staticsData[tile.Id];
+                        textureFile.GetTextureSize(data.TextureId, out ushort width, out ushort height);
+                        PackedRectangle packed = packer.Pack(width, height);
 
-                        if (data.TextureId is >= ushort.MaxValue || data.Type != StaticTileType.Static)
+                        rect = Unsafe.As<PackedRectangle, Rectangle>(ref packed);
+                        if (rect == default)
                             continue;
 
-                        ref Rectangle rect = ref CollectionsMarshal.GetValueRefOrAddDefault
-                        (
-                            addedTextures,
-                            (ushort)data.TextureId,
-                            out bool exists
-                        );
+                        maxTextureWidth = Math.Max(maxTextureWidth, rect.Right);
+                        maxTextureHeight = Math.Max(maxTextureHeight, rect.Bottom);
 
-                        if (!exists)
-                        {
-                            textureFile.GetTextureSize(data.TextureId, out ushort width, out ushort height);
-                            PackedRectangle packed = packer.Pack(width, height);
-
-                            rect = Unsafe.As<PackedRectangle, Rectangle>(ref packed);
-                            if (rect == default)
-                                continue;
-
-                            maxTextureWidth = Math.Max(maxTextureWidth, rect.Right);
-                            maxTextureHeight = Math.Max(maxTextureHeight, rect.Bottom);
-
-                            validTextures++;
-                        }
-                        else if (rect == default)
-                            continue;
-
-                        BuildBillboard(startX + x, startY + y, tile.Z, in data, vIndex, iIndex, in rect);
-
-                        vIndex += 4;
-                        iIndex += 6;
+                        validTextures++;
                     }
+                    else if (rect == default)
+                        continue;
+
+                    int x = index % vertexSize;
+                    int y = index / vertexSize;
+
+                    BuildBillboard(startX + x, startY + y, tile.Z, in data, vIndex, iIndex, in rect);
+
+                    vIndex += 4;
+                    iIndex += 6;
                 }
+
+                index++;
             }
 
             if (validTextures == 0)

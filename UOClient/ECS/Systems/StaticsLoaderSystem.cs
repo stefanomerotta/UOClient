@@ -94,8 +94,8 @@ namespace UOClient.ECS.Systems
         {
             try
             {
-                int count = staticsFile.FillBlock(block.X, block.Y, block.Tiles);
-                block.Initialize(staticsData, count);
+                StaticTileList statics = staticsFile.FillBlock(block.X, block.Y);
+                block.Initialize(staticsData, statics);
 
                 return staticsToSync.EnqueueAsync(block);
             }

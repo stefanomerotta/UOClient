@@ -51,7 +51,7 @@ namespace FileConverter.CC
             int oldX = x << deltaSizeShift;
             int oldY = y << deltaSizeShift;
 
-            Span<MapTile> newChunk = MemoryMarshal.Cast<NewMapTile, MapTile>(chunk);
+            Span<TerrainTile> newChunk = MemoryMarshal.Cast<NewMapTile, TerrainTile>(chunk);
 
             LoadOldChunks(oldX, oldY, newChunk);
             LoadRightDelimiters(oldX, oldY, newChunk);
@@ -59,11 +59,11 @@ namespace FileConverter.CC
             LoadCornerDelimiter(oldX, oldY, newChunk);
         }
 
-        private unsafe void LoadOldChunks(int startX, int startY, Span<MapTile> tiles)
+        private unsafe void LoadOldChunks(int startX, int startY, Span<TerrainTile> tiles)
         {
             Debug.Assert(tiles.Length == (newSize + 1) * (newSize + 1));
 
-            Span<MapTile> oldChunk = stackalloc MapTile[oldSize * oldSize];
+            Span<TerrainTile> oldChunk = stackalloc TerrainTile[oldSize * oldSize];
 
             for (int x = 0; x < deltaSize; x++)
             {
@@ -85,7 +85,7 @@ namespace FileConverter.CC
             }
         }
 
-        private unsafe void LoadRightDelimiters(int startX, int startY, Span<MapTile> tiles)
+        private unsafe void LoadRightDelimiters(int startX, int startY, Span<TerrainTile> tiles)
         {
             Debug.Assert(tiles.Length == (newSize + 1) * (newSize + 1));
 
@@ -95,7 +95,7 @@ namespace FileConverter.CC
             int oldX = startX + deltaSize;
             int tileX = newSize;
 
-            Span<MapTile> oldChunk = stackalloc MapTile[oldSize * oldSize];
+            Span<TerrainTile> oldChunk = stackalloc TerrainTile[oldSize * oldSize];
 
             for (int y = 0; y < deltaSize; y++)
             {
@@ -111,7 +111,7 @@ namespace FileConverter.CC
             }
         }
 
-        private unsafe void LoadBottomDelimiters(int startX, int startY, Span<MapTile> tiles)
+        private unsafe void LoadBottomDelimiters(int startX, int startY, Span<TerrainTile> tiles)
         {
             Debug.Assert(tiles.Length == (newSize + 1) * (newSize + 1));
 
@@ -121,7 +121,7 @@ namespace FileConverter.CC
             int oldY = startY + deltaSize;
             int tileY = newSize;
 
-            Span<MapTile> oldChunk = stackalloc MapTile[oldSize * oldSize];
+            Span<TerrainTile> oldChunk = stackalloc TerrainTile[oldSize * oldSize];
 
             for (int x = 0; x < deltaSize; x++)
             {
@@ -137,7 +137,7 @@ namespace FileConverter.CC
             }
         }
 
-        private unsafe void LoadCornerDelimiter(int startX, int startY, Span<MapTile> tiles)
+        private unsafe void LoadCornerDelimiter(int startX, int startY, Span<TerrainTile> tiles)
         {
             Debug.Assert(tiles.Length == (newSize + 1) * (newSize + 1));
 
@@ -150,14 +150,14 @@ namespace FileConverter.CC
             int tileX = newSize;
             int tileY = newSize;
 
-            Span<MapTile> oldChunk = stackalloc MapTile[oldSize * oldSize];
+            Span<TerrainTile> oldChunk = stackalloc TerrainTile[oldSize * oldSize];
 
             LoadOldChunk(oldX, oldY, oldChunk);
 
             tiles[tileX + tileY * (newSize + 1)] = oldChunk[0];
         }
 
-        private void LoadOldChunk(int x, int y, Span<MapTile> tiles)
+        private void LoadOldChunk(int x, int y, Span<TerrainTile> tiles)
         {
             Debug.Assert(tiles.Length == oldSize * oldSize);
 
@@ -168,7 +168,7 @@ namespace FileConverter.CC
 
             for (int i = 0; i < tiles.Length; i++)
             {
-                ref MapTile tile = ref tiles[i];
+                ref TerrainTile tile = ref tiles[i];
                 tile.Id = TerrainTileTranscoder.GetNewId(tile.Id);
             }
         }
