@@ -14,11 +14,11 @@ namespace FileConverter
         private readonly EC.TextureLoader ecTextureLoader;
         private readonly EC.TextureLoader ccTextureLoader;
         private readonly byte[] unusedCCTextureData;
-        private readonly string ccPath;
+        private readonly string outPath;
 
-        public StaticsDataConverter(string ccPath, string ecPath)
+        public StaticsDataConverter(string ecPath, string outPath)
         {
-            this.ccPath = ccPath;
+            this.outPath = outPath;
 
             converter = new(ecPath);
             ecTextureLoader = new(Path.Combine(ecPath, "Texture.uop"), "build/worldart/");
@@ -42,7 +42,7 @@ namespace FileConverter
 
         private void ConvertStaticsData(List<StaticData> data, string fileName)
         {
-            using FileStream stream = File.Create(Path.Combine(ccPath, fileName));
+            using FileStream stream = File.Create(Path.Combine(outPath, fileName));
             using PackageWriter writer = new(stream);
 
             writer.WriteSpan(0, data.Where(d => d.Id >= 0).ToArray().AsReadOnlySpan(), CompressionAlgorithm.Zstd);
@@ -50,10 +50,10 @@ namespace FileConverter
 
         private HashSet<MissingIdData> ConvertTextures(List<StaticData> data, string ecFileName, string ccFileName)
         {
-            using FileStream ecStream = File.Create(Path.Combine(ccPath, ecFileName));
+            using FileStream ecStream = File.Create(Path.Combine(outPath, ecFileName));
             using PackageWriter<TextureMetadata> ecWriter = new(ecStream);
 
-            using FileStream ccStream = File.Create(Path.Combine(ccPath, ccFileName));
+            using FileStream ccStream = File.Create(Path.Combine(outPath, ccFileName));
             using PackageWriter<TextureMetadata> ccWriter = new(ccStream);
 
             HashSet<int> ecIds = new();
@@ -109,7 +109,7 @@ namespace FileConverter
 
         private void WriteMissingIds(HashSet<MissingIdData> data)
         {
-            using FileStream stream = File.Create(Path.Combine(ccPath, "missings.txt"));
+            using FileStream stream = File.Create(Path.Combine(outPath, "missings.txt"));
             using StreamWriter writer = new(stream);
 
             MissingIdData[] missings = data.OrderBy(x => x.Id).ToArray();

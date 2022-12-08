@@ -43,14 +43,6 @@ namespace UOClient.Data
             return reader.ReadSpan(index, data);
         }
 
-        public void FillTexture(int index, Span<byte> data, out ushort width, out ushort height)
-        {
-            reader.ReadSpan(index, data, out TextureMetadata metadata);
-
-            width = metadata.Width;
-            height = metadata.Height;
-        }
-
         public void Dispose()
         {
             reader.Dispose();

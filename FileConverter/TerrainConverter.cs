@@ -13,8 +13,9 @@ namespace FileConverter
         private readonly int newChunkWidth;
         private readonly int newChunkHeight;
         private readonly CC.TerrainConverter terrainConverter;
+        private readonly string outPath;
 
-        public TerrainConverter(string path, int id, int width, int height, int newChunkSize)
+        public TerrainConverter(string inPath, string outPath, int id, int width, int height, int newChunkSize)
         {
             newSize = newChunkSize;
             newChunkLength = (newSize + 1) * (newSize + 1);
@@ -22,12 +23,14 @@ namespace FileConverter
             newChunkWidth = (int)Math.Ceiling(width / (double)newSize);
             newChunkHeight = (int)Math.Ceiling(height / (double)newSize);
 
-            terrainConverter = new(path, id, width, height, newSize);
+            terrainConverter = new(inPath, id, width, height, newSize);
+
+            this.outPath = outPath;
         }
 
         public void Convert(string fileName)
         {
-            using FileStream stream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", fileName));
+            using FileStream stream = File.Create(Path.Combine(outPath, fileName));
             using PackageWriter writer = new(stream);
 
             TerrainTile[] chunk = new TerrainTile[newChunkLength];

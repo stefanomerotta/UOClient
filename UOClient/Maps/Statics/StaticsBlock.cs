@@ -15,12 +15,10 @@ namespace UOClient.Maps.Statics
     internal sealed class StaticsBlock : IDisposable
     {
         private const int vertexSize = StaticsFile.BlockSize;
-        private const int vertexLength = StaticsFile.BlockLength;
 
         private static readonly float ecRateo = (float)(1 / Math.Sqrt(64 * 64 / 2));
         private static readonly float ccRateo = (float)(1 / Math.Sqrt(44 * 44 / 2));
 
-        private readonly StaticTileList tiles;
         private readonly TextureFile textureFile;
         private readonly Packer packer;
 
@@ -54,6 +52,9 @@ namespace UOClient.Maps.Statics
                 return;
             }
 
+            packer.Reset();
+
+            TotalStaticsCount = statics.TotalStaticsCount;
             vertices = new StaticsVertex[TotalStaticsCount * 4];
             indices = new short[TotalStaticsCount * 6];
 
@@ -135,7 +136,7 @@ namespace UOClient.Maps.Statics
             foreach (ushort textureId in addedTextures.Keys)
             {
                 ref Rectangle rect = ref CollectionsMarshal.GetValueRefOrNullRef(addedTextures, textureId);
-                if (rect == default)
+                if (Unsafe.IsNullRef(ref rect))
                     continue;
 
                 textureBounds[i++] = new(textureId, in rect);
@@ -192,6 +193,7 @@ namespace UOClient.Maps.Statics
         public void Dispose()
         {
             ClearVRAM();
+            packer.Dispose();
         }
 
         private void BuildBillboard(int x, int y, int z, in StaticData data, int vIndex, int iIndex, in Rectangle rect)

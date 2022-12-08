@@ -14,8 +14,9 @@ namespace FileConverter
         private readonly int newChunkWidth;
         private readonly int newChunkHeight;
         private readonly CC.StaticsConverter staticsConverter;
+        private readonly string outPath;
 
-        public StaticsConverter(string path, int id, int width, int height, int newChunkSize)
+        public StaticsConverter(string inPath, string outPath, int id, int width, int height, int newChunkSize)
         {
             newSize = newChunkSize;
             newChunkLength = newSize * newSize;
@@ -23,12 +24,14 @@ namespace FileConverter
             newChunkWidth = (int)Math.Ceiling(width / (double)newSize);
             newChunkHeight = (int)Math.Ceiling(height / (double)newSize);
 
-            staticsConverter = new(path, id, width, height, newSize);
+            staticsConverter = new(inPath, id, width, height, newSize);
+            
+            this.outPath = outPath;
         }
 
         public unsafe void Convert(string fileName)
         {
-            using FileStream stream = File.Create(Path.Combine("C:\\Program Files (x86)\\Electronic Arts\\Ultima Online Classic\\", fileName));
+            using FileStream stream = File.Create(Path.Combine(outPath, fileName));
             using PackageWriter<StaticsMetadata> writer = new(stream);
 
             Span<List<StaticTile>> staticsChunk = new List<StaticTile>[newChunkLength];

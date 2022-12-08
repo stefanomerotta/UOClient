@@ -30,6 +30,14 @@ namespace TexturePacker
             }
         }
 
+        public void Reset()
+        {
+            fixed (Context* contextPtr = &context)
+            {
+                InitTarget(contextPtr, context.Width, context.Height, context.AllNodes, context.Width);
+            }
+        }
+
         public void Dispose()
         {
             context.Dispose();
