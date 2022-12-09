@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace UOClient.Maps.Components
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal readonly struct StaticData
+    public readonly struct StaticData
     {
         public readonly int TextureId;
         public readonly short StartX;

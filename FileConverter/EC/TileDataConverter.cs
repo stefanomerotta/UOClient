@@ -1,18 +1,20 @@
 ﻿using Common.Buffers;
+using Common.Utilities;
 using FileConverter.EC.Structures;
-using FileConverter.Structures;
 using GameData.Enums;
 using MYPReader;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using TileDataExporter.Components;
-using RadarColor = TileDataExporter.Components.RadarColor;
+using RadarColor = GameData.Structures.Contents.Statics.RadarColor;
+using ReadOnlyStaticData = GameData.Structures.Contents.Statics.StaticData;
 
 namespace FileConverter.EC
 {
     internal sealed partial class TileDataConverter : IDisposable
     {
         private static readonly Regex idRegex = CreateIdRegex();
+        private static readonly ReadOnlyStaticData invalidStaticData = new(ushort.MaxValue);
 
         private readonly MythicPackage package;
         private readonly StringDictionary dictionary;
@@ -25,9 +27,9 @@ namespace FileConverter.EC
             buffer = Array.Empty<byte>();
         }
 
-        public List<StaticData> ConvertTileData()
+        public List<ReadOnlyStaticData> ConvertTileData()
         {
-            List<StaticData> converted = new(package.FileCount);
+            List<ReadOnlyStaticData> converted = new(package.FileCount);
 
             foreach (ref readonly MythicPackageFile file in package)
             {
@@ -38,7 +40,7 @@ namespace FileConverter.EC
             return converted;
         }
 
-        private StaticData LoadFile(ReadOnlySpan<byte> bytes)
+        private ReadOnlyStaticData LoadFile(ReadOnlySpan<byte> bytes)
         {
             ByteSpanReader reader = new(bytes);
 
@@ -47,7 +49,7 @@ namespace FileConverter.EC
             TileDataHeader header = reader.Read<TileDataHeader>();
 
             if (header.TileId >= ushort.MaxValue)
-                return new StaticData() { Id = ushort.MaxValue };
+                return invalidStaticData;
 
             TextureOffset ecOffsets = reader.Read<TextureOffset>();
             TextureOffset ccOffsets = reader.Read<TextureOffset>();
@@ -55,7 +57,7 @@ namespace FileConverter.EC
             scoped Span<Property> properties = Span<Property>.Empty;
             int propertiesCount1 = reader.ReadByte();
 
-            if(propertiesCount1 > 0)
+            if (propertiesCount1 > 0)
             {
                 properties = stackalloc Property[propertiesCount1];
                 reader.Read(MemoryMarshal.AsBytes(properties));
@@ -73,7 +75,7 @@ namespace FileConverter.EC
             if (hasSitting)
                 reader.Advance(24);
 
-            RadarColor radarColors = reader.Read<RadarColor>();
+            RadarColor radarColor = reader.Read<RadarColor>();
 
             bool hasTexture = reader.ReadBoolean();
             if (hasTexture)
@@ -85,21 +87,12 @@ namespace FileConverter.EC
             {
                 Id = (ushort)header.TileId,
                 Flags = header.Flags1,
-                RadarColor = new()
-                {
-                    R = radarColors.R,
-                    G = radarColors.G,
-                    B = radarColors.B,
-                    A = radarColors.A,
-                },
-                Properties = new()
-                {
-                     Height = (byte)GetProperty(properties, PropertyKey.Height).Value
-                }
+                RadarColor = radarColor,
+                Properties = new((byte)GetProperty(properties, PropertyKey.Height).Value)
             };
 
             if (shaders.Count == 0)
-                return data;
+                return UnsafeUtility.As<StaticData, ReadOnlyStaticData>(in data);
 
             /* if true, it has three textures: "wordart", "legacy" and "enhanced"
              * if false, ithas two texture: "legacy" and "enhanced"
@@ -124,31 +117,31 @@ namespace FileConverter.EC
             if (data.Type == StaticTileType.Liquid)
                 ecTexture = ecShader.Textures[1];
 
-            data.ECTexture = new()
-            {
-                Id = GetIdFromDictionary(ecTexture.DictionaryIndex),
-                StartX = (short)ecOffsets.StartX,
-                StartY = (short)ecOffsets.StartY,
-                EndX = (short)ecOffsets.EndX,
-                EndY = (short)ecOffsets.EndY,
-                OffsetX = (short)ecOffsets.OffsetX,
-                OffsetY = (short)ecOffsets.OffsetY
-            };
+            data.ECTexture = new
+            (
+                GetIdFromDictionary(ecTexture.DictionaryIndex),
+                (short)ecOffsets.StartX,
+                (short)ecOffsets.StartY,
+                (short)ecOffsets.EndX,
+                (short)ecOffsets.EndY,
+                (short)ecOffsets.OffsetX,
+                (short)ecOffsets.OffsetY
+            );
 
             TextureEntry ccTexture = ccShader.Textures[0];
 
-            data.CCTexture = new()
-            {
-                Id = GetIdFromDictionary(ccTexture.DictionaryIndex),
-                StartX = (short)ccOffsets.StartX,
-                StartY = (short)ccOffsets.StartY,
-                EndX = (short)ccOffsets.EndX,
-                EndY = (short)ccOffsets.EndY,
-                OffsetX = (short)ccOffsets.OffsetX,
-                OffsetY = (short)ccOffsets.OffsetY
-            };
+            data.CCTexture = new
+            (
+                GetIdFromDictionary(ccTexture.DictionaryIndex),
+                (short)ccOffsets.StartX,
+                (short)ccOffsets.StartY,
+                (short)ccOffsets.EndX,
+                (short)ccOffsets.EndY,
+                (short)ccOffsets.OffsetX,
+                (short)ccOffsets.OffsetY
+            );
 
-            return data;
+            return UnsafeUtility.As<StaticData, ReadOnlyStaticData>(in data);
         }
 
         private static void ReadAppearance(ref ByteSpanReader reader)
@@ -244,7 +237,7 @@ namespace FileConverter.EC
 
         private static Property GetProperty(Span<Property> properties, PropertyKey key)
         {
-            for(int i = 0; i< properties.Length; i++)
+            for (int i = 0; i < properties.Length; i++)
                 if (properties[i].Key == key)
                     return properties[i];
 

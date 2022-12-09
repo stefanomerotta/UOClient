@@ -2,7 +2,7 @@
 
 namespace Common.Utilities
 {
-    internal static class UnsafeUtility
+    public static class UnsafeUtility
     {
         public static ref readonly TTo As<TFrom, TTo>(in TFrom @from)
         {

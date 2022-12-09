@@ -1,7 +1,7 @@
 ﻿using FileConverter.CC.Structures;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using NewMapTile = FileConverter.Structures.TerrainTile;
+using NewMapTile = GameData.Structures.Contents.Terrains.TerrainTile;
 
 namespace FileConverter.CC
 {

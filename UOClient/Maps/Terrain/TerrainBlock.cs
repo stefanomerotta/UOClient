@@ -1,4 +1,5 @@
 ﻿using GameData.Enums;
+using GameData.Structures.Contents.Terrains;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using UOClient.Data;

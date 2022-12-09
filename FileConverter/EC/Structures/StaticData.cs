@@ -1,7 +1,8 @@
 ﻿using GameData.Enums;
+using GameData.Structures.Contents.Statics;
 using System.Runtime.InteropServices;
 
-namespace FileConverter.Structures
+namespace FileConverter.EC.Structures
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct StaticData

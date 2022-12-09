@@ -1,8 +1,8 @@
 ﻿using FileSystem.IO;
+using GameData.Structures.Contents.Terrains;
 using System;
 using System.Diagnostics;
 using System.IO;
-using UOClient.Maps.Components;
 
 namespace UOClient.Data
 {

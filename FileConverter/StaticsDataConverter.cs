@@ -1,7 +1,7 @@
 ﻿using Common.Utilities;
-using FileConverter.Structures;
 using FileSystem.Enums;
 using FileSystem.IO;
+using GameData.Structures.Contents.Statics;
 using GameData.Structures.Headers;
 
 namespace FileConverter
@@ -92,7 +92,7 @@ namespace FileConverter
 
                     if (!hasECTexture && !hasCCTexture)
                     {
-                        data[i] = new() { Id = ushort.MaxValue };
+                        data[i] = new(ushort.MaxValue);
                         continue;
                     }
                 }

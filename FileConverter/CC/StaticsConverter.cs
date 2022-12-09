@@ -1,7 +1,7 @@
 ﻿using FileConverter.CC.Structures;
 using FileConverter.IO;
 using System.Diagnostics;
-using NewStaticTile = FileConverter.Structures.StaticTile;
+using NewStaticTile = GameData.Structures.Contents.Statics.StaticTile;
 
 namespace FileConverter.CC
 {
@@ -95,13 +95,7 @@ namespace FileConverter.CC
                 ref List<NewStaticTile> list = ref tiles[startX + oldTile.X + (startY + oldTile.Y) * newSize];
 
                 list ??= new(4);
-
-                list.Add(new()
-                {
-                    Id = oldTile.Id,
-                    Z = oldTile.Z,
-                    Color = oldTile.Color
-                });
+                list.Add(new(oldTile.Id, oldTile.Color, oldTile.Z));
 
                 count++;
             }

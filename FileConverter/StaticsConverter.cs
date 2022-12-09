@@ -1,6 +1,6 @@
-﻿using FileConverter.Structures;
-using FileSystem.Enums;
+﻿using FileSystem.Enums;
 using FileSystem.IO;
+using GameData.Structures.Contents.Statics;
 using GameData.Structures.Headers;
 using System.Runtime.InteropServices;
 

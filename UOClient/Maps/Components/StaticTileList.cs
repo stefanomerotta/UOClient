@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GameData.Structures.Contents.Statics;
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

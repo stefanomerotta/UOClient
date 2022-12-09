@@ -4,7 +4,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using UOClient.Maps.Components;
-using UOClient.Utilities;
 
 namespace UOClient.Data
 {

@@ -9,6 +9,7 @@ using TexturePacker;
 using UOClient.Data;
 using UOClient.Effects.Vertices;
 using UOClient.Maps.Components;
+using FS = GameData.Structures.Contents.Statics;
 
 namespace UOClient.Maps.Statics
 {
@@ -70,7 +71,7 @@ namespace UOClient.Maps.Statics
             int maxTextureHeight = 0;
 
             int index = 0;
-            foreach (ReadOnlySpan<StaticTile> tiles in statics)
+            foreach (ReadOnlySpan<FS.StaticTile> tiles in statics)
             {
                 if (tiles.IsEmpty)
                 {
@@ -80,7 +81,7 @@ namespace UOClient.Maps.Statics
 
                 for (int k = 0; k < tiles.Length; k++)
                 {
-                    StaticTile tile = tiles[k];
+                    FS.StaticTile tile = tiles[k];
                     ref StaticData data = ref staticsData[tile.Id];
 
                     if (data.TextureId is >= ushort.MaxValue || data.Type != StaticTileType.Static)

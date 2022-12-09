@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using UOClient.Data;
-using UOClient.ECS.Events;
 using UOClient.ECS.Systems;
 using UOClient.Maps.Components;
 using CullMode = Microsoft.Xna.Framework.Graphics.CullMode;

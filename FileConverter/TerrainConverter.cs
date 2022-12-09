@@ -1,7 +1,7 @@
 ﻿using Common.Utilities;
-using FileConverter.Structures;
 using FileSystem.Enums;
 using FileSystem.IO;
+using GameData.Structures.Contents.Terrains;
 
 namespace FileConverter
 {

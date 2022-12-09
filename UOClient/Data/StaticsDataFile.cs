@@ -1,9 +1,8 @@
 ﻿using FileSystem.IO;
-using GameData.Enums;
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using UOClient.Maps.Components;
+using FS = GameData.Structures.Contents.Statics;
 
 namespace UOClient.Data
 {
@@ -19,13 +18,13 @@ namespace UOClient.Data
 
         public unsafe StaticData[] Load(bool legacy)
         {
-            Span<FileStaticData> buffer = reader.ReadSpan<FileStaticData>(0);
+            Span<FS.StaticData> buffer = reader.ReadSpan<FS.StaticData>(0);
             StaticData[] toRet = new StaticData[ushort.MaxValue];
 
             for (int i = 0; i < buffer.Length; i++)
             {
-                ref FileStaticData data = ref buffer[i];
-                ref FileStaticTextureInfo texture = ref data.ECTexture;
+                ref readonly FS.StaticData data = ref buffer[i];
+                ref readonly FS.StaticTextureInfo texture = ref data.ECTexture;
 
                 bool usedLegacyTexture = false;
 
@@ -35,7 +34,7 @@ namespace UOClient.Data
                     usedLegacyTexture = true;
                 }
 
-                if (data.Id >= ushort.MaxValue)
+                if (data.Id == ushort.MaxValue)
                     continue;
 
                 toRet[data.Id] = new(texture.Id, texture.StartX, texture.StartY, texture.EndX, texture.EndY,
@@ -48,45 +47,6 @@ namespace UOClient.Data
         public void Dispose()
         {
             reader.Dispose();
-        }
-
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        private struct FileStaticData
-        {
-            public ushort Id;
-            public FileStaticTextureInfo ECTexture;
-            public FileStaticTextureInfo CCTexture;
-            public FileRadarColor RadarColor;
-            public StaticTileType Type;
-            public StaticFlags Flags;
-            public FileProperties Properties;
-        }
-
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        private struct FileStaticTextureInfo
-        {
-            public int Id;
-            public short StartX;
-            public short StartY;
-            public short EndX;
-            public short EndY;
-            public short OffsetX;
-            public short OffsetY;
-        }
-
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        private struct FileRadarColor
-        {
-            public byte R;
-            public byte G;
-            public byte B;
-            public byte A;
-        }
-
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        private struct FileProperties
-        {
-            public byte Height;
         }
     }
 }
