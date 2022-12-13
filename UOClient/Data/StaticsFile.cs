@@ -19,7 +19,7 @@ namespace UOClient.Data
 
         public StaticsFile(int width, int height)
         {
-            FileStream stream = File.Open(Path.Combine(Settings.FilePath, "statics.bin"), FileMode.Open);
+            FileStream stream = File.OpenRead(Path.Combine(Settings.FilePath, "statics.bin"));
             reader = new(stream);
 
             BlocksWidth = (int)Math.Ceiling(width / (double)BlockSize);

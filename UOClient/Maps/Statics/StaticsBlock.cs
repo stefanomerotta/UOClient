@@ -20,7 +20,7 @@ namespace UOClient.Maps.Statics
         private static readonly float ecRateo = (float)(1 / Math.Sqrt(64 * 64 / 2));
         private static readonly float ccRateo = (float)(1 / Math.Sqrt(44 * 44 / 2));
 
-        private readonly TextureFile textureFile;
+        private readonly StaticTextureFile textureFile;
         private readonly Packer packer;
 
         private StaticsVertex[] vertices;
@@ -38,7 +38,7 @@ namespace UOClient.Maps.Statics
         public int TextureWidth { get; private set; }
         public int TextureHeight { get; private set; }
 
-        public StaticsBlock(TextureFile textureFile)
+        public StaticsBlock(StaticTextureFile textureFile)
         {
             this.textureFile = textureFile;
 

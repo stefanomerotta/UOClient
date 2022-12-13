@@ -1,10 +1,12 @@
 ﻿using DefaultEcs;
 using DefaultEcs.System;
+using GameData.Structures.Contents.Terrains;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using UOClient.Data;
 using UOClient.ECS.Systems;
+using UOClient.ECS.Systems.Renderers;
 using UOClient.Maps.Components;
 using CullMode = Microsoft.Xna.Framework.Graphics.CullMode;
 using FillMode = Microsoft.Xna.Framework.Graphics.FillMode;
@@ -20,13 +22,15 @@ namespace UOClient
 
         private GraphicsDevice device;
         private BasicEffect wireframeEffect;
-        private TextureFile textureFile;
+        private StaticTextureFile staticsTextureFile;
+        private TerrainTextureFile terrainsTextureFile;
 
         private SequentialSystem<GameTime> updateSystem;
         private SequentialSystem<GameTime> renderSystem;
         private SequentialSystem<GameTime> postRenderSystem;
 
         private readonly StaticData[] staticsData;
+        private readonly TerrainData terrainData;
 
         public MainGame()
         {
@@ -41,7 +45,11 @@ namespace UOClient
             camera = new();
             world = new World();
 
-            staticsData = new StaticsDataFile().Load(!Settings.UseEnhancedTextures);
+            using StaticsDataFile staticsDataFile = new();
+            staticsData = staticsDataFile.Load(!Settings.UseEnhancedTextures);
+            
+            using TerrainsDataFile terrainsDataFile = new();
+            terrainData = terrainsDataFile.Load();
         }
 
         protected override void Initialize()
@@ -59,18 +67,19 @@ namespace UOClient
         protected override void LoadContent()
         {
             device = graphics.GraphicsDevice;
-            textureFile = new(Settings.UseEnhancedTextures ? "ecTextures.bin" : "ccTextures.bin");
+            staticsTextureFile = new(Settings.UseEnhancedTextures ? "ecTextures.bin" : "ccTextures.bin");
+            terrainsTextureFile = new("terraintextures.bin");
 
             updateSystem = new SequentialSystem<GameTime>
             (
                 new CameraSystem(world, camera),
-                new TerrainLoaderSystem(world, device, new TerrainFile(1448, 1448)),
-                new StaticsLoaderSystem(world, device, new StaticsFile(1448, 1448), textureFile, staticsData)
+                new TerrainLoaderSystem(world, device, new TerrainFile(1448, 1448), in terrainData),
+                new StaticsLoaderSystem(world, device, new StaticsFile(1448, 1448), staticsTextureFile, staticsData)
             );
 
             renderSystem = new SequentialSystem<GameTime>
             (
-                new TerrainRenderSystem(world, device, Content, camera),
+                new TerrainRenderSystem(world, device, Content, camera, terrainsTextureFile, in terrainData),
                 new StaticsRenderSystem(world, device, Content, camera)
             );
 
@@ -78,18 +87,6 @@ namespace UOClient
             (
                 new BlocksSystem(world, 1448, 1448)
             );
-
-            //var v = Content.Load<Texture2D>("statics/00003369");
-            //TextureFile f = new("ecTextures.bin");
-            //var v1 = new byte[128 * 64];
-            //var v2 = f.ReadTexture(3369, out int w, out int h);
-
-            //v.GetData(v1);
-
-            //bool r = v1.SequenceEqual(v2);
-
-            //Texture2D t = new(device, w, h, false, SurfaceFormat.Dxt5, 10);
-            //t.SetData(0, 0, new Rectangle(0, 0, w, h), v2, 0, v2.Length);
 
             wireframeEffect = new(device);
         }
@@ -138,13 +135,6 @@ namespace UOClient
                 camera.Test(device);
             }
 
-            //Vector3 position = device.Viewport.Project(Vector3.Subtract(camera.Target, new Vector3(5, 5, 0)), camera.ProjectionMatrix, camera.ViewMatrix, Matrix.Identity);
-
-            //spriteBatch.Begin();
-
-            //fps.DrawFps(spriteBatch, font, new Vector2(position.X, position.Y), Color.MonoGameOrange);
-            //spriteBatch.End();
-
             base.Draw(gameTime);
         }
 
@@ -161,7 +151,7 @@ namespace UOClient
 
             device.Dispose();
             wireframeEffect.Dispose();
-            textureFile.Dispose();
+            staticsTextureFile.Dispose();
             graphics.Dispose();
 
             world.Dispose();

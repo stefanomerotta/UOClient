@@ -41,24 +41,17 @@ namespace UOClient.ECS.Systems
             statics.SetWorldViewProjection(in camera.WorldViewProjectionMatrix);
 
             EffectPass firstPass = statics.CurrentTechnique.Passes[0];
-            EffectPass secondPass = statics.CurrentTechnique.Passes[1];
 
             foreach (StaticsBlock block in activeBlocks.Keys)
             {
                 device.BlendState = BlendState.NonPremultiplied;
                 device.DepthStencilState = DepthStencilState.Default;
-                
+
                 statics.Texture0 = block.Texture;
                 statics.TextureSize = new(block.TextureWidth, block.TextureHeight);
 
                 firstPass.Apply();
                 block.Draw(device);
-
-                //device.BlendState = BlendState.NonPremultiplied;
-                //device.DepthStencilState = DepthStencilState.DepthRead;
-
-                //secondPass.Apply();
-                //block.Draw(device);
             }
 
             device.DepthStencilState = prevDepthStencilState;

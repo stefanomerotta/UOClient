@@ -1,4 +1,6 @@
-﻿namespace FileConverter
+﻿using FileConverter.EC;
+
+namespace FileConverter
 {
     public class Program
     {
@@ -10,14 +12,19 @@
 
             int newChunkSize = 32;
 
-            using TerrainConverter p = new(uoCCPath, outPath, 4, 1448, 1448, newChunkSize);
-            p.Convert("terrain.bin");
+            StringDictionary dictionary = new(Path.Combine(uoECPath, "string_dictionary.uop"));
 
-            using StaticsConverter s = new(uoCCPath, outPath, 4, 1448, 1448, newChunkSize);
-            s.Convert("statics.bin");
+            //using StaticsConverter s = new(uoCCPath, outPath, 4, 1448, 1448, newChunkSize);
+            //s.Convert("statics.bin");
 
-            using StaticsDataConverter t = new(uoECPath, outPath);
-            t.Convert("tiledata.bin", "ecTextures.bin", "ccTextures.bin");
+            //using StaticsDataConverter t = new(uoECPath, outPath, dictionary);
+            //t.Convert("staticdata.bin", "ecTextures.bin", "ccTextures.bin");
+
+            //using TerrainConverter p = new(uoCCPath, outPath, 4, 1448, 1448, newChunkSize);
+            //p.Convert("terrain.bin");
+
+            using TerrainsDataConverter tdc = new(uoECPath, outPath);
+            tdc.Convert("terraindata.bin", "terraintextures.bin");
 
             //AnimationsConverter c = new(uoCCPath);
             //c.Convert(uoCCPath, "animations{0}.bin");

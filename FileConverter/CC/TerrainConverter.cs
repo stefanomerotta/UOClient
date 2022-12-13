@@ -1,7 +1,7 @@
 ﻿using FileConverter.CC.Structures;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using NewMapTile = GameData.Structures.Contents.Terrains.TerrainTile;
+using NewTerrainTile = GameData.Structures.Contents.Terrains.TerrainTile;
 
 namespace FileConverter.CC
 {
@@ -23,6 +23,7 @@ namespace FileConverter.CC
         private readonly int newChunkHeight;
         private readonly string path;
         private readonly UOPMap map;
+        private readonly TerrainTileTranscoder transcoder;
 
         public TerrainConverter(string path, int id, int width, int height, int newChunkSize)
         {
@@ -42,16 +43,17 @@ namespace FileConverter.CC
             newChunkHeight = (int)Math.Ceiling(height / (double)newSize);
 
             map = new(path, id, width, height);
+            transcoder = new();
         }
 
-        public unsafe void ConvertChunk(int x, int y, Span<NewMapTile> chunk)
+        public unsafe void ConvertChunk(int x, int y, Span<NewTerrainTile> chunk)
         {
             Debug.Assert(chunk.Length == (newSize + 1) * (newSize + 1));
 
             int oldX = x << deltaSizeShift;
             int oldY = y << deltaSizeShift;
 
-            Span<TerrainTile> newChunk = MemoryMarshal.Cast<NewMapTile, TerrainTile>(chunk);
+            Span<TerrainTile> newChunk = MemoryMarshal.Cast<NewTerrainTile, TerrainTile>(chunk);
 
             LoadOldChunks(oldX, oldY, newChunk);
             LoadRightDelimiters(oldX, oldY, newChunk);
@@ -169,7 +171,7 @@ namespace FileConverter.CC
             for (int i = 0; i < tiles.Length; i++)
             {
                 ref TerrainTile tile = ref tiles[i];
-                tile.Id = TerrainTileTranscoder.GetNewId(tile.Id);
+                tile.Id = transcoder.GetNewId(tile.Id);
             }
         }
 

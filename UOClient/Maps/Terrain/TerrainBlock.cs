@@ -1,5 +1,4 @@
-﻿using GameData.Enums;
-using GameData.Structures.Contents.Terrains;
+﻿using GameData.Structures.Contents.Terrains;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using UOClient.Data;
@@ -17,20 +16,22 @@ namespace UOClient.Maps.Terrain
         private const int vertexSize = blockSize + 1;
 
         private readonly TerrainVertex[] vertices;
-        private readonly short[][] indices;
         private readonly IndexBuffer?[] iBuffers;
+        public readonly TerrainIndicesEntry[] Indices;
         public readonly TerrainTile[] Tiles;
         private VertexBuffer vBuffer = null!;
 
         public ushort X;
         public ushort Y;
 
-        public TerrainBlock()
+        public int IndicesCount { get; private set; }
+
+        public TerrainBlock(int terrainTypeCount)
         {
             Tiles = new TerrainTile[terrainBlockLength];
             vertices = new TerrainVertex[terrainBlockLength];
-            indices = new short[(int)LandTileId.Length][];
-            iBuffers = new IndexBuffer[indices.Length];
+            Indices = new TerrainIndicesEntry[terrainTypeCount];
+            iBuffers = new IndexBuffer[Indices.Length];
         }
 
         public void Initialize()
@@ -48,7 +49,7 @@ namespace UOClient.Maps.Terrain
         {
             for (int i = 0; i < iBuffers.Length; i++)
             {
-                indices[i] = null!;
+                Indices[i] = default;
 
                 ref IndexBuffer? iBuffer = ref iBuffers[i];
 
@@ -60,17 +61,18 @@ namespace UOClient.Maps.Terrain
             }
         }
 
-        public void Draw(GraphicsDevice device, int id)
+        public void Draw(GraphicsDevice device, int index)
         {
-            short[] indices = this.indices[id];
+            ref TerrainIndicesEntry entry = ref Indices[index];
+            int indicesCount = entry.Indices.Length;
 
-            if (indices.Length == 0)
+            if (indicesCount == 0)
                 return;
 
             device.SetVertexBuffer(vBuffer);
-            device.Indices = iBuffers[id];
+            device.Indices = iBuffers[index];
 
-            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indices.Length / 3);
+            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indicesCount / 3);
         }
 
         public void Dispose()
@@ -110,16 +112,13 @@ namespace UOClient.Maps.Terrain
 
         private void UpdateIndexBuffers(GraphicsDevice device)
         {
-            for (int i = 0; i < (int)LandTileId.Length; i++)
+            for (int i = 0; i < IndicesCount; i++)
             {
-                short[] indices = this.indices[i];
-                int indicesCount = indices.Length;
-
-                if (indicesCount == 0)
-                    continue;
+                ref TerrainIndicesEntry entry = ref Indices[i];
+                int indicesCount = entry.Indices.Length;
 
                 IndexBuffer iBuffer = new(device, IndexElementSize.SixteenBits, indicesCount, BufferUsage.WriteOnly);
-                iBuffer.SetData(indices, 0, indicesCount);
+                iBuffer.SetData(entry.Indices, 0, indicesCount);
 
                 iBuffers[i] = iBuffer;
             }
@@ -127,7 +126,9 @@ namespace UOClient.Maps.Terrain
 
         private void SetUpIndices()
         {
-            for (int i = 0; i < (int)LandTileId.Length; i++)
+            int index = 0;
+
+            for (int i = 0; i < Indices.Length; i++)
             {
                 int counter = 0;
                 BitMapBlock64 bitmap = new();
@@ -135,7 +136,7 @@ namespace UOClient.Maps.Terrain
 
                 if (bitmap.TrueCount == 0)
                 {
-                    this.indices[i] = Array.Empty<short>();
+                    Indices[i] = default;
                     continue;
                 }
 
@@ -165,8 +166,10 @@ namespace UOClient.Maps.Terrain
                     }
                 }
 
-                this.indices[i] = indices;
+                Indices[index++] = new(i, indices);
             }
+
+            IndicesCount = index;
         }
 
         private void SetupBitMap(int id, ref BitMapBlock64 bitmap)

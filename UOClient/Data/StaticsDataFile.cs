@@ -12,7 +12,7 @@ namespace UOClient.Data
 
         public StaticsDataFile()
         {
-            FileStream stream = File.Open(Path.Combine(Settings.FilePath, "tiledata.bin"), FileMode.Open, FileAccess.Read);
+            FileStream stream = File.OpenRead(Path.Combine(Settings.FilePath, "staticdata.bin"));
             reader = new(stream);
         }
 

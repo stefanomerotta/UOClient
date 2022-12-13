@@ -1,4 +1,5 @@
 ﻿using Common.Utilities;
+using FileConverter.EC;
 using FileSystem.Enums;
 using FileSystem.IO;
 using GameData.Structures.Contents.Statics;
@@ -10,17 +11,17 @@ namespace FileConverter
     {
         private static readonly TileDataComparer tileDataComparer = new();
 
-        private readonly EC.TileDataConverter converter;
-        private readonly EC.TextureLoader ecTextureLoader;
-        private readonly EC.TextureLoader ccTextureLoader;
+        private readonly TileDataConverter converter;
+        private readonly TextureLoader ecTextureLoader;
+        private readonly TextureLoader ccTextureLoader;
         private readonly byte[] unusedCCTextureData;
         private readonly string outPath;
 
-        public StaticsDataConverter(string ecPath, string outPath)
+        public StaticsDataConverter(string ecPath, string outPath, StringDictionary dictionary)
         {
             this.outPath = outPath;
 
-            converter = new(ecPath);
+            converter = new(ecPath, dictionary);
             ecTextureLoader = new(Path.Combine(ecPath, "Texture.uop"), "build/worldart/");
             ccTextureLoader = new(Path.Combine(ecPath, "LegacyTexture.uop"), "build/tileartlegacy/");
 
@@ -51,10 +52,10 @@ namespace FileConverter
         private HashSet<MissingIdData> ConvertTextures(List<StaticData> data, string ecFileName, string ccFileName)
         {
             using FileStream ecStream = File.Create(Path.Combine(outPath, ecFileName));
-            using PackageWriter<TextureMetadata> ecWriter = new(ecStream);
+            using PackageWriter<StaticTextureMetadata> ecWriter = new(ecStream);
 
             using FileStream ccStream = File.Create(Path.Combine(outPath, ccFileName));
-            using PackageWriter<TextureMetadata> ccWriter = new(ccStream);
+            using PackageWriter<StaticTextureMetadata> ccWriter = new(ccStream);
 
             HashSet<int> ecIds = new();
             HashSet<int> ccIds = new();

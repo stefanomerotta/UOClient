@@ -15,11 +15,11 @@ namespace UOClient
 
         private static readonly GlobalTextureData[] globalTextures = new GlobalTextureData[ushort.MaxValue];
 
-        private readonly TextureFile textureFile;
+        private readonly StaticTextureFile textureFile;
         private readonly Dictionary<ushort, int> loadedTextures;
         private readonly List<TextureBufferEntry> entries;
 
-        public TextureBuffer(TextureFile textureFile)
+        public TextureBuffer(StaticTextureFile textureFile)
         {
             this.textureFile = textureFile;
 

@@ -1,4 +1,4 @@
-﻿namespace TileDataExporter.Components
+﻿namespace FileConverter.EC.Structures
 {
     public struct ShaderEntry
     {

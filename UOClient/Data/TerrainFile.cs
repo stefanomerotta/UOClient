@@ -18,7 +18,7 @@ namespace UOClient.Data
 
         public TerrainFile(int width, int height)
         {
-            FileStream stream = File.Open(Path.Combine(Settings.FilePath, "terrain.bin"), FileMode.Open);
+            FileStream stream = File.OpenRead(Path.Combine(Settings.FilePath, "terrain.bin"));
             reader = new(stream);
 
             BlocksWidth = (int)Math.Ceiling(width / (double)BlockSize);

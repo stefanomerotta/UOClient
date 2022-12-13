@@ -5,7 +5,6 @@ using GameData.Enums;
 using MYPReader;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using TileDataExporter.Components;
 using RadarColor = GameData.Structures.Contents.Statics.RadarColor;
 using ReadOnlyStaticData = GameData.Structures.Contents.Statics.StaticData;
 
@@ -20,10 +19,10 @@ namespace FileConverter.EC
         private readonly StringDictionary dictionary;
         private byte[] buffer;
 
-        public TileDataConverter(string path)
+        public TileDataConverter(string path, StringDictionary dictionary)
         {
             package = new(Path.Combine(path, "tileart.uop"));
-            dictionary = new(Path.Combine(path, "string_dictionary.uop"));
+            this.dictionary = dictionary;
             buffer = Array.Empty<byte>();
         }
 

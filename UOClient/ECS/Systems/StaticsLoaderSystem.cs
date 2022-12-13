@@ -22,7 +22,7 @@ namespace UOClient.ECS.Systems
 
         private readonly GraphicsDevice device;
         private readonly StaticsFile staticsFile;
-        private readonly TextureFile textureFile;
+        private readonly StaticTextureFile textureFile;
         private readonly StaticData[] staticsData;
         private readonly EntityMap<Block> blocks;
 
@@ -33,7 +33,7 @@ namespace UOClient.ECS.Systems
         public bool IsEnabled { get; set; }
 
         public StaticsLoaderSystem(World world, GraphicsDevice device, StaticsFile staticsFile,
-            TextureFile textureFile, StaticData[] staticsData)
+            StaticTextureFile textureFile, StaticData[] staticsData)
         {
             this.device = device;
             this.staticsFile = staticsFile;

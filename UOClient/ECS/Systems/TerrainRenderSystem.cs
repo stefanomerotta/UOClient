@@ -4,115 +4,57 @@ using GameData.Enums;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using System.Runtime.CompilerServices;
-using UOClient.Effects;
+using UOClient.Data;
+using UOClient.Maps.Components;
 using UOClient.Maps.Terrain;
 
-namespace UOClient.ECS.Systems
+namespace UOClient.ECS.Systems.Renderers
 {
     internal sealed class TerrainRenderSystem : ISystem<GameTime>
     {
         private readonly GraphicsDevice device;
         private readonly EntityMap<TerrainBlock> activeBlocks;
 
-        private readonly SolidTerrainEffect solid;
-        private readonly LiquidTerrainEffect liquid;
-        private readonly IsometricCamera camera;
+        private readonly TerrainData terrainData;
+        private readonly LiquidSubRenderSystem liquidRenderer;
+        private readonly SolidSubRenderSystem solidRenderer;
+        private readonly SingleSubRenderSystem singleRenderer;
 
         public bool IsEnabled { get; set; }
 
-        public TerrainRenderSystem(World world, GraphicsDevice device, ContentManager contentManager, IsometricCamera camera)
+        public TerrainRenderSystem(World world, GraphicsDevice device, ContentManager contentManager, IsometricCamera camera,
+            TerrainTextureFile textureFile, in TerrainData terrainData)
         {
-            this.camera = camera;
             this.device = device;
+            this.terrainData = terrainData;
 
             activeBlocks = world.GetEntities().AsMap<TerrainBlock>();
 
-            SolidTerrainInfo.Load(contentManager);
-            LiquidTerrainInfo.Load(contentManager);
-
-            ref readonly Matrix worldViewProjection = ref camera.WorldViewProjectionMatrix;
-
-            solid = new(contentManager, in worldViewProjection);
-            liquid = new(contentManager, in worldViewProjection);
+            liquidRenderer = new(device, contentManager, camera, textureFile, terrainData.Liquid);
+            solidRenderer = new(device, contentManager, camera, textureFile, terrainData.Solid);
+            singleRenderer = new(device, contentManager, camera, textureFile, terrainData.Single);
         }
 
         public void Update(GameTime state)
         {
-            solid.SetWorldViewProjection(in camera.WorldViewProjectionMatrix);
-            liquid.SetWorldViewProjection(in camera.WorldViewProjectionMatrix);
+            liquidRenderer.Update(state);
+            solidRenderer.Update();
+            singleRenderer.Update();
 
-            DrawSolid();
-            DrawLiquid(state);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void DrawSolid()
-        {
-            EffectPass pass = solid.CurrentTechnique.Passes[0];
-
-            for (int k = 1; k < (int)LandTileId.Water; k++)
+            foreach (TerrainBlock block in activeBlocks.Keys)
             {
-                ref SolidTerrainInfo info = ref SolidTerrainInfo.Values[k];
-
-                solid.TextureIndex = k;
-                solid.Texture0 = info.Texture0;
-                solid.Texture1 = info.Texture1;
-                solid.AlphaMask = info.AlphaMask;
-
-                solid.Texture0Stretch = info.Texture0Stretch;
-                solid.Texture1Stretch = info.Texture1Stretch;
-                solid.AlphaMaskStretch = info.AlphaMaskStretch;
-
-                pass.Apply();
-
-                foreach (TerrainBlock block in activeBlocks.Keys)
+                for (int k = 0; k < block.IndicesCount; k++)
                 {
-                    block.Draw(device, k);
-                }
-            }
-        }
+                    TerrainIndicesEntry entry = block.Indices[k];
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void DrawLiquid(GameTime gameTime)
-        {
-            EffectPass waterPass;
-            Vector3 target = camera.Target;
+                    switch(terrainData.Types[entry.TileId])
+                    {
+                        case TerrainTileType.Liquid: liquidRenderer.SetupDraw(in entry); break;
+                        case TerrainTileType.Solid: solidRenderer.SetupDraw(in entry); break;
+                        case TerrainTileType.Single: singleRenderer.SetupDraw(in entry); break;
+                        default: continue;
+                    }
 
-            liquid.Time = (float)gameTime.TotalGameTime.TotalMilliseconds / 100.0f;
-            liquid.Center = new Vector2(target.X, target.Z);
-
-            for (int k = (int)LandTileId.Water; k < (int)LandTileId.Length; k++)
-            {
-                ref LiquidTerrainInfo info = ref LiquidTerrainInfo.Values[k];
-
-                liquid.TextureIndex = k;
-                liquid.Texture0 = info.Texture0;
-                liquid.Texture0Stretch = info.Texture0Stretch;
-
-                liquid.Normal = info.Normal;
-                liquid.NormalStretch = info.NormalStretch;
-
-                liquid.WaveHeight = info.WaveHeight;
-
-                if (info.WindSpeed == 0)
-                {
-                    liquid.WindForce = 0.05f;
-                    liquid.WindDirection = new(0, 1);
-                }
-                else
-                {
-                    liquid.WindForce = info.WindSpeed;
-                    liquid.WindDirection = new(1, 0);
-                }
-
-                liquid.FollowCenter = info.FollowCenter;
-
-                waterPass = liquid.CurrentTechnique.Passes[0];
-                waterPass.Apply();
-
-                foreach (TerrainBlock block in activeBlocks.Keys)
-                {
                     block.Draw(device, k);
                 }
             }
@@ -120,9 +62,10 @@ namespace UOClient.ECS.Systems
 
         public void Dispose()
         {
-            solid.Dispose();
-            liquid.Dispose();
             activeBlocks.Dispose();
+            liquidRenderer.Dispose();
+            solidRenderer.Dispose();
+            singleRenderer.Dispose();
 
             foreach (TerrainBlock block in activeBlocks.Keys)
             {

@@ -1,11 +1,15 @@
 ﻿using DefaultEcs;
 using DefaultEcs.System;
+using GameData.Structures.Contents.Terrains;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UOClient.Data;
 using UOClient.ECS.Components;
+using UOClient.Maps.Components;
 using UOClient.Maps.Terrain;
 using UOClient.Utilities;
 using UOClient.Utilities.SingleThreaded;
@@ -21,6 +25,7 @@ namespace UOClient.ECS.Systems
         private readonly GraphicsDevice device;
         private readonly TerrainFile terrainFile;
         private readonly EntityMap<Block> blocks;
+        private readonly int terrainTypeCount;
 
         private readonly AsyncCommandProcessor<TerrainBlock> blocksToLoad;
         private readonly CommandQueue<TerrainBlock> blocksToSync;
@@ -28,12 +33,13 @@ namespace UOClient.ECS.Systems
 
         public bool IsEnabled { get; set; }
 
-        public TerrainLoaderSystem(World world, GraphicsDevice device, TerrainFile terrainFile)
+        public TerrainLoaderSystem(World world, GraphicsDevice device, TerrainFile terrainFile, in TerrainData terrainData)
         {
             source = new();
 
             this.device = device;
             this.terrainFile = terrainFile;
+            terrainTypeCount = terrainData.MaxLength;
 
             blocksToLoad = new(poolSize, LoadBlock, source);
             blocksToSync = new(poolSize);
@@ -62,7 +68,7 @@ namespace UOClient.ECS.Systems
         private void OnBlockAdded(in Entity e)
         {
             if (!pool.TryGet(out TerrainBlock? block))
-                block = new();
+                block = new(terrainTypeCount);
 
             Block blockComponent = e.Get<Block>();
 

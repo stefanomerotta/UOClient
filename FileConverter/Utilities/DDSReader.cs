@@ -1,13 +1,19 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace FileConverter.Utilities
 {
     internal static class DDSReader
     {
         private const int magicNumber = 0x20534444;
-        private const int DX10 = 'D' << 3 + 'X' << 2 + '1' << 1 + '0';
+        private static readonly int DX10 = BitConverter.ToInt32("DX10"u8.ToArray(), 0);
+        private static readonly int DXT1 = BitConverter.ToInt32("DXT1"u8.ToArray(), 0);
+        private static readonly int DXT2 = BitConverter.ToInt32("DXT2"u8.ToArray(), 0);
+        private static readonly int DXT3 = BitConverter.ToInt32("DXT3"u8.ToArray(), 0);
+        private static readonly int DXT4 = BitConverter.ToInt32("DXT4"u8.ToArray(), 0);
+        private static readonly int DXT5 = BitConverter.ToInt32("DXT5"u8.ToArray(), 0);
 
-        public static unsafe ReadOnlySpan<byte> GetContent(ReadOnlySpan<byte> data, out int width, out int height)
+        public static unsafe ReadOnlySpan<byte> GetContent(ReadOnlySpan<byte> data, out DDSFormat format, out int width, out int height)
         {
             if (BitConverter.ToInt32(data) != magicNumber)
                 throw new Exception();
@@ -21,6 +27,19 @@ namespace FileConverter.Utilities
 
             width = header.Width;
             height = header.Height;
+
+            if (header.ddspf.FourCC == DXT1)
+                format = DDSFormat.Dxt1;
+            else if (header.ddspf.FourCC == DXT2)
+                format = DDSFormat.Dxt2;
+            else if (header.ddspf.FourCC == DXT3)
+                format = DDSFormat.Dxt3;
+            else if (header.ddspf.FourCC == DXT4)
+                format = DDSFormat.Dxt4;
+            else if (header.ddspf.FourCC == DXT5)
+                format = DDSFormat.Dxt5;
+            else
+                format = DDSFormat.Unknown;
 
             return data.Slice(toSkip, header.PitchOrLinearSize);
         }

@@ -170,7 +170,7 @@ namespace FileSystem.IO
                 IntPtr pointer = IntPtr.Add(handle.DangerousGetHandle(), header.ContentAddress);
                 ReadOnlySpan<byte> compressed = new(pointer.ToPointer(), header.CompressedSize);
 
-                T[] uncompressed = new T[header.UncompressedSize];
+                T[] uncompressed = new T[header.UncompressedSize / Unsafe.SizeOf<T>()];
 
                 zstdDecompressor.Unwrap(compressed, MemoryMarshal.AsBytes(uncompressed.AsSpan()), false);
                 return uncompressed;

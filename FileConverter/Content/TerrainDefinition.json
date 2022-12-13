@@ -1,0 +1,999 @@
+﻿[
+	// Void / No-Draw
+	{ 
+		"Id" :0, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000000", "Stretch": 8 }, 
+		"Texture1": { "Id": "02000001", "Stretch": 6 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 32 },
+	}, 
+	
+	// Grass	
+	{ 
+		"Id" :1, 
+		"Type" : "Solid,Smooth", 
+		"Texture0" : { "Id": "02000010", "Stretch": 10 }, 
+		"Texture1": { "Id": "02000011", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 32 },
+	}, 
+
+	// Dirt
+	{ 
+		"Id" :2, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000020", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000021", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Jungle
+	{ 
+		"Id" :3, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000030", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000031", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Forest
+	{ 
+		"Id" :4, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000040", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000041", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Water
+	{ 
+		"Id" :5, 
+		"Type" : "Liquid,Smooth,FollowCenter",
+		"Speed": 0,
+		"WaveHeight": 0.3,
+		"Texture0" : { "Id": "01000017", "Stretch": 30 }, 
+		"Static": { "Id": "02000051", "Stretch": 4 },
+		"Normal": { "Id": "01000013", "Stretch": 16 },
+	}, 
+
+	// Rock
+	{ 
+		"Id" :6, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000060", "Stretch": 9 }, 
+		"Texture1": { "Id": "02000061", "Stretch": 6 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 24 },
+	}, 
+
+	// Sand
+	{ 
+		"Id" :7, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000070", "Stretch": 6 }, 
+		"Texture1": { "Id": "02000071", "Stretch": 6 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Snow
+	{ 
+		"Id" :8, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000080", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000081", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Cobblestone
+	{ 
+		"Id" :9, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000090", "Stretch": 8 }, 
+		"Texture1": { "Id": "02000091", "Stretch": 8 },
+		"AlphaMask": { "Id": "01000004", "Stretch": 48 },
+	}, 
+
+	// Lava
+	{ 
+		"Id" :10, 
+		"Type" : "Liquid,Smooth",
+		"Speed": 0.01,
+		"WaveHeight": 0.2,
+		"Texture0" : { "Id": "02000100", "Stretch": 6 }, 
+		"Static": { "Id": "02000100", "Stretch": 8 },
+		"Normal": { "Id": "01000012", "Stretch": 12 },
+	}, 
+
+	// Wooden Floor (E-W)
+	{ 
+		"Id" :11, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000110", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000111", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Wooden Floor (N-S)
+	{ 
+		"Id" :12, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000120", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000121", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+	
+	// Cave Floor
+	{ 
+		"Id" :13, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000130", "Stretch": 12 }, 
+		"Texture1": { "Id": "02000131", "Stretch": 6 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Cave wall (N-S)
+	{ 
+		"Id" :14, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000140", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000141", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Cave wall (NW-SE)
+	{ 
+		"Id" :15, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000151", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000151", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Cave wall (E-W)
+	{ 
+		"Id" :16, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000160", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000161", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Furrows (N-S)
+	{ 
+		"Id" :20, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000200", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000201", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Furrows (E-W)
+	{ 
+		"Id" :21, 
+		"Type" : "Solid,Smooth",
+		"Texture0" : { "Id": "02000210", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000211", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Wooden Planks (E-W)
+	{ 
+		"Id" :22, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000230", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000231", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Wooden Planks (N-S)
+	{ 
+		"Id" :23, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000220", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000221", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Flagstone (tan)
+	{ 
+		"Id" :24, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000240", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000241", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Stone (light) Pavers
+	{ 
+		"Id" :25, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000250", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000251", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	},
+
+	// Stone (medium) Pavers
+	{ 
+		"Id" :26, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000260", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000261", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Stone (darker) Pavers
+	{ 
+		"Id" :27, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000270", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000271", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Stone (light tan) Pavers
+	{ 
+		"Id" :28, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000280", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000281", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Stone (dark tan) Pavers
+	{ 
+		"Id" :29, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000290", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000291", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Light sand stone brick (E-W)
+	{ 
+		"Id" :30, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000300", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000301", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Light sand stone brick (N-S)
+	{ 
+		"Id" :31, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000310", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000311", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Dark sand stone brick (E-W)
+	{ 
+		"Id" :32, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000320", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000321", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Dark sand stone brick (N-S)
+	{ 
+		"Id" :33, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000330", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000331", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Red brick3 (mixed direction)
+	{ 
+		"Id" :34, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000340", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000341", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Red brick (E-W)
+	{ 
+		"Id" :35, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000350", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000351", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Red brick (N-S)
+	{ 
+		"Id" :36, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000360", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000361", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Marble (grey)
+	{ 
+		"Id" :37, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "00001299", "Stretch": 2.5 }, 
+		"Texture1": { "Id": "00001300", "Stretch": 2.5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Brown brick4 (E-W)
+	{ 
+		"Id" :38, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000380", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000381", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Brown brick (N-S)
+	{ 
+		"Id" :39, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000390", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000391", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Marble (teal)
+	{ 
+		"Id" :40, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000400", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000401", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Marble (white)
+	{ 
+		"Id" :41, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000410", "Stretch": 2 }, 
+		"Texture1": { "Id": "02000411", "Stretch": 2 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Flagstone (grey)
+	{ 
+		"Id" :42, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000420", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000421", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Marble (no tiles)
+	{ 
+		"Id" :43, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000430", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000431", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	{ "Id" :44, "Type" : "Solid" }, // TODO
+
+	// Cave exit 2
+	{ 
+		"Id" :45, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000450", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000450", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Embank (E-W)
+	{ 
+		"Id" :46, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000580", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000581", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Embank (N-S)
+	{ 
+		"Id" :47, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000600", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000601", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	{ "Id" :48, "Type" : "Solid" }, // TODO
+
+	// Acid (solid)
+	{ 
+		"Id" :49, 
+		"Type" : "Liquid,Smooth",
+		"Speed": 0.01,
+		"WaveHeight": 0.3,
+		"Texture0" : { "Id": "02000490", "Stretch": 8 }, 
+		"Static": { "Id": "02000490", "Stretch": 8 },
+		"Normal": { "Id": "01000012", "Stretch": 12 },
+	}, 
+
+	// Obsidian
+	{ 
+		"Id" :50, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000500", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000501", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	{ "Id" :51, "Type" : "Solid" }, // TODO
+
+	// Tan no-name (under static water)
+	{ 
+		"Id" :52, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000510", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000511", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Stars
+	{ 
+		"Id" :53, 
+		"Type" : "Liquid,Smooth,FollowCenter",
+		"Texture0" : { "Id": "02000532", "Stretch": 24 }, 
+		"Static": { "Id": "02000531", "Stretch": 0.5 },
+		"Normal": { "Id": "02000530", "Stretch": 24 },
+	}, 
+
+	// Sand Cliff (E-W)
+	{ 
+		"Id" :54, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000540", "Stretch": 1 }, 
+		"Texture1": { "Id": "02000541", "Stretch": 1 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 8 },
+	}, 
+
+	// Sand Cliff (NW-SE)
+	{ 
+		"Id" :55, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000550", "Stretch": 2 }, 
+		"Texture1": { "Id": "02000551", "Stretch": 2 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 8 },
+	}, 
+
+	// Sand Cliff (N-S)
+	{ 
+		"Id" :56, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000560", "Stretch": 1 }, 
+		"Texture1": { "Id": "02000561", "Stretch": 1 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 8 },
+	}, 
+
+	// Sand Cliff (NE-SW)
+	{ 
+		"Id" :57, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000570", "Stretch": 1 }, 
+		"Texture1": { "Id": "02000571", "Stretch": 1 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 8 },
+	}, 
+
+	// Dirt Cliff (E-W)
+	{ 
+		"Id" :58, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000580", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000581", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Dirt Cliff (NW-SE)
+	{ 
+		"Id" :59, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000590", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000591", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Dirt Cliff (N-S)
+	{ 
+		"Id" :60, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000600", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000601", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Snow Cliff (E-W)
+	{ 
+		"Id" :61, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000610", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000611", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Snow Cliff (NW-SE)
+	{ 
+		"Id" :62, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000620", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000621", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Snow Cliff (N-S)
+	{ 
+		"Id" :63, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000630", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000631", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Snow Cliff (NE-SW)
+	{ 
+		"Id" :64, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000640", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000641", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Embank Snow (E-W)
+	{ 
+		"Id" :65, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000610", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000611", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Embank Snow  (NW-SE)
+	{ 
+		"Id" :66, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000620", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000621", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Embank Snow  (NE-SO)
+	{ 
+		"Id" :201, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000640", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000641", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Embank Snow (N-S)
+	{ 
+		"Id" :67, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000630", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000631", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Planks in sand (N-S)
+	{ 
+		"Id" :68,
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000680", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000681", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Planks in sand (E-W)
+	{ 
+		"Id" :19, 
+		"Type" : "Solid",
+	},
+	
+	// Swamp2
+	{ 
+		"Id" :69, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000480", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000481", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	},
+
+	// Swamp Water
+	{ 
+		"Id" :70, 
+		"Type" : "Liquid,Smooth",
+		"Speed": 0.01,
+		"WaveHeight": 0.3,
+		"Texture0": { "Id": "02000702", "Stretch": 20 },
+		"Static": { "Id": "02000704", "Stretch": 10 },
+		"Normal" : { "Id": "02000703", "Stretch": 16 }, 
+	}, 
+
+	{ "Id" :71, "Type" : "Solid" }, // TODO
+
+	// Tile (terra cotta) Plain
+	{ 
+		"Id" :72, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000720", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000721", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 32 },
+	}, 
+
+	// Tile (terra cotta) Ornate
+	{ 
+		"Id" :73,
+		"Type" : "Solid,Single",
+		"TextureId": "00001267"
+	}, 
+
+	// Tile (terra cotta) Ornate
+	{
+		"Id" :74, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001268"
+	}, 
+
+	// Tile (terra cotta) Ornate
+	{ 
+		"Id" :75, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001269"
+	}, 
+
+	// Tile (terra cotta) Ornate
+	{ 
+		"Id" :76, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001270"
+	}, 
+
+	// Tile (terra cotta) Ornate
+	{ 
+		"Id" :77, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001271"
+	}, 
+
+	// Tile (terra cotta) Ornate
+	{ 
+		"Id" :78, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001272"
+	}, 
+
+	// Tile (terra cotta) Ornate
+	{ 
+		"Id" :79, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001273" 
+	}, 
+
+	// Tile (terra cotta) Ornate
+	{
+		"Id" :80, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001274"
+	}, 
+
+	// Tile (terra cotta) Ornate
+	{ 
+		"Id" :81, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001275"
+	},
+	
+	// Tile (blue slate) Plain
+	{ 
+		"Id" :88, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000880", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000881", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Tile (blue slate) Ornate
+	{
+		"Id" :89, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001266"
+	},
+	
+	// Tile (blue slate) Ornate
+	{ 
+		"Id" :90, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001258"
+	}, 
+
+	// Tile (blue slate) Ornate
+	{ 
+		"Id" :91, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001259"
+	}, 
+
+	// Tile (blue slate) Ornate
+	{ 
+		"Id" :92, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001260"
+	}, 
+
+	// Tile (blue slate) Ornate
+	{ 
+		"Id" :93, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001261"
+	}, 
+
+	// Tile (blue slate) Ornate
+	{ 
+		"Id" :94, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001262"
+	}, 
+
+	// Tile (blue slate) Ornate
+	{ 
+		"Id" :95, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001263"
+	}, 
+
+	// Tile (blue slate) Ornate
+	{ 
+		"Id" :96, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001264"
+	}, 
+
+	// Tile (blue slate) Ornate
+	{ 
+		"Id" :97, 
+		"Type" : "Solid,Single",
+		"TextureId": "00001265"
+	}, 
+	
+	// Brown Deco Tile
+	{ 
+		"Id" :104, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001040", "Stretch": 1 }, 
+		"Texture1": { "Id": "02001041", "Stretch": 1 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 8 },
+	}, 
+
+	// Brown Deco Tile
+	{ 
+		"Id" :105, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001050", "Stretch": 1 }, 
+		"Texture1": { "Id": "02001051", "Stretch": 1 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 8 },
+	}, 
+
+	// Brown Deco Tile
+	{ 
+		"Id" :106, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001060", "Stretch": 1 }, 
+		"Texture1": { "Id": "02001061", "Stretch": 1 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 8 },
+	}, 
+
+	// Brown Deco Tile
+	{ 
+		"Id" :107, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001070", "Stretch": 1 }, 
+		"Texture1": { "Id": "02001071", "Stretch": 1 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 8 },
+	}, 
+
+	// Brown Deco Tile
+	{ 
+		"Id" :108, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001080", "Stretch": 1 }, 
+		"Texture1": { "Id": "02001081", "Stretch": 1 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 8 },
+	}, 
+
+	// Wooden floor edges (E-W)
+	{ 
+		"Id" :109, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000110", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000111", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Woodenfloor edges (N-S)
+	{ 
+		"Id" :119, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000120", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000121", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Swamp2 edges
+	{ 
+		"Id" :129, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000480", "Stretch": 5 }, 
+		"Texture1": { "Id": "02000481", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Leaves
+	{ 
+		"Id" :145, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001450", "Stretch": 5 }, 
+		"Texture1": { "Id": "02001451", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Dark Rock
+	{ 
+		"Id" :146, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001460", "Stretch": 5 }, 
+		"Texture1": { "Id": "02001461", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Tree bark (E-W)
+	{ 
+		"Id" :147, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001470", "Stretch": 5 }, 
+		"Texture1": { "Id": "02001471", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Tree path (E-W)
+	{ 
+		"Id" :148, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001480", "Stretch": 5 }, 
+		"Texture1": { "Id": "02001481", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Tree bark horz
+	{ 
+		"Id" :149, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001490", "Stretch": 5 }, 
+		"Texture1": { "Id": "02001491", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Tree bark horz
+	{ 
+		"Id" :150, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001500", "Stretch": 5 }, 
+		"Texture1": { "Id": "02001501", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Tree bark vert
+	{ 
+		"Id" :151, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001510", "Stretch": 5 }, 
+		"Texture1": { "Id": "02001511", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Tree bark vert
+	{ 
+		"Id" :152, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001520", "Stretch": 5 }, 
+		"Texture1": { "Id": "02001521", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Tree bark (N-S)
+	{ 
+		"Id" :153, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001530", "Stretch": 5 }, 
+		"Texture1": { "Id": "02001531", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Dirt with Large Rocks
+	{ 
+		"Id" :155, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001540", "Stretch": 4 }, 
+		"Texture1": { "Id": "02001541", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Black
+	{ 
+		"Id" :170, 
+		"Type" : "Solid,Single",
+		"TextureId": "02001700"
+	}, 
+
+	// Cave Transition
+	{ 
+		"Id" :171, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000130", "Stretch": 12 }, 
+		"Texture1": { "Id": "02000131", "Stretch": 6 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Road
+	{ 
+		"Id" :190, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02001900", "Stretch": 5 }, 
+		"Texture1": { "Id": "01000006", "Stretch": 5 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Stone (moss) Pavers
+	{ 
+		"Id" :191, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000250", "Stretch": 4 }, 
+		"Texture1": { "Id": "03000262", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Stone (mossDark) Pavers
+	{ 
+		"Id" :192, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000271", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000272", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Cool Lava
+	{ 
+		"Id" :193, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000103", "Stretch": 4 }, 
+		"Texture1": { "Id": "02000103", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 16 },
+	}, 
+
+	// Void Destruction
+	{ 
+		"Id" :194, 
+		"Type" : "Solid",
+		"Texture0" : { "Id": "02000103", "Stretch": 6 }, 
+		"Texture1": { "Id": "02000103", "Stretch": 4 },
+		"AlphaMask": { "Id": "01000003", "Stretch": 32 },
+	}, 
+
+	// Void
+	{ 
+		"Id" :195, 
+		"Type" : "Liquid,Smooth",
+		"Texture0" : { "Id": "02000531", "Stretch": 24 }, 
+		"Static": { "Id": "02000531", "Stretch": 24 },
+		"Normal": { "Id": "02000002", "Stretch": 1 },
+	}, 
+	
+	{ "Id" :196, "Type" : "Solid" }, // TODO
+	{ "Id" :197, "Type" : "Solid" }, // Eodon clouds
+	{ "Id" :198, "Type" : "Solid" }, // Eodon clouds
+	{ "Id" :199, "Type" : "Solid" }, // Eodon clouds
+	{ "Id" :200, "Type" : "Solid" }, // Eodon clouds
+]
