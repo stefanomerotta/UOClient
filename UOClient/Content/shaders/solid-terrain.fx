@@ -39,9 +39,9 @@ float4 GetMainTextCoord(float4 position)
 float3 GetAlphaTextCoord(float4 position, int textId)
 {
     float2 xy = position.xz / AlphaMaskStretch;
-    bool a = TextureIndex <= textId;
+    bool alpha = TextureIndex <= textId;
     
-    return float3(xy, a);
+    return float3(xy, alpha);
 }
 
 VertexShaderOutput MainVS(VertexShaderInput input)
