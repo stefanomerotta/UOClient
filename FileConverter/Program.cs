@@ -14,14 +14,14 @@ namespace FileConverter
 
             StringDictionary dictionary = new(Path.Combine(uoECPath, "string_dictionary.uop"));
 
-            //using StaticsConverter s = new(uoCCPath, outPath, 4, 1448, 1448, newChunkSize);
-            //s.Convert("statics.bin");
+            using StaticsConverter s = new(uoCCPath, outPath, 4, 1448, 1448, newChunkSize);
+            s.Convert("statics.bin");
 
-            //using StaticsDataConverter t = new(uoECPath, outPath, dictionary);
-            //t.Convert("staticdata.bin", "ecTextures.bin", "ccTextures.bin");
+            using StaticsDataConverter t = new(uoECPath, outPath, dictionary);
+            t.Convert("staticdata.bin", "ecTextures.bin", "ccTextures.bin");
 
-            //using TerrainConverter p = new(uoCCPath, outPath, 4, 1448, 1448, newChunkSize);
-            //p.Convert("terrain.bin");
+            using TerrainConverter p = new(uoCCPath, outPath, 4, 1448, 1448, newChunkSize);
+            p.Convert("terrain.bin");
 
             using TerrainsDataConverter tdc = new(uoECPath, outPath);
             tdc.Convert("terraindata.bin", "terraintextures.bin");
